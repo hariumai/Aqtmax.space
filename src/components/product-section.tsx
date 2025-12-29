@@ -1,18 +1,12 @@
 'use client';
 import Link from 'next/link';
 import { Button } from './ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { ArrowRight, Clapperboard, Music, Palette, Tv } from 'lucide-react';
+import { Card, CardHeader, CardTitle } from './ui/card';
+import { ArrowRight } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, limit } from 'firebase/firestore';
+import ProductCard from './product-card';
 
-const iconMap: { [key: string]: React.ElementType } = {
-  'Netflix Premium': Clapperboard,
-  'Spotify Premium': Music,
-  'Canva Pro': Palette,
-  'Prime Video': Tv,
-  default: Clapperboard,
-};
 
 export default function ProductSection() {
   const firestore = useFirestore();
@@ -34,7 +28,7 @@ export default function ProductSection() {
             Hand-picked for the best value and quality.
           </p>
         </div>
-        <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {isLoading &&
             Array.from({ length: 4 }).map((_, i) => (
               <Card key={i} className="flex flex-col h-full overflow-hidden rounded-2xl p-4">
@@ -46,41 +40,9 @@ export default function ProductSection() {
                 <div className="mt-2 h-4 w-full rounded bg-muted animate-pulse" />
               </Card>
             ))}
-          {!isLoading && products?.map((product) => {
-            const Icon = iconMap[product.name] || iconMap.default;
-            const displayPrice = product.discountedPrice && product.discountedPrice < product.price ? product.discountedPrice : product.price;
-            const hasDiscount = product.discountedPrice && product.discountedPrice < product.price;
-
-            return (
-              <Link key={product.id} href={`/products/${product.id}`}>
-                <Card
-                  className="flex flex-col h-full overflow-hidden rounded-2xl border-border bg-card backdrop-blur-xl transition-all duration-300 hover:border-primary/50 hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary/10"
-                >
-                  <CardHeader className="flex-row items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
-                      <Icon className="h-6 w-6 text-foreground" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">{product.name}</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <div className="text-4xl font-bold">
-                        {product.variants && product.variants.length > 0 ? 'From ' : ''}
-                        {hasDiscount && (
-                            <span className="text-2xl font-normal text-muted-foreground line-through mr-2">{product.price}</span>
-                        )}
-                        {displayPrice}
-                      <span className="text-base font-normal text-muted-foreground"> PKR</span>
-                    </div>
-                    <CardDescription className="mt-2">
-                      {product.description}
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-              </Link>
-            )
-          })}
+          {!isLoading && products?.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
         </div>
         <div className="mt-12 text-center">
           <Button asChild variant="outline">

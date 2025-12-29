@@ -1,19 +1,10 @@
 'use client';
 import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query } from 'firebase/firestore';
-import { Clapperboard, Music, Palette, Tv } from 'lucide-react';
-import Link from 'next/link';
-
-const iconMap: { [key: string]: React.ElementType } = {
-  'Netflix Premium': Clapperboard,
-  'Spotify Premium': Music,
-  'Canva Pro': Palette,
-  'Prime Video': Tv,
-  default: Clapperboard,
-};
+import ProductCard from '@/components/product-card';
 
 export default function ProductsPage() {
   const firestore = useFirestore();
@@ -47,41 +38,9 @@ export default function ProductsPage() {
                 <div className="mt-2 h-4 w-full rounded bg-muted animate-pulse" />
               </Card>
             ))}
-          {!isLoading && products?.map((product) => {
-            const Icon = iconMap[product.name] || iconMap.default;
-            const displayPrice = product.discountedPrice && product.discountedPrice < product.price ? product.discountedPrice : product.price;
-            const hasDiscount = product.discountedPrice && product.discountedPrice < product.price;
-
-            return (
-              <Link key={product.id} href={`/products/${product.id}`}>
-                <Card
-                  className="flex flex-col h-full overflow-hidden rounded-2xl border-border/10 bg-card/50 backdrop-blur-xl transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl"
-                >
-                  <CardHeader className="flex-row items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
-                      <Icon className="h-6 w-6 text-foreground" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">{product.name}</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <div className="text-4xl font-bold">
-                       {product.variants?.length > 0 ? 'From ' : ''}
-                       {hasDiscount && (
-                            <span className="text-2xl font-normal text-muted-foreground line-through mr-2">{product.price}</span>
-                        )}
-                       {displayPrice}
-                      <span className="text-base font-normal text-muted-foreground"> PKR</span>
-                    </div>
-                    <CardDescription className="mt-2">
-                      {product.description}
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-              </Link>
-            )
-          })}
+          {!isLoading && products?.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
         </div>
       </main>
       <SiteFooter />

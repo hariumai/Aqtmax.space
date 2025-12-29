@@ -2,21 +2,14 @@
 import { use } from 'react';
 import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { useCollection, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, doc } from 'firebase/firestore';
 import { Clapperboard, Music, Palette, Tv } from 'lucide-react';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-
-const iconMap: { [key: string]: React.ElementType } = {
-  'Netflix Premium': Clapperboard,
-  'Spotify Premium': Music,
-  'Canva Pro': Palette,
-  'Prime Video': Tv,
-  default: Clapperboard,
-};
+import ProductCard from '@/components/product-card';
 
 const categoryIconMap: { [key: string]: React.ElementType } = {
     Entertainment: Clapperboard,
@@ -74,41 +67,9 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
                 <div className="mt-2 h-4 w-full rounded bg-muted animate-pulse" />
               </Card>
             ))}
-          {!isLoadingProducts && products?.map((product) => {
-            const Icon = iconMap[product.name] || iconMap.default;
-            const displayPrice = product.discountedPrice && product.discountedPrice < product.price ? product.discountedPrice : product.price;
-            const hasDiscount = product.discountedPrice && product.discountedPrice < product.price;
-            
-            return (
-              <Link key={product.id} href={`/products/${product.id}`}>
-                <Card
-                  className="flex flex-col h-full overflow-hidden rounded-2xl border-border/10 bg-card/50 backdrop-blur-xl transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl"
-                >
-                  <CardHeader className="flex-row items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
-                      <Icon className="h-6 w-6 text-foreground" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">{product.name}</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <div className="text-4xl font-bold">
-                      {product.variants?.length > 0 ? 'From ' : ''}
-                      {hasDiscount && (
-                            <span className="text-2xl font-normal text-muted-foreground line-through mr-2">{product.price}</span>
-                      )}
-                      {displayPrice}
-                      <span className="text-base font-normal text-muted-foreground"> PKR</span>
-                    </div>
-                    <CardDescription className="mt-2">
-                      {product.description}
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-              </Link>
-            )
-          })}
+          {!isLoadingProducts && products?.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
         </div>
         {!isLoadingProducts && products?.length === 0 && (
             <div className="text-center col-span-full">
