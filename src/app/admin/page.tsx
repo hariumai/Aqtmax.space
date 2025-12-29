@@ -16,7 +16,7 @@ import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Trash } from 'lucide-react';
+import { Loader2, Trash } from 'lucide-react';
 
 const ADMIN_KEY = '36572515';
 
@@ -313,7 +313,7 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [key, setKey] = useState('');
   const [error, setError] = useState('');
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
 
   const handleLogin = () => {
     if (key === ADMIN_KEY) {
@@ -356,8 +356,9 @@ export default function AdminPage() {
                       onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
                   />
                   {error && <p className="text-sm font-medium text-destructive">{error}</p>}
-                  <Button onClick={handleLogin} className="w-full">
-                      Enter
+                  <Button onClick={handleLogin} className="w-full" disabled={isUserLoading}>
+                    {isUserLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Enter
                   </Button>
                   </div>
               </CardContent>
