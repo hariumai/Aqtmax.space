@@ -45,7 +45,7 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
         {!isLoadingCategory && category && (
           <div className="text-center mb-12">
             <div className="flex justify-center mb-4">
-                {CategoryIcon && <CategoryIcon className="h-12 w-12 text-primary" />}
+                {CategoryIcon && <CategoryIcon className="h-12 w-12 text-primary animate-float" />}
             </div>
             <h1 className="font-headline text-4xl font-extrabold tracking-tighter sm:text-5xl">
               {category.name}

@@ -112,7 +112,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
               <div className="flex flex-col justify-center">
-                <ProductIcon className="h-16 w-16 text-primary mb-4" />
+                <ProductIcon className="h-16 w-16 text-primary mb-4 animate-float" />
                 <h1 className="font-headline text-4xl font-extrabold tracking-tighter sm:text-5xl">
                   {product.name}
                 </h1>
