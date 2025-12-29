@@ -1,3 +1,4 @@
+
 'use client';
 import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
@@ -87,8 +88,20 @@ export default function CheckoutPage() {
     }, [user, form]);
 
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setScreenshotFile(e.target.files[0]);
+        const file = e.target.files?.[0];
+        if (file) {
+            const MAX_SIZE_MB = 8;
+            if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+                toast({
+                    variant: 'destructive',
+                    title: 'File Too Large',
+                    description: `The selected file exceeds the ${MAX_SIZE_MB}MB size limit.`,
+                });
+                setScreenshotFile(null);
+                e.target.value = ''; // Clear the input
+                return;
+            }
+            setScreenshotFile(file);
         }
     };
 
