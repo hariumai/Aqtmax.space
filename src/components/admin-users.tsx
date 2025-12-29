@@ -1,9 +1,8 @@
 
 'use client';
 
-import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useCollection, useFirestore, useUser } from '@/firebase';
+import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query } from 'firebase/firestore';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -11,7 +10,7 @@ export default function AdminUsers() {
   const firestore = useFirestore();
   const { user } = useUser();
 
-  const usersQuery = useMemo(
+  const usersQuery = useMemoFirebase(
     () => (firestore && user ? query(collection(firestore, 'users')) : null),
     [firestore, user]
   );
