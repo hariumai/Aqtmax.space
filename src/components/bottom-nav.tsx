@@ -1,7 +1,7 @@
 'use client';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { cn } from '@/lib/utils';
-import { Gem, Home, LayoutGrid, Menu, Shapes, User, ArrowRight } from 'lucide-react';
+import { Gem, Home, LayoutGrid, Menu, Shapes, User, ArrowRight, Sun, Moon } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -14,11 +14,13 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from './ui/button';
 import { collection, query, orderBy } from 'firebase/firestore';
+import { useTheme } from 'next-themes';
 
 export default function BottomNav() {
   const pathname = usePathname();
   const { user } = useUser();
   const firestore = useFirestore();
+  const { theme, setTheme } = useTheme();
 
   const menuItemsQuery = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'menuItems'), orderBy('order')) : null),
@@ -115,10 +117,21 @@ export default function BottomNav() {
                     <SheetDescription>Main navigation menu for the application.</SheetDescription>
                   </SheetHeader>
                  <div className="flex flex-col gap-6 p-6">
-                        <Link href="/" className="flex items-center gap-2">
-                            <Gem className="h-6 w-6 text-primary" />
-                            <span className="text-xl font-bold tracking-tighter">SubLime</span>
-                        </Link>
+                        <div className="flex justify-between items-center">
+                          <Link href="/" className="flex items-center gap-2">
+                              <Gem className="h-6 w-6 text-primary" />
+                              <span className="text-xl font-bold tracking-tighter">SubLime</span>
+                          </Link>
+                          <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+                            >
+                              <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                              <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                              <span className="sr-only">Toggle theme</span>
+                          </Button>
+                        </div>
                         <nav className="flex flex-col gap-4">
                         {navItems?.map(link => (
                             <Link key={link.href} href={link.href} className="text-lg font-medium text-foreground hover:text-primary transition-colors">
