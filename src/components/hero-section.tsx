@@ -51,13 +51,13 @@ export default function HeroSection() {
               Access your favorite digital services like Netflix, Spotify, and more at unbeatable prices. Instant delivery, 24/7 support.
             </p>
 
-            <div className="mt-8 flex justify-center gap-4">
+            <div className="mt-8 flex flex-col items-center gap-4">
                <Button size="lg" asChild>
                 <Link href="/products">
                     Browse Products <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              <Button size="lg" variant="ghost" asChild>
+              <Button size="lg" variant="outline" asChild>
                 <Link href="/categories">
                     View Categories
                 </Link>
