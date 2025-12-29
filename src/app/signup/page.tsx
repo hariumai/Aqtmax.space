@@ -85,11 +85,12 @@ export default function SignupPage() {
       });
       router.push('/verify-email');
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Signup Failed',
-        description: error.message || 'An unexpected error occurred.',
-      });
+        const errorMessage = (error.message || 'An unexpected error occurred.').replace('Firebase: ', '');
+        toast({
+            variant: 'destructive',
+            title: 'Signup Failed',
+            description: errorMessage,
+        });
     }
   }
 

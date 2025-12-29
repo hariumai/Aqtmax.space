@@ -51,11 +51,12 @@ export default function ForgotPasswordPage() {
       });
       form.reset();
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: error.message || 'An unexpected error occurred.',
-      });
+        const errorMessage = (error.message || 'An unexpected error occurred.').replace('Firebase: ', '');
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: errorMessage,
+        });
     }
   }
 

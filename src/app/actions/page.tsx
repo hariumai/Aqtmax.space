@@ -96,11 +96,12 @@ function ResetPasswordComponent({ oobCode }: { oobCode: string | null }) {
       });
       router.push('/login');
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Error Resetting Password',
-        description: error.message || 'An unexpected error occurred. The link may have expired.',
-      });
+        const errorMessage = (error.message || 'An unexpected error occurred. The link may have expired.').replace('Firebase: ', '');
+        toast({
+            variant: 'destructive',
+            title: 'Error Resetting Password',
+            description: errorMessage,
+        });
     }
   }
 
@@ -202,7 +203,8 @@ function VerifyEmailComponent({ oobCode }: { oobCode: string | null }) {
         
       } catch (error: any) {
         setStatus('error');
-        setMessage(error.message || 'Failed to verify email. The link may have expired or already been used.');
+        const errorMessage = (error.message || 'Failed to verify email. The link may have expired or already been used.').replace('Firebase: ', '');
+        setMessage(errorMessage);
       }
     };
 

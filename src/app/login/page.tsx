@@ -72,11 +72,12 @@ export default function LoginPage() {
       });
       router.push('/profile');
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Login Failed',
-        description: error.message || 'An unexpected error occurred.',
-      });
+        const errorMessage = (error.message || 'An unexpected error occurred.').replace('Firebase: ', '');
+        toast({
+            variant: 'destructive',
+            title: 'Login Failed',
+            description: errorMessage,
+        });
     }
   }
 
