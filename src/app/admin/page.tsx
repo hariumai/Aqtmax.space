@@ -52,12 +52,13 @@ const menuItemsSchema = z.object({
 
 function AdminDashboard() {
   const firestore = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
 
-  // Users
+  // Users - This is the key change. We only create the query if firestore and user are available.
   const usersQuery = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'users')) : null),
-    [firestore]
+    () => (firestore && user ? query(collection(firestore, 'users')) : null),
+    [firestore, user]
   );
   const { data: users, isLoading: isLoadingUsers } = useCollection(usersQuery);
 
@@ -312,9 +313,13 @@ export default function AdminPage() {
 
   const handleLogin = () => {
     if (key === ADMIN_KEY) {
-      setIsAuthenticated(true);
-      setError('');
-      localStorage.setItem('admin-key', key);
+      if (user) {
+        setIsAuthenticated(true);
+        setError('');
+        localStorage.setItem('admin-key', key);
+      } else {
+        setError('You must be signed in to access the admin panel.');
+      }
     } else {
       setError('Invalid admin key.');
     }
@@ -322,10 +327,10 @@ export default function AdminPage() {
   
   useEffect(() => {
     const storedKey = localStorage.getItem('admin-key');
-    if (storedKey === ADMIN_KEY) {
+    if (storedKey === ADMIN_KEY && user) {
         setIsAuthenticated(true);
     }
-  }, []);
+  }, [user]);
 
   return (
     <div className="flex flex-col min-h-screen">
