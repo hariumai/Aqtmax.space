@@ -1,5 +1,4 @@
 'use client';
-import { use } from 'react';
 import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +7,7 @@ import { collection, query, where, doc } from 'firebase/firestore';
 import { Clapperboard, Music, Palette, Tv } from 'lucide-react';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 
 const iconMap: { [key: string]: React.ElementType } = {
   'Netflix Premium': Clapperboard,
@@ -26,7 +26,7 @@ const categoryIconMap: { [key: string]: React.ElementType } = {
 };
 
 export default function CategoryPage({ params }: { params: { id: string } }) {
-  const { id } = use(Promise.resolve(params));
+  const { id } = params;
   const firestore = useFirestore();
   
   const categoryRef = useMemoFirebase(
