@@ -26,11 +26,17 @@ export default function BottomNav() {
   );
   const { data: menuItems } = useCollection(menuItemsQuery);
 
-  const mainNavItems = menuItems?.filter(item => ['/', '/products', '/categories'].includes(item.href)) || [
+  const defaultNavItems = [
     { href: '/', label: 'Home', icon: Home },
     { href: '/products', label: 'Products', icon: LayoutGrid },
     { href: '/categories', label: 'Categories', icon: Shapes },
   ];
+
+  // Use default items and merge/replace with fetched items if they exist
+  const navItems = menuItems ? [...defaultNavItems.filter(defaultItem => !menuItems.some(item => item.href === defaultItem.href)), ...menuItems] : defaultNavItems;
+
+  const mainNavItems = navItems.filter(item => ['/', '/products', '/categories'].includes(item.href));
+
 
   const getHref = (href: string) => {
     if (href === '/profile') {
@@ -48,7 +54,7 @@ export default function BottomNav() {
   };
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 z-50 w-full h-16 bg-background/70 border-t border-border/10 backdrop-blur-lg">
+    <div className="md:hidden fixed bottom-0 left-0 z-50 w-full h-16 bg-background/80 border-t border-border backdrop-blur-lg">
       <div className="grid h-full max-w-lg grid-cols-5 mx-auto font-medium">
         {mainNavItems.map(item => {
              const Icon = IconMap[item.label] || Home;
@@ -114,7 +120,7 @@ export default function BottomNav() {
                             <span className="text-xl font-bold tracking-tighter">SubLime</span>
                         </Link>
                         <nav className="flex flex-col gap-4">
-                        {menuItems?.map(link => (
+                        {navItems?.map(link => (
                             <Link key={link.href} href={link.href} className="text-lg font-medium text-foreground hover:text-primary transition-colors">
                                 {link.label}
                             </Link>
