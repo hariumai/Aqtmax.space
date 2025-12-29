@@ -1,4 +1,5 @@
 'use client';
+import { useState, useEffect } from 'react';
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
 import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
@@ -12,6 +13,11 @@ export default function RefundPage() {
     [firestore]
   );
   const { data: page, isLoading } = useDoc(pageRef);
+  const [lastUpdated, setLastUpdated] = useState('');
+
+  useEffect(() => {
+    setLastUpdated(new Date().toLocaleDateString());
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -32,7 +38,7 @@ export default function RefundPage() {
         {page && (
             <div className="prose prose-invert max-w-none">
             <h1 className="font-headline text-4xl font-extrabold tracking-tighter">{page.title}</h1>
-            <p className="lead">Last updated: {new Date().toLocaleDateString()}</p>
+            {lastUpdated && <p className="lead">Last updated: {lastUpdated}</p>}
             <div dangerouslySetInnerHTML={{ __html: page.content.replace(/\n/g, '<br />') }} />
             </div>
         )}
