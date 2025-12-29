@@ -4,14 +4,13 @@ import {
   Sidebar,
   SidebarContent,
   SidebarHeader,
-  SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { Gem, Settings, Users, ShoppingCart, FileText, Menu, PlusCircle, Pencil, Trash, ListOrdered } from 'lucide-react';
+import { Settings, Users, ShoppingCart, FileText, Menu, PlusCircle, ListOrdered } from 'lucide-react';
 import AdminUsers from '@/components/admin-users';
 import AdminAddProduct from '@/components/admin-add-product';
 import AdminLegalPages from '@/components/admin-legal-pages';
@@ -23,8 +22,15 @@ import AdminSettings from '@/components/admin-settings';
 type AdminSection = 'users' | 'addProduct' | 'manageProducts' | 'orders' | 'legal' | 'menu' | 'settings';
 
 export default function AdminDashboard() {
-  const { isMobile } = useSidebar();
+  const { isMobile, setOpenMobile } = useSidebar();
   const [activeSection, setActiveSection] = useState<AdminSection>('orders');
+
+  const handleSectionClick = (section: AdminSection) => {
+    setActiveSection(section);
+    if(isMobile) {
+      setOpenMobile(false);
+    }
+  }
 
   const renderSection = () => {
     switch (activeSection) {
@@ -47,58 +53,65 @@ export default function AdminDashboard() {
     }
   };
 
+  const getSectionTitle = () => {
+    switch (activeSection) {
+      case 'users': return 'Users';
+      case 'addProduct': return 'Add Product';
+      case 'manageProducts': return 'Manage Products';
+      case 'orders': return 'Orders';
+      case 'legal': return 'Legal Pages';
+      case 'menu': return 'Menu Items';
+      case 'settings': return 'Settings';
+      default: return 'Dashboard';
+    }
+  };
+
   return (
-    <div className="flex min-h-[calc(100vh-5rem)]">
+    <div className="flex min-h-[calc(100vh-10.5rem)]">
       <Sidebar>
-        <SidebarHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Gem className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold tracking-tighter">Admin</span>
-            </div>
+        <SidebarHeader className="hidden">
             {isMobile && <SidebarTrigger />}
-          </div>
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton onClick={() => setActiveSection('orders')} isActive={activeSection === 'orders'}>
+              <SidebarMenuButton onClick={() => handleSectionClick('orders')} isActive={activeSection === 'orders'}>
                 <ListOrdered />
                 <span>Orders</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton onClick={() => setActiveSection('users')} isActive={activeSection === 'users'}>
+              <SidebarMenuButton onClick={() => handleSectionClick('users')} isActive={activeSection === 'users'}>
                 <Users />
                 <span>Users</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => setActiveSection('addProduct')} isActive={activeSection === 'addProduct'}>
+                <SidebarMenuButton onClick={() => handleSectionClick('addProduct')} isActive={activeSection === 'addProduct'}>
                     <PlusCircle />
                     <span>Add Product</span>
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => setActiveSection('manageProducts')} isActive={activeSection === 'manageProducts'}>
+                <SidebarMenuButton onClick={() => handleSectionClick('manageProducts')} isActive={activeSection === 'manageProducts'}>
                     <ShoppingCart />
                     <span>Manage Products</span>
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton onClick={() => setActiveSection('legal')} isActive={activeSection === 'legal'}>
+              <SidebarMenuButton onClick={() => handleSectionClick('legal')} isActive={activeSection === 'legal'}>
                 <FileText />
                 <span>Legal Pages</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton onClick={() => setActiveSection('menu')} isActive={activeSection === 'menu'}>
+              <SidebarMenuButton onClick={() => handleSectionClick('menu')} isActive={activeSection === 'menu'}>
                 <Menu />
                 <span>Menu Items</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
-              <SidebarMenuButton onClick={() => setActiveSection('settings')} isActive={activeSection === 'settings'}>
+              <SidebarMenuButton onClick={() => handleSectionClick('settings')} isActive={activeSection === 'settings'}>
                 <Settings />
                 <span>Settings</span>
               </SidebarMenuButton>
@@ -106,17 +119,14 @@ export default function AdminDashboard() {
           </SidebarMenu>
         </SidebarContent>
       </Sidebar>
-      <SidebarInset>
-        <div className="p-4 md:p-8">
-            <div className="flex items-center justify-between mb-6">
-                <h1 className="font-headline text-3xl font-extrabold tracking-tighter capitalize">
-                    {activeSection === 'addProduct' ? 'Add Product' : activeSection.replace(/([A-Z])/g, ' $1')}
-                </h1>
-                <SidebarTrigger />
-            </div>
-            {renderSection()}
+      <main className="flex-1 p-4 md:p-8">
+        <div className="flex items-center justify-between mb-6">
+            <h1 className="font-headline text-3xl font-extrabold tracking-tighter capitalize">
+                {getSectionTitle()}
+            </h1>
         </div>
-      </SidebarInset>
+        {renderSection()}
+      </main>
     </div>
   );
 }

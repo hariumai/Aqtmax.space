@@ -4,6 +4,7 @@ import CategorySection from '@/components/category-section';
 import ProductSection from '@/components/product-section';
 import HowItWorksSection from '@/components/how-it-works-section';
 import SiteFooter from '@/components/site-footer';
+import BottomNav from '@/components/bottom-nav';
 
 export default function Home() {
   return (
@@ -16,6 +17,7 @@ export default function Home() {
         <HowItWorksSection />
       </main>
       <SiteFooter />
+      <BottomNav />
     </div>
   );
 }

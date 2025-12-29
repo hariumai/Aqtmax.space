@@ -8,7 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useMemoFirebase } from '@/firebase';
 import { doc, collection, writeBatch, getDocs, query, orderBy, deleteDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { Trash } from 'lucide-react';
@@ -30,6 +30,7 @@ export default function AdminMenuItems() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const [initialItems, setInitialItems] = useState<MenuItem[]>([]);
+  const [itemsToDelete, setItemsToDelete] = useState<string[]>([]);
 
   const menuItemsForm = useForm<z.infer<typeof menuItemsSchema>>({
     resolver: zodResolver(menuItemsSchema),
@@ -55,21 +56,26 @@ export default function AdminMenuItems() {
     }
   }, [firestore, menuItemsForm]);
 
+  const handleRemoveItem = (index: number) => {
+    const itemToRemove = menuFields[index];
+    if (itemToRemove.id) {
+        setItemsToDelete(prev => [...prev, itemToRemove.id!]);
+    }
+    removeMenuItem(index);
+  }
+
   async function onMenuItemsSubmit(values: z.infer<typeof menuItemsSchema>) {
     if (!firestore) return;
     try {
         const batch = writeBatch(firestore);
-        const submittedItemIds = new Set(values.items.map(item => item.id).filter(id => !!id));
 
-        // Delete items that are no longer in the list
-        initialItems.forEach(initialItem => {
-            if (initialItem.id && !submittedItemIds.has(initialItem.id)) {
-                const docRef = doc(firestore, 'menuItems', initialItem.id);
-                batch.delete(docRef);
-            }
+        // Delete items that were marked for deletion
+        itemsToDelete.forEach(id => {
+            const docRef = doc(firestore, 'menuItems', id);
+            batch.delete(docRef);
         });
 
-        // Set (create or update) items
+        // Set (create or update) current items
         values.items.forEach((item, index) => {
             const id = item.id || doc(collection(firestore, 'menuItems')).id;
             const docRef = doc(firestore, 'menuItems', id);
@@ -84,6 +90,7 @@ export default function AdminMenuItems() {
         const updatedItems = menuItemsSnapshot.docs.map(d => ({ ...d.data(), id: d.id })) as MenuItem[];
         menuItemsForm.reset({ items: updatedItems });
         setInitialItems(updatedItems);
+        setItemsToDelete([]); // Clear deletion queue
         
         toast({ title: 'Menu Items Updated', description: 'Your navigation menu has been saved.' });
 
@@ -120,7 +127,7 @@ export default function AdminMenuItems() {
                       )}
                     />
                   </div>
-                  <Button type="button" variant="destructive" size="icon" onClick={() => removeMenuItem(index)}>
+                  <Button type="button" variant="destructive" size="icon" onClick={() => handleRemoveItem(index)}>
                     <Trash className="h-4 w-4" />
                     <span className="sr-only">Remove Item</span>
                   </Button>

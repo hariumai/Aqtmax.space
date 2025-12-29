@@ -3,7 +3,6 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from '@/lib/utils';
-import BottomNav from '@/components/bottom-nav';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { ThemeProvider } from '@/components/theme-provider';
 
@@ -26,7 +25,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       </head>
-      <body className={cn('font-body antialiased pb-16 md:pb-0', inter.variable)}>
+      <body className={cn('font-body antialiased', inter.variable)}>
         <ThemeProvider
             attribute="class"
             defaultTheme="dark"
@@ -36,7 +35,6 @@ export default function RootLayout({
           <FirebaseClientProvider>
             {children}
             <Toaster />
-            <BottomNav />
           </FirebaseClientProvider>
         </ThemeProvider>
       </body>
