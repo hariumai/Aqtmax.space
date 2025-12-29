@@ -1,4 +1,5 @@
 'use client';
+import { use } from 'react';
 import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,17 +26,18 @@ const categoryIconMap: { [key: string]: React.ElementType } = {
 };
 
 export default function CategoryPage({ params }: { params: { id: string } }) {
+  const { id } = use(Promise.resolve(params));
   const firestore = useFirestore();
   
   const categoryRef = useMemoFirebase(
-    () => (firestore ? doc(firestore, 'categories', params.id) : null),
-    [firestore, params.id]
+    () => (firestore ? doc(firestore, 'categories', id) : null),
+    [firestore, id]
   );
   const { data: category, isLoading: isLoadingCategory } = useDoc(categoryRef);
 
   const productsQuery = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'subscriptions'), where('categoryId', '==', params.id)) : null),
-    [firestore, params.id]
+    () => (firestore ? query(collection(firestore, 'subscriptions'), where('categoryId', '==', id)) : null),
+    [firestore, id]
   );
   const { data: products, isLoading: isLoadingProducts } = useCollection(productsQuery);
 

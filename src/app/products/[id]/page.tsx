@@ -1,4 +1,5 @@
 'use client';
+import { use } from 'react';
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
@@ -18,10 +19,11 @@ const iconMap: { [key: string]: React.ElementType } = {
 };
 
 export default function ProductPage({ params }: { params: { id: string } }) {
+  const { id } = use(Promise.resolve(params));
   const firestore = useFirestore();
   const productRef = useMemoFirebase(
-    () => (firestore ? doc(firestore, 'subscriptions', params.id) : null),
-    [firestore, params.id]
+    () => (firestore ? doc(firestore, 'subscriptions', id) : null),
+    [firestore, id]
   );
   const { data: product, isLoading } = useDoc(productRef);
   
