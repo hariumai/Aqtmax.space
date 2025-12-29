@@ -40,7 +40,11 @@ export default function ForgotPasswordPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!auth) return;
     try {
-      await sendPasswordResetEmail(auth, values.email);
+      const actionCodeSettings = {
+        url: `${window.location.origin}/reset-password`,
+        handleCodeInApp: true,
+      };
+      await sendPasswordResetEmail(auth, values.email, actionCodeSettings);
       toast({
         title: 'Password Reset Email Sent',
         description: 'Check your inbox for a link to reset your password.',

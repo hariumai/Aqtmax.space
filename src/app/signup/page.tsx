@@ -63,7 +63,11 @@ export default function SignupPage() {
       
       await updateProfile(newUser, { displayName: values.name });
       
-      await sendEmailVerification(newUser);
+      const actionCodeSettings = {
+        url: `${window.location.origin}/login`,
+        handleCodeInApp: true,
+      };
+      await sendEmailVerification(newUser, actionCodeSettings);
 
       const userDocRef = doc(firestore, 'users', newUser.uid);
       await setDoc(userDocRef, {
