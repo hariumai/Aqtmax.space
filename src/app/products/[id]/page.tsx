@@ -82,7 +82,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                       Proceed to Checkout
                     </Button>
                     <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-2">
-                      <Lock className="h-3 w-3" /> Secure payment via Stripe.
+                      <Lock className="h-3 w-3" /> Secure payments with SubLime Payment Gateway
                     </p>
                   </CardFooter>
                 </Card>
