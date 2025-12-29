@@ -39,20 +39,57 @@ export default function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/10 bg-background/80 backdrop-blur-lg">
       <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2">
-          <Gem className="h-6 w-6 text-primary" />
-          <span className="text-xl font-bold tracking-tighter text-foreground">
-            SubLime
-          </span>
-        </Link>
-        <nav className="hidden items-center gap-6 md:flex">
+        <div className="flex items-center md:hidden">
+            <Sheet>
+                <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                        <Menu />
+                        <span className="sr-only">Toggle Menu</span>
+                    </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-3/4">
+                    <div className="flex flex-col gap-6 p-6">
+                        <Link href="/" className="flex items-center gap-2">
+                            <Gem className="h-6 w-6 text-primary" />
+                            <span className="text-xl font-bold tracking-tighter">SubLime</span>
+                        </Link>
+                        <nav className="flex flex-col gap-4">
+                        {navLinks.map(link => (
+                            <Link key={link.href} href={link.href} className="text-lg font-medium text-foreground hover:text-primary">
+                                {link.label}
+                            </Link>
+                        ))}
+                        </nav>
+                        {!user && (
+                          <div className="flex flex-col gap-2 border-t pt-6">
+                              <Button asChild>
+                                  <Link href="/signup">Sign Up</Link>
+                              </Button>
+                              <Button asChild variant="ghost">
+                                  <Link href="/login">Sign In</Link>
+                              </Button>
+                          </div>
+                        )}
+                    </div>
+                </SheetContent>
+            </Sheet>
+           </div>
+        <div className="flex-1 flex justify-center md:justify-start">
+            <Link href="/" className="flex items-center gap-2">
+            <Gem className="h-6 w-6 text-primary" />
+            <span className="text-xl font-bold tracking-tighter text-foreground">
+                SubLime
+            </span>
+            </Link>
+        </div>
+        <nav className="hidden items-center gap-6 md:flex flex-1 justify-center">
             {navLinks.map(link => (
                  <Link key={link.href} href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
                     {link.label}
                  </Link>
             ))}
         </nav>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-1 justify-end">
           {isUserLoading ? (
             <div className="h-10 w-20 animate-pulse rounded-md bg-muted" />
           ) : user ? (
@@ -94,41 +131,6 @@ export default function SiteHeader() {
               </Button>
             </div>
           )}
-           <div className="md:hidden">
-            <Sheet>
-                <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                        <Menu />
-                        <span className="sr-only">Toggle Menu</span>
-                    </Button>
-                </SheetTrigger>
-                <SheetContent side="left">
-                    <div className="flex flex-col gap-6 p-6">
-                        <Link href="/" className="flex items-center gap-2">
-                            <Gem className="h-6 w-6 text-primary" />
-                            <span className="text-xl font-bold tracking-tighter">SubLime</span>
-                        </Link>
-                        <nav className="flex flex-col gap-4">
-                        {navLinks.map(link => (
-                            <Link key={link.href} href={link.href} className="text-lg font-medium text-foreground hover:text-primary">
-                                {link.label}
-                            </Link>
-                        ))}
-                        </nav>
-                        {!user && (
-                          <div className="flex flex-col gap-2 border-t pt-6">
-                              <Button asChild>
-                                  <Link href="/signup">Sign Up</Link>
-                              </Button>
-                              <Button asChild variant="ghost">
-                                  <Link href="/login">Sign In</Link>
-                              </Button>
-                          </div>
-                        )}
-                    </div>
-                </SheetContent>
-            </Sheet>
-           </div>
         </div>
       </div>
     </header>
