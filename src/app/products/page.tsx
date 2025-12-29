@@ -1,10 +1,11 @@
 'use client';
-import Link from 'next/link';
-import { Button } from './ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { ArrowRight, Clapperboard, Music, Palette, Tv } from 'lucide-react';
+import SiteHeader from '@/components/site-header';
+import SiteFooter from '@/components/site-footer';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, limit } from 'firebase/firestore';
+import { collection, query } from 'firebase/firestore';
+import { Clapperboard, Music, Palette, Tv } from 'lucide-react';
+import Link from 'next/link';
 
 const iconMap: { [key: string]: React.ElementType } = {
   'Netflix Premium': Clapperboard,
@@ -14,28 +15,29 @@ const iconMap: { [key: string]: React.ElementType } = {
   default: Clapperboard,
 };
 
-export default function ProductSection() {
+export default function ProductsPage() {
   const firestore = useFirestore();
   const productsQuery = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'subscriptions'), limit(4)) : null),
+    () => (firestore ? query(collection(firestore, 'subscriptions')) : null),
     [firestore]
   );
   const { data: products, isLoading } = useCollection(productsQuery);
 
   return (
-    <section id="products" className="py-16 md:py-24 bg-card/20">
-      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h2 className="font-headline text-3xl font-bold tracking-tighter sm:text-4xl">
-            Our Top Subscriptions
-          </h2>
+    <div className="flex flex-col min-h-screen">
+      <SiteHeader />
+      <main className="flex-grow container mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h1 className="font-headline text-4xl font-extrabold tracking-tighter sm:text-5xl">
+            All Subscriptions
+          </h1>
           <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-            Hand-picked for the best value and quality.
+            Browse our full catalog of premium digital subscriptions.
           </p>
         </div>
-        <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {isLoading &&
-            Array.from({ length: 4 }).map((_, i) => (
+            Array.from({ length: 8 }).map((_, i) => (
               <Card key={i} className="flex flex-col h-full overflow-hidden rounded-3xl p-4">
                 <div className="flex items-center gap-4">
                   <div className="h-12 w-12 rounded-xl bg-muted animate-pulse" />
@@ -74,14 +76,8 @@ export default function ProductSection() {
             )
           })}
         </div>
-        <div className="mt-12 text-center">
-          <Button asChild variant="outline">
-            <Link href="/products">
-              View All Products <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
-      </div>
-    </section>
+      </main>
+      <SiteFooter />
+    </div>
   );
 }
