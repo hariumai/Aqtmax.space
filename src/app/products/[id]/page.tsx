@@ -1,14 +1,18 @@
 'use client';
-import { use } from 'react';
+import { useState } from 'react';
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Clapperboard, CreditCard, Lock, Music, Palette, Tv } from "lucide-react";
+import { CheckCircle, Clapperboard, CreditCard, Lock, Music, Palette, ShoppingCart, Tv } from "lucide-react";
 import Link from "next/link";
-import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
-import { doc } from "firebase/firestore";
+import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
+import { doc, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 const iconMap: { [key: string]: React.ElementType } = {
   'Netflix Premium': Clapperboard,
@@ -21,26 +25,65 @@ const iconMap: { [key: string]: React.ElementType } = {
 export default function ProductPage({ params }: { params: { id: string } }) {
   const { id } = params;
   const firestore = useFirestore();
+  const { user } = useUser();
+  const { toast } = useToast();
+  const router = useRouter();
+
   const productRef = useMemoFirebase(
     () => (firestore ? doc(firestore, 'subscriptions', id) : null),
     [firestore, id]
   );
   const { data: product, isLoading } = useDoc(productRef);
+
+  const [selectedVariant, setSelectedVariant] = useState<any>(null);
   
   const ProductIcon = product ? iconMap[product.name] || iconMap.default : null;
 
-  const displayPrice = () => {
-    if (!product) return '';
-    if (product.discountedPrice) {
-      return (
-        <>
-          <span className="text-muted-foreground line-through mr-2">{product.price} PKR</span>
-          <span className="text-primary">{product.discountedPrice} PKR</span>
-        </>
-      )
+  const handleAddToCart = async () => {
+    if (!user) {
+      toast({ variant: "destructive", title: "Not logged in", description: "You need to be logged in to add items to your cart."});
+      router.push('/login');
+      return;
     }
-    return `${product.price} PKR`;
-  }
+    if (!selectedVariant && product?.variants?.length > 0) {
+      toast({ variant: "destructive", title: "No variant selected", description: "Please select a plan to continue."});
+      return;
+    }
+    if (!firestore) return;
+
+    const cartRef = collection(firestore, 'users', user.uid, 'cart');
+    const itemToAdd = {
+        subscriptionId: product.id,
+        subscriptionName: product.name,
+        variantName: selectedVariant?.name || 'Default',
+        price: selectedVariant?.price || product.discountedPrice || product.price,
+        quantity: 1,
+        imageUrl: product.imageUrl,
+    };
+    
+    try {
+        await addDoc(cartRef, {
+            ...itemToAdd,
+            createdAt: serverTimestamp(),
+        });
+        toast({ title: "Added to Cart", description: `${product.name} has been added to your cart.`});
+    } catch(error: any) {
+        toast({ variant: "destructive", title: "Error", description: "Could not add item to cart."});
+    }
+  };
+
+  const handleBuyNow = () => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    if (!selectedVariant && product?.variants?.length > 0) {
+      toast({ variant: "destructive", title: "No variant selected", description: "Please select a plan to continue."});
+      return;
+    }
+    // Redirect to checkout page with product info
+    router.push(`/checkout?productId=${product.id}&variant=${selectedVariant?.name || 'Default'}`);
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -55,10 +98,6 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                 <h1 className="font-headline text-4xl font-extrabold tracking-tighter sm:text-5xl">
                   {product.name}
                 </h1>
-                <p className="mt-4 text-3xl font-bold">
-                  {displayPrice()}
-                  <span className="text-lg text-muted-foreground">/month</span>
-                </p>
                 <p className="mt-4 text-muted-foreground">
                   {product.description}
                 </p>
@@ -71,47 +110,50 @@ export default function ProductPage({ params }: { params: { id: string } }) {
               <div>
                 <Card className="rounded-2xl border-border/10 bg-card/50 backdrop-blur-xl">
                   <CardHeader>
-                    <CardTitle>Complete Your Order</CardTitle>
+                    <CardTitle>
+                        {product.variants && product.variants.length > 0 
+                            ? 'Select a Plan' 
+                            : 'Complete Your Order'}
+                    </CardTitle>
                     <CardDescription>
-                      {product.variants && product.variants.length > 0 
-                        ? 'Select a plan to continue' 
-                        : 'Final step to unlock your premium access.'}
+                      {product.variants?.length > 0 ? "Choose your desired subscription duration." : "Final step to unlock premium access."}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       {product.variants && product.variants.length > 0 ? (
-                        <div className="flex flex-col gap-2">
-                          {product.variants.map((variant: any) => (
-                            <Button key={variant.name} variant="outline" className="w-full justify-between h-12">
-                              <span>{variant.name}</span>
-                              <span className="font-bold">{variant.price} PKR</span>
-                            </Button>
-                          ))}
-                        </div>
+                        <RadioGroup onValueChange={(value) => setSelectedVariant(product.variants.find((v:any) => v.name === value))}>
+                            <div className="space-y-2">
+                                {product.variants.map((variant: any) => (
+                                    <Label key={variant.name} htmlFor={variant.name} className="flex items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary">
+                                        <span>{variant.name}</span>
+                                        <span className="font-bold">{variant.price} PKR</span>
+                                        <RadioGroupItem value={variant.name} id={variant.name} className="sr-only" />
+                                    </Label>
+                                ))}
+                            </div>
+                        </RadioGroup>
                       ) : (
                         <div className="rounded-xl bg-muted/50 p-4">
                             <div className="flex justify-between items-center">
                             <span className="font-medium">{product.name}</span>
                             <span className="font-bold">{product.discountedPrice || product.price} PKR</span>
                             </div>
-                            <div className="flex justify-between items-center mt-2 text-muted-foreground text-sm">
-                            <span>Tax</span>
-                            <span>0.00 PKR</span>
-                            </div>
                         </div>
                       )}
-                      <div className="flex justify-between items-center border-t border-border/50 pt-4">
-                        <span className="text-lg font-bold">Total</span>
-                        <span className="text-lg font-bold">{product.discountedPrice || product.price} PKR</span>
-                      </div>
                     </div>
                   </CardContent>
                   <CardFooter className="flex-col items-stretch gap-4">
-                    <Button size="lg" className="w-full">
-                      <CreditCard className="mr-2 h-5 w-5" />
-                      Proceed to Checkout
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button size="lg" className="w-full" onClick={handleAddToCart}>
+                            <ShoppingCart className="mr-2 h-5 w-5" />
+                            Add to Cart
+                        </Button>
+                         <Button size="lg" variant="outline" className="w-full" onClick={handleBuyNow}>
+                            <CreditCard className="mr-2 h-5 w-5" />
+                            Buy Now
+                        </Button>
+                    </div>
                     <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-2">
                       <Lock className="h-3 w-3" /> Secure payments with SubLime Payment Gateway
                     </p>
@@ -163,15 +205,15 @@ function ProductPageSkeleton() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <Skeleton className="h-16 w-full" />
-              <div className="flex justify-between items-center border-t pt-4">
-                <Skeleton className="h-7 w-1/4" />
-                <Skeleton className="h-7 w-1/4" />
-              </div>
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
             </div>
           </CardContent>
           <CardFooter className="flex-col items-stretch gap-4">
-            <Skeleton className="h-12 w-full" />
+            <div className="flex gap-2">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+            </div>
             <Skeleton className="h-4 w-1/2 mx-auto" />
           </CardFooter>
         </Card>

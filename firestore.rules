@@ -4,7 +4,7 @@
  * ## Core Philosophy
  * This ruleset enforces a hybrid security model designed for a marketplace application.
  * It combines a strict user-ownership model for private data with a public-read model for shared catalog data.
- * The primary goal is to ensure that users can only access and manage their own information (profiles, orders)
+ * The primary goal is to ensure that users can only access and manage their own information (profiles, orders, cart)
  * while allowing anyone to browse the publicly available catalog (categories, subscriptions).
  * An admin user (any authenticated user for now) is allowed to list all users.
  *
@@ -12,6 +12,7 @@
  * - `/users/{userId}`: Contains private user profile documents. All user-specific data, including subcollections,
  *   is nested under this path to leverage path-based security.
  * - `/users/{userId}/orders/{orderId}`: A subcollection containing a user's private order history.
+ * - `/users/{userId}/cart/{cartItemId}`: A subcollection containing a user's shopping cart items.
  * - `/categories/{categoryId}`: A top-level collection for subscription categories, intended for public browsing.
  * - `/subscriptions/{subscriptionId}`: A top-level collection for subscription products, intended for public browsing.
  *
@@ -82,6 +83,17 @@ service cloud.firestore {
         allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
         allow delete: if isExistingOwner(userId);
       }
+      
+      /**
+       * @description Controls access to a user's shopping cart.
+       * @path /users/{userId}/cart/{cartItemId}
+       * @allow (read, write) An authenticated user managing their own cart items.
+       * @deny An authenticated user accessing another user's cart.
+       * @principle Ensures a user can only manage items in their own cart subcollection.
+       */
+      match /cart/{cartItemId} {
+        allow read, write: if isOwner(userId);
+      }
     }
 
     /**
@@ -135,5 +147,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

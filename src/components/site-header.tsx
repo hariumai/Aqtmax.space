@@ -1,5 +1,5 @@
 'use client';
-import { Gem, LogOut } from 'lucide-react';
+import { Gem, LogOut, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from './ui/button';
 import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -16,6 +16,7 @@ import {
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { collection, query, orderBy } from 'firebase/firestore';
+import { CartDrawer } from './cart-drawer';
 
 export default function SiteHeader() {
   const { user, isUserLoading } = useUser();
@@ -78,10 +79,12 @@ export default function SiteHeader() {
             </Link>
         </div>
 
-        <div className="flex items-center justify-end flex-1">
+        <div className="flex items-center justify-end flex-1 gap-2">
           {isUserLoading ? (
             <div className="h-10 w-24 animate-pulse rounded-md bg-muted" />
           ) : user ? (
+            <>
+            <CartDrawer />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -110,6 +113,7 @@ export default function SiteHeader() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            </>
           ) : (
             <div className="hidden md:flex items-center gap-2">
               <Button asChild variant="ghost">

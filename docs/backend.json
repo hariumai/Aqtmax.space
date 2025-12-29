@@ -93,6 +93,22 @@
         "order": { "type": "number", "description": "The display order of the menu item." }
       },
       "required": ["id", "label", "href", "order"]
+    },
+    "CartItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Cart Item",
+      "type": "object",
+      "description": "Represents an item in a user's shopping cart.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the cart item." },
+        "subscriptionId": { "type": "string", "description": "Reference to the Subscription." },
+        "subscriptionName": { "type": "string", "description": "Name of the subscription." },
+        "variantName": { "type": "string", "description": "Name of the selected variant." },
+        "price": { "type": "number", "description": "Price of the variant at the time of adding to cart." },
+        "quantity": { "type": "number", "description": "Quantity of the item." },
+        "imageUrl": { "type": "string", "description": "Image URL of the subscription." }
+      },
+      "required": ["id", "subscriptionId", "subscriptionName", "variantName", "price", "quantity", "imageUrl"]
     }
   },
   "auth": {
@@ -115,6 +131,10 @@
       {
         "path": "/users/{userId}/orders/{orderId}",
         "definition": { "entityName": "Order", "schema": { "$ref": "#/entities/Order" }, "description": "Stores order information for a specific user." }
+      },
+       {
+        "path": "/users/{userId}/cart/{cartItemId}",
+        "definition": { "entityName": "CartItem", "schema": { "$ref": "#/entities/CartItem" }, "description": "Stores items in a user's shopping cart." }
       },
       {
         "path": "/legalPages/{pageId}",
