@@ -2,7 +2,7 @@
 import { Gem, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from './ui/button';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import {
@@ -15,18 +15,20 @@ import {
 } from './ui/dropdown-menu';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
-
-const navLinks = [
-    { href: "/products", label: "Products" },
-    { href: "/categories", label: "Categories" },
-    { href: "/#how-it-works", label: "How It Works" },
-]
+import { collection, query, orderBy } from 'firebase/firestore';
 
 export default function SiteHeader() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
+  const firestore = useFirestore();
+
+  const menuItemsQuery = useMemoFirebase(
+    () => (firestore ? query(collection(firestore, 'menuItems'), orderBy('order')) : null),
+    [firestore]
+  );
+  const { data: navLinks } = useCollection(menuItemsQuery);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -66,7 +68,7 @@ export default function SiteHeader() {
             </Link>
         </div>
         <nav className="hidden items-center gap-6 md:flex flex-1 justify-center">
-            {navLinks.map(link => (
+            {navLinks?.map(link => (
                  <Link key={link.href} href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
                     {link.label}
                  </Link>

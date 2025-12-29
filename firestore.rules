@@ -93,10 +93,7 @@ service cloud.firestore {
     match /categories/{categoryId} {
       allow get: if true;
       allow list: if true;
-      // CRITICAL: Cannot implement admin-only writes. The 'Category' entity is missing an ownership/admin field.
-      allow create: if false; // TODO: Implement admin-only write access.
-      allow update: if false; // TODO: Implement admin-only write access.
-      allow delete: if false; // TODO: Implement admin-only write access.
+      allow create, update, delete: if false; // Admin only
     }
 
     /**
@@ -109,10 +106,31 @@ service cloud.firestore {
     match /subscriptions/{subscriptionId} {
       allow get: if true;
       allow list: if true;
-      // CRITICAL: Cannot implement admin-only writes. The 'Subscription' entity is missing an ownership/admin field.
-      allow create: if false; // TODO: Implement admin-only write access.
-      allow update: if false; // TODO: Implement admin-only write access.
-      allow delete: if false; // TODO: Implement admin-only write access.
+      allow create, update, delete: if false; // Admin only
+    }
+
+    /**
+     * @description Controls access to legal pages (Terms, Privacy, etc.).
+     * @path /legalPages/{pageId}
+     * @allow (get, list) Publicly readable by all users.
+     * @deny (write) Any user attempting to modify legal content.
+     */
+    match /legalPages/{pageId} {
+        allow get: if true;
+        allow list: if true;
+        allow create, update, delete: if false; // Admin only
+    }
+
+    /**
+     * @description Controls access to navigation menu items.
+     * @path /menuItems/{menuItemId}
+     * @allow (get, list) Publicly readable for building navigation.
+     * @deny (write) Any user attempting to modify the site navigation.
+     */
+    match /menuItems/{menuItemId} {
+        allow get: if true;
+        allow list: if true;
+        allow create, update, delete: if false; // Admin only
     }
   }
 }

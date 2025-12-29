@@ -6,40 +6,14 @@
       "type": "object",
       "description": "Represents a user of the SubLime Marketplace.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the user entity."
-        },
-        "email": {
-          "type": "string",
-          "description": "User's email address.",
-          "format": "email"
-        },
-        "name": {
-          "type": "string",
-          "description": "User's full name."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the user account was created.",
-          "format": "date-time"
-        },
-        "signupCredit": {
-          "type": "number",
-          "description": "A credit assigned to the user upon signing up."
-        },
-        "emailVerified": {
-          "type": "boolean",
-          "description": "Indicates if the user has verified their email address."
-        }
+        "id": { "type": "string", "description": "Unique identifier for the user entity." },
+        "email": { "type": "string", "description": "User's email address.", "format": "email" },
+        "name": { "type": "string", "description": "User's full name." },
+        "createdAt": { "type": "string", "description": "Timestamp indicating when the user account was created.", "format": "date-time" },
+        "signupCredit": { "type": "number", "description": "A credit assigned to the user upon signing up." },
+        "emailVerified": { "type": "boolean", "description": "Indicates if the user has verified their email address." }
       },
-      "required": [
-        "id",
-        "email",
-        "name",
-        "createdAt",
-        "emailVerified"
-      ]
+      "required": ["id", "email", "name", "createdAt", "emailVerified"]
     },
     "Subscription": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -47,40 +21,14 @@
       "type": "object",
       "description": "Represents a digital subscription offered on the marketplace.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the subscription entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the subscription (e.g., Netflix Premium)."
-        },
-        "description": {
-          "type": "string",
-          "description": "Detailed description of the subscription benefits and features."
-        },
-        "price": {
-          "type": "number",
-          "description": "Price of the subscription."
-        },
-        "imageUrl": {
-          "type": "string",
-          "description": "URL of the image representing the subscription.",
-          "format": "uri"
-        },
-        "categoryId": {
-          "type": "string",
-          "description": "Reference to Category. (Relationship: Category 1:N Subscription)"
-        }
+        "id": { "type": "string", "description": "Unique identifier for the subscription entity." },
+        "name": { "type": "string", "description": "Name of the subscription (e.g., Netflix Premium)." },
+        "description": { "type": "string", "description": "Detailed description of the subscription benefits and features." },
+        "price": { "type": "number", "description": "Price of the subscription." },
+        "imageUrl": { "type": "string", "description": "URL of the image representing the subscription.", "format": "uri" },
+        "categoryId": { "type": "string", "description": "Reference to Category. (Relationship: Category 1:N Subscription)" }
       },
-      "required": [
-        "id",
-        "name",
-        "description",
-        "price",
-        "imageUrl",
-        "categoryId"
-      ]
+      "required": ["id", "name", "description", "price", "imageUrl", "categoryId"]
     },
     "Category": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -88,25 +36,11 @@
       "type": "object",
       "description": "Represents a category of subscriptions (e.g., Entertainment, Music).",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the category entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the category (e.g., Entertainment)."
-        },
-        "imageUrl": {
-          "type": "string",
-          "description": "URL of the image representing the category.",
-          "format": "uri"
-        }
+        "id": { "type": "string", "description": "Unique identifier for the category entity." },
+        "name": { "type": "string", "description": "Name of the category (e.g., Entertainment)." },
+        "imageUrl": { "type": "string", "description": "URL of the image representing the category.", "format": "uri" }
       },
-      "required": [
-        "id",
-        "name",
-        "imageUrl"
-      ]
+      "required": ["id", "name", "imageUrl"]
     },
     "Order": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -114,114 +48,69 @@
       "type": "object",
       "description": "Represents an order placed by a user for a subscription.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the order entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N Order)"
-        },
-        "subscriptionId": {
-          "type": "string",
-          "description": "Reference to Subscription. (Relationship: Subscription 1:N Order)"
-        },
-        "orderDate": {
-          "type": "string",
-          "description": "Date when the order was placed.",
-          "format": "date-time"
-        },
-        "status": {
-          "type": "string",
-          "description": "Status of the order (e.g., pending, completed, cancelled)."
-        }
+        "id": { "type": "string", "description": "Unique identifier for the order entity." },
+        "userId": { "type": "string", "description": "Reference to User. (Relationship: User 1:N Order)" },
+        "subscriptionId": { "type": "string", "description": "Reference to Subscription. (Relationship: Subscription 1:N Order)" },
+        "orderDate": { "type": "string", "description": "Date when the order was placed.", "format": "date-time" },
+        "status": { "type": "string", "description": "Status of the order (e.g., pending, completed, cancelled)." }
       },
-      "required": [
-        "id",
-        "userId",
-        "subscriptionId",
-        "orderDate",
-        "status"
-      ]
+      "required": ["id", "userId", "subscriptionId", "orderDate", "status"]
+    },
+    "LegalPage": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Legal Page",
+      "type": "object",
+      "description": "Represents a legal document page like Terms of Service or Privacy Policy.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the legal page (e.g., 'terms', 'privacy')." },
+        "title": { "type": "string", "description": "The title of the legal page." },
+        "content": { "type": "string", "description": "The full HTML or Markdown content of the page." }
+      },
+      "required": ["id", "title", "content"]
+    },
+    "MenuItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Menu Item",
+      "type": "object",
+      "description": "Represents a single item in a navigation menu.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the menu item." },
+        "label": { "type": "string", "description": "The text to display for the menu item." },
+        "href": { "type": "string", "description": "The URL path the menu item links to." },
+        "order": { "type": "number", "description": "The display order of the menu item." }
+      },
+      "required": ["id", "label", "href", "order"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["password", "anonymous"]
   },
   "firestore": {
     "structure": [
       {
         "path": "/users/{userId}",
-        "definition": {
-          "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Stores user profiles. Access is restricted to the individual user (path-based ownership).",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            }
-          ]
-        }
+        "definition": { "entityName": "User", "schema": { "$ref": "#/entities/User" }, "description": "Stores user profiles." }
       },
       {
         "path": "/categories/{categoryId}",
-        "definition": {
-          "entityName": "Category",
-          "schema": {
-            "$ref": "#/backend/entities/Category"
-          },
-          "description": "Stores subscription categories. Publicly readable, write access restricted to authorized admins.",
-          "params": [
-            {
-              "name": "categoryId",
-              "description": "The unique identifier of the category."
-            }
-          ]
-        }
+        "definition": { "entityName": "Category", "schema": { "$ref": "#/entities/Category" }, "description": "Stores subscription categories." }
       },
       {
         "path": "/subscriptions/{subscriptionId}",
-        "definition": {
-          "entityName": "Subscription",
-          "schema": {
-            "$ref": "#/backend/entities/Subscription"
-          },
-          "description": "Stores subscription details. Includes the `categoryId` for category association. Publicly readable, write access restricted to authorized admins.",
-          "params": [
-            {
-              "name": "subscriptionId",
-              "description": "The unique identifier of the subscription."
-            }
-          ]
-        }
+        "definition": { "entityName": "Subscription", "schema": { "$ref": "#/entities/Subscription" }, "description": "Stores subscription details." }
       },
       {
         "path": "/users/{userId}/orders/{orderId}",
-        "definition": {
-          "entityName": "Order",
-          "schema": {
-            "$ref": "#/backend/entities/Order"
-          },
-          "description": "Stores order information related to a specific user. Access is restricted to the individual user (path-based ownership). Includes the `subscriptionId` for subscription association.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            },
-            {
-              "name": "orderId",
-              "description": "The unique identifier of the order."
-            }
-          ]
-        }
+        "definition": { "entityName": "Order", "schema": { "$ref": "#/entities/Order" }, "description": "Stores order information for a specific user." }
+      },
+      {
+        "path": "/legalPages/{pageId}",
+        "definition": { "entityName": "LegalPage", "schema": { "$ref": "#/entities/LegalPage" }, "description": "Stores content for legal pages." }
+      },
+      {
+        "path": "/menuItems/{menuItemId}",
+        "definition": { "entityName": "MenuItem", "schema": { "$ref": "#/entities/MenuItem" }, "description": "Stores navigation menu items." }
       }
-    ],
-    "reasoning": "The Firestore structure is designed to align with the application's data model and access patterns, prioritizing security and scalability. It incorporates the principles of Authorization Independence and Structural Segregation to facilitate robust security rules and efficient data retrieval.\n\n*   **Users Collection (`/users/{userId}`):** Stores user profiles. Access is restricted to the individual user (path-based ownership). No denormalization is needed here as this is private user data.\n*   **Categories Collection (`/categories/{categoryId}`):** Stores subscription categories. This collection can be publicly readable, with write access restricted to authorized admins (not defined in the schema, so assuming this).\n*   **Subscriptions Collection (`/subscriptions/{subscriptionId}`):** Stores subscription details. Includes the `categoryId` for category association. This collection can be publicly readable, with write access restricted to authorized admins.\n*   **Orders Collection (`/users/{userId}/orders/{orderId}`):** Stores order information related to a specific user. Access is restricted to the individual user (path-based ownership). Includes the `subscriptionId` for subscription association.\n\n**Authorization Independence:** Achieved by avoiding hierarchical `get()` calls in security rules. For example, the `orders` subcollection directly associates with a user via path-based ownership (`/users/{userId}/orders/{orderId}`).\n\n**QAPs (Rules are not Filters):** Supported by structural segregation. Publicly readable data (categories, subscriptions) is stored in dedicated collections, allowing for secure `list` operations. User-specific data (users, orders) is stored under the `/users/{userId}` path, enforcing ownership-based access control."
+    ]
   }
 }
