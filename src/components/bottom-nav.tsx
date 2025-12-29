@@ -29,9 +29,9 @@ export default function BottomNav() {
   const { data: menuItems } = useCollection(menuItemsQuery);
 
   const defaultNavItems = [
-    { href: '/', label: 'Home', icon: Home },
-    { href: '/products', label: 'Products', icon: LayoutGrid },
-    { href: '/categories', label: 'Categories', icon: Shapes },
+    { id: 'home', href: '/', label: 'Home', icon: Home, order: 1 },
+    { id: 'products', href: '/products', label: 'Products', icon: LayoutGrid, order: 2 },
+    { id: 'categories', href: '/categories', label: 'Categories', icon: Shapes, order: 3 },
   ];
 
   // Use default items and merge/replace with fetched items if they exist
@@ -63,7 +63,7 @@ export default function BottomNav() {
              const Icon = IconMap[item.label] || Home;
              return (
              <Link
-             key={item.label}
+             key={item.id}
              href={item.href}
              className="inline-flex flex-col items-center justify-center px-5 hover:bg-muted/50 group"
            >
@@ -126,7 +126,7 @@ export default function BottomNav() {
                         </div>
                         <nav className="flex flex-col gap-4">
                         {navItems?.map(link => (
-                            <Link key={link.href} href={link.href} className="text-lg font-medium text-foreground hover:text-primary transition-colors">
+                            <Link key={link.id} href={link.href} className="text-lg font-medium text-foreground hover:text-primary transition-colors">
                                 {link.label}
                             </Link>
                         ))}
