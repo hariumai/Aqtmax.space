@@ -14,7 +14,7 @@ export default function HeroSection() {
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
           <div className="z-10 flex flex-col justify-center text-center lg:text-left">
             <div className="flex justify-center lg:justify-start gap-2 mb-4">
-              <Badge variant="outline" className="border-primary/50 text-primary">UPDATED</Badge>
+              <Badge variant="outline" className="border-primary/50 text-primary">Cheapest Provider</Badge>
               <Badge variant="outline">2025</Badge>
             </div>
             <h1 className="font-headline text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl">
