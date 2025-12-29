@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useUser } from '@/firebase';
 import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
 import { Loader2 } from 'lucide-react';
@@ -17,30 +16,27 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [key, setKey] = useState('');
   const [error, setError] = useState('');
-  const { user, isUserLoading } = useUser();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const storedKey = localStorage.getItem('admin-key');
+    if (storedKey === ADMIN_KEY) {
+      setIsAuthenticated(true);
+    }
+    setIsLoading(false);
+  }, []);
 
   const handleLogin = () => {
     if (key === ADMIN_KEY) {
-      if (user) {
-        setIsAuthenticated(true);
-        setError('');
-        localStorage.setItem('admin-key', key);
-      } else {
-        setError('You must be signed in to access the admin panel.');
-      }
+      setIsAuthenticated(true);
+      setError('');
+      localStorage.setItem('admin-key', key);
     } else {
       setError('Invalid admin key.');
     }
   };
   
-  useEffect(() => {
-    const storedKey = localStorage.getItem('admin-key');
-    if (storedKey === ADMIN_KEY && user) {
-        setIsAuthenticated(true);
-    }
-  }, [user]);
-
-  if (isUserLoading) {
+  if (isLoading) {
     return (
         <div className="flex flex-col min-h-screen">
           <SiteHeader />
@@ -76,8 +72,7 @@ export default function AdminPage() {
                       onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
                   />
                   {error && <p className="text-sm font-medium text-destructive">{error}</p>}
-                  <Button onClick={handleLogin} className="w-full" disabled={isUserLoading}>
-                    {isUserLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  <Button onClick={handleLogin} className="w-full">
                     Enter
                   </Button>
                   </div>

@@ -9,8 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore } from '@/firebase';
-import { doc, collection, writeBatch, getDocs, query, orderBy } from 'firebase/firestore';
-import { useEffect } from 'react';
+import { doc, collection, writeBatch, getDocs, query, orderBy, deleteDoc } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
 import { Trash } from 'lucide-react';
 
 const menuItemSchema = z.object({
@@ -24,9 +24,12 @@ const menuItemsSchema = z.object({
     items: z.array(menuItemSchema),
 });
 
+type MenuItem = z.infer<typeof menuItemSchema>;
+
 export default function AdminMenuItems() {
   const firestore = useFirestore();
   const { toast } = useToast();
+  const [initialItems, setInitialItems] = useState<MenuItem[]>([]);
 
   const menuItemsForm = useForm<z.infer<typeof menuItemsSchema>>({
     resolver: zodResolver(menuItemsSchema),
@@ -43,8 +46,9 @@ export default function AdminMenuItems() {
         if (!firestore) return;
         const menuItemsQuery = query(collection(firestore, 'menuItems'), orderBy('order'));
         const menuItemsSnapshot = await getDocs(menuItemsQuery);
-        const items = menuItemsSnapshot.docs.map(d => ({ ...d.data(), id: d.id })) as z.infer<typeof menuItemSchema>[];
+        const items = menuItemsSnapshot.docs.map(d => ({ ...d.data(), id: d.id })) as MenuItem[];
         menuItemsForm.reset({ items });
+        setInitialItems(items);
     }
     if (firestore) {
       fetchMenuItems();
@@ -55,13 +59,34 @@ export default function AdminMenuItems() {
     if (!firestore) return;
     try {
         const batch = writeBatch(firestore);
+        const submittedItemIds = new Set(values.items.map(item => item.id).filter(id => !!id));
+
+        // Delete items that are no longer in the list
+        initialItems.forEach(initialItem => {
+            if (initialItem.id && !submittedItemIds.has(initialItem.id)) {
+                const docRef = doc(firestore, 'menuItems', initialItem.id);
+                batch.delete(docRef);
+            }
+        });
+
+        // Set (create or update) items
         values.items.forEach((item, index) => {
             const id = item.id || doc(collection(firestore, 'menuItems')).id;
             const docRef = doc(firestore, 'menuItems', id);
             batch.set(docRef, { ...item, id, order: index });
         });
+
         await batch.commit();
+
+        // Refetch the items to update the state
+        const menuItemsQuery = query(collection(firestore, 'menuItems'), orderBy('order'));
+        const menuItemsSnapshot = await getDocs(menuItemsQuery);
+        const updatedItems = menuItemsSnapshot.docs.map(d => ({ ...d.data(), id: d.id })) as MenuItem[];
+        menuItemsForm.reset({ items: updatedItems });
+        setInitialItems(updatedItems);
+        
         toast({ title: 'Menu Items Updated', description: 'Your navigation menu has been saved.' });
+
     } catch (error: any) {
         toast({ variant: 'destructive', title: 'Error Updating Menu', description: error.message || 'An unexpected error occurred.' });
     }

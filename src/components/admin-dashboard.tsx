@@ -11,7 +11,6 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
 import { Gem, Settings, Users, ShoppingCart, FileText, Menu, PlusCircle, Pencil, Trash } from 'lucide-react';
 import AdminUsers from '@/components/admin-users';
 import AdminAddProduct from '@/components/admin-add-product';
@@ -46,9 +45,12 @@ export default function AdminDashboard() {
     <div className="flex min-h-[calc(100vh-5rem)]">
       <Sidebar>
         <SidebarHeader>
-          <div className="flex items-center gap-2">
-            <Gem className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold tracking-tighter">Admin</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Gem className="h-6 w-6 text-primary" />
+              <span className="text-xl font-bold tracking-tighter">Admin</span>
+            </div>
+            {isMobile && <SidebarTrigger />}
           </div>
         </SidebarHeader>
         <SidebarContent>
@@ -92,7 +94,7 @@ export default function AdminDashboard() {
                 <h1 className="font-headline text-3xl font-extrabold tracking-tighter capitalize">
                     {activeSection.replace(/([A-Z])/g, ' $1')}
                 </h1>
-                {isMobile && <SidebarTrigger />}
+                {!isMobile && <SidebarTrigger />}
             </div>
             {renderSection()}
         </div>
