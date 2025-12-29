@@ -67,7 +67,7 @@ export default function AdminPage() {
     localStorage.removeItem('admin-key');
   }
   
-  const pageIsLoading = isLoading || isUserLoading;
+  const pageIsLoading = isLoading;
   
   if (pageIsLoading) {
     return (

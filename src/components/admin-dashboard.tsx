@@ -11,7 +11,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { Settings, Users, ShoppingCart, FileText, Menu as MenuIcon, PlusCircle, ListOrdered } from 'lucide-react';
+import { Settings, Users, ShoppingCart, FileText, Menu as MenuIcon, PlusCircle, ListOrdered, Shapes } from 'lucide-react';
 import AdminUsers from '@/components/admin-users';
 import AdminAddProduct from '@/components/admin-add-product';
 import AdminLegalPages from '@/components/admin-legal-pages';
@@ -19,8 +19,9 @@ import AdminMenuItems from '@/components/admin-menu-items';
 import AdminManageProducts from '@/components/admin-manage-products';
 import AdminOrders from '@/components/admin-orders';
 import AdminSettings from '@/components/admin-settings';
+import AdminCategories from './admin-categories';
 
-export type AdminSection = 'users' | 'addProduct' | 'manageProducts' | 'orders' | 'legal' | 'menu' | 'settings';
+export type AdminSection = 'users' | 'addProduct' | 'manageProducts' | 'orders' | 'legal' | 'menu' | 'settings' | 'categories';
 
 type AdminDashboardContextType = {
   activeSection: AdminSection;
@@ -75,6 +76,8 @@ export default function AdminDashboard() {
         return <AdminMenuItems />;
        case 'settings':
         return <AdminSettings />;
+      case 'categories':
+        return <AdminCategories />;
       default:
         return <AdminOrders />;
     }
@@ -89,6 +92,7 @@ export default function AdminDashboard() {
       case 'legal': return 'Legal Pages';
       case 'menu': return 'Menu Items';
       case 'settings': return 'Settings';
+      case 'categories': return 'Categories';
       default: return 'Dashboard';
     }
   };
@@ -112,6 +116,12 @@ export default function AdminDashboard() {
                 <Users />
                 <span>Users</span>
               </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => handleSectionClick('categories')} isActive={activeSection === 'categories'}>
+                    <Shapes />
+                    <span>Categories</span>
+                </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
                 <SidebarMenuButton onClick={() => handleSectionClick('addProduct')} isActive={activeSection === 'addProduct'}>

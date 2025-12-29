@@ -29,7 +29,6 @@ type MenuItem = z.infer<typeof menuItemSchema>;
 export default function AdminMenuItems() {
   const firestore = useFirestore();
   const { toast } = useToast();
-  const [initialItems, setInitialItems] = useState<MenuItem[]>([]);
   const [itemsToDelete, setItemsToDelete] = useState<string[]>([]);
 
   const menuItemsForm = useForm<z.infer<typeof menuItemsSchema>>({
@@ -49,7 +48,6 @@ export default function AdminMenuItems() {
         const menuItemsSnapshot = await getDocs(menuItemsQuery);
         const items = menuItemsSnapshot.docs.map(d => ({ ...d.data(), id: d.id })) as MenuItem[];
         menuItemsForm.reset({ items });
-        setInitialItems(items);
     }
     if (firestore) {
       fetchMenuItems();
@@ -89,7 +87,6 @@ export default function AdminMenuItems() {
         const menuItemsSnapshot = await getDocs(menuItemsQuery);
         const updatedItems = menuItemsSnapshot.docs.map(d => ({ ...d.data(), id: d.id })) as MenuItem[];
         menuItemsForm.reset({ items: updatedItems });
-        setInitialItems(updatedItems);
         setItemsToDelete([]); // Clear deletion queue
         
         toast({ title: 'Menu Items Updated', description: 'Your navigation menu has been saved.' });
