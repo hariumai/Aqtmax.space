@@ -195,7 +195,7 @@ export default function CheckoutPage() {
             await batch.commit();
             setOrderComplete(newOrderData);
 
-        } catch (error: any) => {
+        } catch (error: any) {
             console.error('Order placement error:', error);
             toast({ variant: 'destructive', title: 'Order Failed', description: error.message || 'Could not place your order.' });
         } finally {
