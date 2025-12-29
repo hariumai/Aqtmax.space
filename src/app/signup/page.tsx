@@ -69,6 +69,7 @@ export default function SignupPage() {
         name: values.name,
         email: values.email,
         createdAt: new Date().toISOString(),
+        signupCredit: Math.floor(Math.random() * (50 - 5 + 1)) + 5, // Random credit between 5 and 50
       });
 
       toast({
