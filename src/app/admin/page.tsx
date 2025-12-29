@@ -55,7 +55,6 @@ function AdminDashboard() {
   const { user } = useUser();
   const { toast } = useToast();
 
-  // Users - This is the key change. We only create the query if firestore and user are available.
   const usersQuery = useMemoFirebase(
     () => (firestore && user ? query(collection(firestore, 'users')) : null),
     [firestore, user]
@@ -88,12 +87,12 @@ function AdminDashboard() {
   useEffect(() => {
     async function fetchLegalPages() {
       if (!firestore) return;
-      const pagesSnapshot = await getDocs(query(collection(firestore, 'legalPages'), orderBy('title')));
+      const pagesQuery = query(collection(firestore, 'legalPages'), orderBy('title'));
+      const pagesSnapshot = await getDocs(pagesQuery);
       const pages = pagesSnapshot.docs.map(d => ({ ...d.data(), id: d.id })) as z.infer<typeof legalPageSchema>[];
       if (pages.length > 0) {
         legalPagesForm.reset({ pages });
       } else {
-        // Initialize with empty defaults if no pages are found
         legalPagesForm.reset({ pages: [
             { id: 'terms', title: 'Terms of Service', content: ''},
             { id: 'privacy', title: 'Privacy Policy', content: ''},
@@ -101,7 +100,9 @@ function AdminDashboard() {
         ]});
       }
     }
-    fetchLegalPages();
+    if (firestore) {
+      fetchLegalPages();
+    }
   }, [firestore, legalPagesForm]);
 
   async function onLegalPagesSubmit(values: z.infer<typeof legalPagesSchema>) {
@@ -138,11 +139,14 @@ function AdminDashboard() {
   useEffect(() => {
     async function fetchMenuItems() {
         if (!firestore) return;
-        const menuItemsSnapshot = await getDocs(query(collection(firestore, 'menuItems'), orderBy('order')));
+        const menuItemsQuery = query(collection(firestore, 'menuItems'), orderBy('order'));
+        const menuItemsSnapshot = await getDocs(menuItemsQuery);
         const items = menuItemsSnapshot.docs.map(d => ({ ...d.data(), id: d.id })) as z.infer<typeof menuItemSchema>[];
         menuItemsForm.reset({ items });
     }
-    fetchMenuItems();
+    if (firestore) {
+      fetchMenuItems();
+    }
   }, [firestore, menuItemsForm]);
 
   async function onMenuItemsSubmit(values: z.infer<typeof menuItemsSchema>) {
@@ -367,5 +371,3 @@ export default function AdminPage() {
     </div>
   );
 }
-
-    

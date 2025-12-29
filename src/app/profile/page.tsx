@@ -6,7 +6,32 @@ import SiteFooter from '@/components/site-footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { collection, query, where } from 'firebase/firestore';
+import { collection, query, doc } from 'firebase/firestore';
+import { useDoc } from '@/firebase';
+
+function OrderItem({ order }: { order: any }) {
+  const firestore = useFirestore();
+  const subscriptionRef = useMemoFirebase(
+    () => (firestore && order.subscriptionId ? doc(firestore, 'subscriptions', order.subscriptionId) : null),
+    [firestore, order.subscriptionId]
+  );
+  const { data: subscription, isLoading } = useDoc(subscriptionRef);
+
+  if (isLoading) {
+    return <li className="py-3">Loading order details...</li>;
+  }
+
+  return (
+    <li className="py-4 flex justify-between items-center">
+      <div>
+        <p className="font-semibold">{subscription ? subscription.name : `Subscription ID: ${order.subscriptionId}`}</p>
+        <p className="text-sm text-muted-foreground">Order Date: {new Date(order.orderDate).toLocaleDateString()}</p>
+        <p className="text-sm text-muted-foreground">Status: <span className="capitalize">{order.status}</span></p>
+      </div>
+      {subscription && <p className="font-semibold">${subscription.price.toFixed(2)}</p>}
+    </li>
+  );
+}
 
 export default function ProfilePage() {
   const { user, isUserLoading, userError } = useUser();
@@ -39,7 +64,9 @@ export default function ProfilePage() {
   }
 
   const handleSignOut = async () => {
-    await auth?.signOut();
+    if (auth) {
+      await auth.signOut();
+    }
     router.push('/');
   };
 
@@ -80,12 +107,7 @@ export default function ProfilePage() {
               {!isLoadingOrders && orders && orders.length > 0 ? (
                 <ul className="divide-y divide-border">
                   {orders.map((order) => (
-                    <li key={order.id} className="py-3">
-                       <p>Order ID: {order.id}</p>
-                       <p>Date: {new Date(order.orderDate).toLocaleDateString()}</p>
-                       <p>Status: {order.status}</p>
-                       <p>Subscription ID: {order.subscriptionId}</p>
-                    </li>
+                    <OrderItem key={order.id} order={order} />
                   ))}
                 </ul>
               ) : (
