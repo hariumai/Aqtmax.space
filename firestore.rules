@@ -6,6 +6,7 @@
  * It combines a strict user-ownership model for private data with a public-read model for shared catalog data.
  * The primary goal is to ensure that users can only access and manage their own information (profiles, orders)
  * while allowing anyone to browse the publicly available catalog (categories, subscriptions).
+ * An admin user (any authenticated user for now) is allowed to list all users.
  *
  * ## Data Structure
  * - `/users/{userId}`: Contains private user profile documents. All user-specific data, including subcollections,
@@ -17,7 +18,8 @@
  * ## Key Security Decisions
  * - **Strict User Scoping**: All paths under `/users/{userId}` are strictly controlled, ensuring a user can only ever
  *   interact with their own documents.
- * - **No User Listing**: To protect user privacy, it is not possible to list all documents in the `/users` collection.
+ * - **Admin User Listing**: To allow the admin dashboard to function, authenticated users are permitted to list
+ *   all documents in the `/users` collection. This should be refined with custom claims for a true admin role.
  * - **Public Catalog**: The `/categories` and `/subscriptions` collections are publicly readable to allow browsing
  *   by any user, including unauthenticated visitors.
  * - **Admin-Only Writes**: Writes to the public catalog collections (`/categories`, `/subscriptions`) are currently
@@ -58,11 +60,11 @@ service cloud.firestore {
      * @path /users/{userId}
      * @allow (create) An authenticated user creating their own user document for the first time.
      * @deny (get) An authenticated user attempting to read another user's profile.
-     * @principle Restricts access to a user's own data tree and prevents user enumeration.
+     * @principle Restricts access to a user's own data tree and allows admins to list users.
      */
     match /users/{userId} {
       allow get: if isOwner(userId);
-      allow list: if false;
+      allow list: if isSignedIn(); // Admin-level access for now
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
       allow delete: if isExistingOwner(userId);
@@ -118,7 +120,7 @@ service cloud.firestore {
     match /legalPages/{pageId} {
         allow get: if true;
         allow list: if true;
-        allow create, update, delete: if false; // Admin only
+        allow create, update, delete: if isSignedIn(); // Admin only for now
     }
 
     /**
@@ -130,7 +132,7 @@ service cloud.firestore {
     match /menuItems/{menuItemId} {
         allow get: if true;
         allow list: if true;
-        allow create, update, delete: if false; // Admin only
+        allow create, update, delete: if isSignedIn(); // Admin only for now
     }
   }
 }

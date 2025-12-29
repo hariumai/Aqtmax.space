@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, addDoc, doc, setDoc, getDocs, writeBatch, orderBy } from 'firebase/firestore';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -50,14 +50,14 @@ const menuItemsSchema = z.object({
 });
 
 
-function AdminDashboard() {
+function AdminDashboard({ isAuthenticated }: { isAuthenticated: boolean }) {
   const firestore = useFirestore();
   const { toast } = useToast();
 
   // Users
   const usersQuery = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'users')) : null),
-    [firestore]
+    () => (firestore && isAuthenticated ? query(collection(firestore, 'users')) : null),
+    [firestore, isAuthenticated]
   );
   const { data: users, isLoading: isLoadingUsers } = useCollection(usersQuery);
 
@@ -100,7 +100,7 @@ function AdminDashboard() {
       }
     }
     fetchLegalPages();
-  }, [firestore, legalPagesForm.reset]);
+  }, [firestore, legalPagesForm]);
 
   async function onLegalPagesSubmit(values: z.infer<typeof legalPagesSchema>) {
     if (!firestore) return;
@@ -141,7 +141,7 @@ function AdminDashboard() {
         menuItemsForm.reset({ items });
     }
     fetchMenuItems();
-  }, [firestore, menuItemsForm.reset]);
+  }, [firestore, menuItemsForm]);
 
   async function onMenuItemsSubmit(values: z.infer<typeof menuItemsSchema>) {
     if (!firestore) return;
@@ -359,7 +359,7 @@ export default function AdminPage() {
     <div className="flex flex-col min-h-screen">
       <SiteHeader />
       <main className="flex-grow">
-        <AdminDashboard />
+        <AdminDashboard isAuthenticated={isAuthenticated} />
       </main>
       <SiteFooter />
     </div>
