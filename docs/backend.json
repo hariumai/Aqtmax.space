@@ -10,7 +10,7 @@
         "email": { "type": "string", "description": "User's email address.", "format": "email" },
         "name": { "type": "string", "description": "User's full name." },
         "createdAt": { "type": "string", "description": "Timestamp indicating when the user account was created.", "format": "date-time" },
-        "signupCredit": { "type": "number", "description": "A credit assigned to the user upon signing up." },
+        "storeCredit": { "type": "number", "description": "The amount of store credit the user has in PKR." },
         "emailVerified": { "type": "boolean", "description": "Indicates if the user has verified their email address." }
       },
       "required": ["id", "email", "name", "createdAt", "emailVerified"]
@@ -63,11 +63,18 @@
       "properties": {
         "id": { "type": "string", "description": "Unique identifier for the order entity." },
         "userId": { "type": "string", "description": "Reference to User. (Relationship: User 1:N Order)" },
-        "subscriptionId": { "type": "string", "description": "Reference to Subscription. (Relationship: Subscription 1:N Order)" },
+        "items": { "type": "array", "description": "An array of items included in the order.", "items": { "$ref": "#/entities/CartItem" }},
+        "customerName": { "type": "string", "description": "The name of the customer who placed the order." },
+        "customerEmail": { "type": "string", "description": "The email of the customer.", "format": "email" },
+        "customerPhone": { "type": "string", "description": "The phone number of the customer." },
+        "subtotal": { "type": "number", "description": "The subtotal of the order before discounts and taxes." },
+        "creditUsed": { "type": "number", "description": "The amount of store credit used for the order." },
+        "totalAmount": { "type": "number", "description": "The final amount paid after applying credits." },
+        "paymentScreenshotUrl": { "type": "string", "description": "URL of the uploaded payment screenshot.", "format": "uri" },
         "orderDate": { "type": "string", "description": "Date when the order was placed.", "format": "date-time" },
         "status": { "type": "string", "description": "Status of the order (e.g., pending, completed, cancelled)." }
       },
-      "required": ["id", "userId", "subscriptionId", "orderDate", "status"]
+      "required": ["id", "userId", "items", "customerName", "customerEmail", "subtotal", "totalAmount", "orderDate", "status"]
     },
     "LegalPage": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -109,6 +116,18 @@
         "imageUrl": { "type": "string", "description": "Image URL of the subscription." }
       },
       "required": ["id", "subscriptionId", "subscriptionName", "variantName", "price", "quantity", "imageUrl"]
+    },
+    "AppSettings": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "App Settings",
+        "type": "object",
+        "description": "Stores global application settings, such as payment details.",
+        "properties": {
+            "bankName": { "type": "string", "description": "The name of the bank for payments." },
+            "accountNumber": { "type": "string", "description": "The bank account number." },
+            "accountHolderName": { "type": "string", "description": "The name of the account holder." }
+        },
+        "required": ["bankName", "accountNumber", "accountHolderName"]
     }
   },
   "auth": {
@@ -129,8 +148,8 @@
         "definition": { "entityName": "Subscription", "schema": { "$ref": "#/entities/Subscription" }, "description": "Stores subscription details." }
       },
       {
-        "path": "/users/{userId}/orders/{orderId}",
-        "definition": { "entityName": "Order", "schema": { "$ref": "#/entities/Order" }, "description": "Stores order information for a specific user." }
+        "path": "/orders/{orderId}",
+        "definition": { "entityName": "Order", "schema": { "$ref": "#/entities/Order" }, "description": "Stores order information for all users." }
       },
        {
         "path": "/users/{userId}/cart/{cartItemId}",
@@ -143,6 +162,10 @@
       {
         "path": "/menuItems/{menuItemId}",
         "definition": { "entityName": "MenuItem", "schema": { "$ref": "#/entities/MenuItem" }, "description": "Stores navigation menu items." }
+      },
+      {
+        "path": "/settings/payment",
+        "definition": { "entityName": "AppSettings", "schema": { "$ref": "#/entities/AppSettings" }, "description": "Stores application settings like payment details." }
       }
     ]
   }

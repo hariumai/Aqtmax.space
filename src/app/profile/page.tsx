@@ -6,29 +6,26 @@ import SiteFooter from '@/components/site-footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { collection, query, doc } from 'firebase/firestore';
+import { collection, query, doc, where } from 'firebase/firestore';
 import { useDoc } from '@/firebase';
+import { Wallet } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
 
 function OrderItem({ order }: { order: any }) {
-  const firestore = useFirestore();
-  const subscriptionRef = useMemoFirebase(
-    () => (firestore && order.subscriptionId ? doc(firestore, 'subscriptions', order.subscriptionId) : null),
-    [firestore, order.subscriptionId]
-  );
-  const { data: subscription, isLoading } = useDoc(subscriptionRef);
-
-  if (isLoading) {
-    return <li className="py-3">Loading order details...</li>;
-  }
+  const itemNames = order.items.map((item: any) => item.subscriptionName).join(', ');
 
   return (
     <li className="py-4 flex justify-between items-center">
       <div>
-        <p className="font-semibold">{subscription ? subscription.name : `Subscription ID: ${order.subscriptionId}`}</p>
-        <p className="text-sm text-muted-foreground">Order Date: {new Date(order.orderDate).toLocaleDateString()}</p>
-        <p className="text-sm text-muted-foreground">Status: <span className="capitalize">{order.status}</span></p>
+        <p className="font-semibold">{itemNames}</p>
+        <p className="text-sm text-muted-foreground">Order Date: {new Date(order.orderDate.toDate()).toLocaleDateString()}</p>
+        <Badge variant={order.status === 'completed' ? 'default' : 'secondary'} className="capitalize mt-1">{order.status}</Badge>
       </div>
-      {subscription && <p className="font-semibold">{subscription.price.toFixed(2)} PKR</p>}
+      <div className="text-right">
+        <p className="font-semibold">{order.totalAmount.toFixed(2)} PKR</p>
+        {order.creditUsed > 0 && <p className="text-xs text-primary">-{order.creditUsed.toFixed(2)} credits</p>}
+      </div>
     </li>
   );
 }
@@ -39,8 +36,11 @@ export default function ProfilePage() {
   const router = useRouter();
   const firestore = useFirestore();
 
+  const userRef = useMemoFirebase(() => (firestore && user ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
+  const { data: userData } = useDoc(userRef);
+
   const ordersQuery = useMemoFirebase(
-    () => (firestore && user ? query(collection(firestore, 'users', user.uid, 'orders')) : null),
+    () => (firestore && user ? query(collection(firestore, 'orders'), where('userId', '==', user.uid)) : null),
     [firestore, user]
   );
   const { data: orders, isLoading: isLoadingOrders } = useCollection(ordersQuery);
@@ -77,15 +77,26 @@ export default function ProfilePage() {
         <div className="space-y-8">
           <Card>
             <CardHeader>
-              <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
-                  <AvatarImage src={user.photoURL ?? ''} />
-                  <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <CardTitle className="text-2xl">{user.displayName || 'User'}</CardTitle>
-                  <CardDescription>{user.email}</CardDescription>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-16 w-16">
+                    <AvatarImage src={user.photoURL ?? ''} />
+                    <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <CardTitle className="text-2xl">{user.displayName || 'User'}</CardTitle>
+                    <CardDescription>{user.email}</CardDescription>
+                  </div>
                 </div>
+                 {userData && (
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-muted">
+                        <Wallet className="h-6 w-6 text-primary"/>
+                        <div>
+                            <p className="text-sm text-muted-foreground">Store Credit</p>
+                            <p className="text-lg font-bold">{(userData.storeCredit || 0).toFixed(2)} PKR</p>
+                        </div>
+                    </div>
+                )}
               </div>
             </CardHeader>
             <CardContent>
@@ -111,7 +122,12 @@ export default function ProfilePage() {
                   ))}
                 </ul>
               ) : (
-                <p>You have not placed any orders yet.</p>
+                <div className="text-center py-8">
+                    <p className="text-muted-foreground">You have not placed any orders yet.</p>
+                    <Button asChild variant="link" className="mt-2">
+                        <Link href="/products">Start Shopping</Link>
+                    </Button>
+                </div>
               )}
             </CardContent>
           </Card>

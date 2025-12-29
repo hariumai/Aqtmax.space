@@ -11,18 +11,20 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { Gem, Settings, Users, ShoppingCart, FileText, Menu, PlusCircle, Pencil, Trash } from 'lucide-react';
+import { Gem, Settings, Users, ShoppingCart, FileText, Menu, PlusCircle, Pencil, Trash, ListOrdered } from 'lucide-react';
 import AdminUsers from '@/components/admin-users';
 import AdminAddProduct from '@/components/admin-add-product';
 import AdminLegalPages from '@/components/admin-legal-pages';
 import AdminMenuItems from '@/components/admin-menu-items';
 import AdminManageProducts from '@/components/admin-manage-products';
+import AdminOrders from '@/components/admin-orders';
+import AdminSettings from '@/components/admin-settings';
 
-type AdminSection = 'users' | 'addProduct' | 'manageProducts' | 'legal' | 'menu';
+type AdminSection = 'users' | 'addProduct' | 'manageProducts' | 'orders' | 'legal' | 'menu' | 'settings';
 
 export default function AdminDashboard() {
   const { isMobile } = useSidebar();
-  const [activeSection, setActiveSection] = useState<AdminSection>('users');
+  const [activeSection, setActiveSection] = useState<AdminSection>('orders');
 
   const renderSection = () => {
     switch (activeSection) {
@@ -32,12 +34,16 @@ export default function AdminDashboard() {
         return <AdminAddProduct />;
       case 'manageProducts':
         return <AdminManageProducts />;
+      case 'orders':
+        return <AdminOrders />;
       case 'legal':
         return <AdminLegalPages />;
       case 'menu':
         return <AdminMenuItems />;
+       case 'settings':
+        return <AdminSettings />;
       default:
-        return <AdminUsers />;
+        return <AdminOrders />;
     }
   };
 
@@ -55,6 +61,12 @@ export default function AdminDashboard() {
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={() => setActiveSection('orders')} isActive={activeSection === 'orders'}>
+                <ListOrdered />
+                <span>Orders</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton onClick={() => setActiveSection('users')} isActive={activeSection === 'users'}>
                 <Users />
@@ -85,6 +97,12 @@ export default function AdminDashboard() {
                 <span>Menu Items</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton onClick={() => setActiveSection('settings')} isActive={activeSection === 'settings'}>
+                <Settings />
+                <span>Settings</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
       </Sidebar>
@@ -92,9 +110,9 @@ export default function AdminDashboard() {
         <div className="p-4 md:p-8">
             <div className="flex items-center justify-between mb-6">
                 <h1 className="font-headline text-3xl font-extrabold tracking-tighter capitalize">
-                    {activeSection.replace(/([A-Z])/g, ' $1')}
+                    {activeSection === 'addProduct' ? 'Add Product' : activeSection.replace(/([A-Z])/g, ' $1')}
                 </h1>
-                {!isMobile && <SidebarTrigger />}
+                <SidebarTrigger />
             </div>
             {renderSection()}
         </div>

@@ -1,20 +1,26 @@
-
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useCollection, useFirestore, useAuth, useMemoFirebase } from '@/firebase';
-import { collection, query, doc, deleteDoc } from 'firebase/firestore';
+import { collection, query, doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from './ui/button';
-import { Mail, Trash } from 'lucide-react';
+import { Mail, Trash, Edit } from 'lucide-react';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from './ui/dialog';
+import { useState } from 'react';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
 
 export default function AdminUsers() {
   const firestore = useFirestore();
   const auth = useAuth();
   const { toast } = useToast();
+  const [creditAmount, setCreditAmount] = useState(0);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [isCreditDialogOpen, setIsCreditDialogOpen] = useState(false);
 
   const usersQuery = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'users')) : null),
@@ -47,9 +53,6 @@ export default function AdminUsers() {
   const handleDeleteUser = async (userId: string) => {
     if (!firestore) return;
     try {
-        // Note: This only deletes the Firestore user document.
-        // The actual Firebase Auth user needs to be deleted via a backend function (e.g., Cloud Function)
-        // for security reasons, as this is a privileged operation.
         await deleteDoc(doc(firestore, 'users', userId));
         toast({
             title: 'User Document Deleted',
@@ -64,12 +67,36 @@ export default function AdminUsers() {
     }
   };
 
+  const openCreditDialog = (user: any) => {
+    setSelectedUser(user);
+    setCreditAmount(user.storeCredit || 0);
+    setIsCreditDialogOpen(true);
+  };
+
+  const handleUpdateCredit = async () => {
+    if (!firestore || !selectedUser) return;
+    try {
+      const userRef = doc(firestore, 'users', selectedUser.id);
+      await updateDoc(userRef, {
+        storeCredit: Number(creditAmount)
+      });
+      toast({
+        title: 'Store Credit Updated',
+        description: `${selectedUser.name}'s credit has been updated to ${creditAmount} PKR.`
+      });
+      setIsCreditDialogOpen(false);
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Error Updating Credit', description: error.message });
+    }
+  };
+
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Users</CardTitle>
         <CardDescription>
-            Manage your application's users. Deleting a user here only removes their Firestore data.
+            Manage your application's users.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -78,7 +105,7 @@ export default function AdminUsers() {
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Signup Credit</TableHead>
+              <TableHead>Store Credit</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -92,7 +119,14 @@ export default function AdminUsers() {
                 <TableRow key={user.id}>
                   <TableCell>{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.signupCredit?.toFixed(2) || '0.00'} PKR</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                        <span>{user.storeCredit?.toFixed(2) || '0.00'} PKR</span>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openCreditDialog(user)}>
+                            <Edit className="h-3 w-3" />
+                        </Button>
+                    </div>
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => handlePasswordReset(user.email)}>
                         <Mail className="h-4 w-4" />
@@ -109,7 +143,7 @@ export default function AdminUsers() {
                         <AlertDialogHeader>
                           <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This will only delete the user's data from Firestore, not their authentication record. This action cannot be undone.
+                            This will delete the user's data from Firestore. This action cannot be undone.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -133,6 +167,31 @@ export default function AdminUsers() {
             )}
           </TableBody>
         </Table>
+
+        <Dialog open={isCreditDialogOpen} onOpenChange={setIsCreditDialogOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Edit Store Credit for {selectedUser?.name}</DialogTitle>
+                </DialogHeader>
+                <div className="py-4">
+                    <Label htmlFor="credit-amount">Credit Amount (PKR)</Label>
+                    <Input 
+                        id="credit-amount"
+                        type="number"
+                        value={creditAmount}
+                        onChange={(e) => setCreditAmount(Number(e.target.value))}
+                        placeholder="e.g., 500"
+                    />
+                </div>
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button variant="ghost">Cancel</Button>
+                    </DialogClose>
+                    <Button onClick={handleUpdateCredit}>Save Changes</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
       </CardContent>
     </Card>
   );

@@ -11,16 +11,16 @@
  * ## Data Structure
  * - `/users/{userId}`: Contains private user profile documents. All user-specific data, including subcollections,
  *   is nested under this path to leverage path-based security.
- * - `/users/{userId}/orders/{orderId}`: A subcollection containing a user's private order history.
  * - `/users/{userId}/cart/{cartItemId}`: A subcollection containing a user's shopping cart items.
+ * - `/orders/{orderId}`: A top-level collection containing all user orders. Access is restricted.
  * - `/categories/{categoryId}`: A top-level collection for subscription categories, intended for public browsing.
  * - `/subscriptions/{subscriptionId}`: A top-level collection for subscription products, intended for public browsing.
  *
  * ## Key Security Decisions
  * - **Strict User Scoping**: All paths under `/users/{userId}` are strictly controlled, ensuring a user can only ever
  *   interact with their own documents.
- * - **Admin User Listing**: To allow the admin dashboard to function, authenticated users are permitted to list
- *   all documents in the `/users` collection. This should be refined with custom claims for a true admin role.
+ * - **Admin-level access**: To allow the admin dashboard to function, authenticated users are permitted to list
+ *   all documents in the `/users`, and `/orders` collections. This should be refined with custom claims for a true admin role.
  * - **Public Catalog**: The `/categories` and `/subscriptions` collections are publicly readable to allow browsing
  *   by any user, including unauthenticated visitors.
  * - **Admin-Only Writes**: Writes to the public catalog collections (`/categories`, `/subscriptions`) are currently
@@ -28,13 +28,13 @@
  *
  * ## Denormalization for Authorization
  * To maintain performance and create simple, secure rules, we enforce relational integrity on document creation.
- * For example, a new document in the `/users/{userId}/orders` subcollection must contain a `userId` field that
- * matches the `{userId}` from the path. This creates a durable and easily verifiable link for authorization
+ * For example, a new document in the `/orders` collection must contain a `userId` field that
+ * matches the authenticated user's UID. This creates a durable and easily verifiable link for authorization
  * without needing extra database reads.
  *
  * ## Structural Segregation
  * The ruleset leverages separate top-level collections for public and private data. Publicly listable data
- * like `/subscriptions` is stored separately from private, user-owned data like `/users/{userId}/orders`.
+ * like `/subscriptions` is stored separately from private, user-owned data like `/users/{userId}/cart`.
  * This is a critical pattern that makes it safe to allow broad `list` queries on public data without risking
  * the exposure of private information.
  */
@@ -63,26 +63,11 @@ service cloud.firestore {
      * @principle Restricts access to a user's own data tree and allows admins to list users.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId);
+      allow get: if isOwner(userId) || isSignedIn(); // Allow admin to get user doc for credits
       allow list: if isSignedIn(); // Admin-level access for now
       allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow update: if isOwner(userId) || isSignedIn(); // Allow admin to update credits
       allow delete: if isExistingOwner(userId);
-
-      /**
-       * @description Controls access to a user's order history.
-       * @path /users/{userId}/orders/{orderId}
-       * @allow (create) An authenticated user creating a new order for themselves.
-       * @deny (list) An authenticated user attempting to list another user's orders.
-       * @principle Enforces path-based ownership for subcollection documents.
-       */
-      match /orders/{orderId} {
-        allow get: if isOwner(userId);
-        allow list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-        allow delete: if isExistingOwner(userId);
-      }
       
       /**
        * @description Controls access to a user's shopping cart.
@@ -94,6 +79,20 @@ service cloud.firestore {
       match /cart/{cartItemId} {
         allow read, write: if isOwner(userId);
       }
+    }
+
+    /**
+     * @description Controls access to all orders.
+     * @path /orders/{orderId}
+     * @allow (list, get) Admin users.
+     * @allow (create) Authenticated user creating an order for themselves.
+     * @deny (get) A user attempting to read another user's order.
+     */
+    match /orders/{orderId} {
+      allow get, list, update: if isSignedIn(); // Admin-level access for now
+      allow create: if isOwner(request.resource.data.userId);
+      // Users should not be able to delete their own orders.
+      allow delete: if false; 
     }
 
     /**
@@ -144,6 +143,17 @@ service cloud.firestore {
         allow get: if true;
         allow list: if true;
         allow create, update, delete: if isSignedIn(); // Admin only for now
+    }
+
+    /**
+     * @description Controls access to global app settings.
+     * @path /settings/payment
+     * @allow (get) Any user can read payment details.
+     * @allow (write) Only admins can change settings.
+     */
+    match /settings/payment {
+        allow get: if true;
+        allow write: if isSignedIn(); // Admin only for now
     }
   }
 }
