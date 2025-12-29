@@ -4,7 +4,7 @@ import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useCollection, useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query, doc, addDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { CreditCard, Lock, Upload, Wallet, X, CheckCircle, FileText } from 'lucide-react';
 import Image from 'next/image';
@@ -22,8 +22,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useState, useMemo, ChangeEvent, useEffect } from 'react';
-import { Switch } from '@/components/ui/switch';
+import { useState, useMemo, ChangeEvent, useEffect, use } from 'react';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
@@ -74,13 +73,9 @@ export default function CheckoutPage() {
     const router = useRouter();
     const { toast } = useToast();
     
-    const [useCredits, setUseCredits] = useState(false);
     const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [orderComplete, setOrderComplete] = useState<Order | null>(null);
-
-    const userRef = useMemoFirebase(() => (firestore && user ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
-    const { data: userData } = useDoc(userRef);
 
     const settingsRef = useMemoFirebase(() => (firestore ? doc(firestore, 'settings', 'payment') : null), [firestore]);
     const { data: paymentSettings } = useDoc(settingsRef);
@@ -99,9 +94,7 @@ export default function CheckoutPage() {
 
 
     const subtotal = useMemo(() => cartItems?.reduce((acc, item) => acc + item.price * item.quantity, 0) ?? 0, [cartItems]);
-    const availableCredits = userData?.storeCredit ?? 0;
-    const creditsToUse = useCredits ? Math.min(subtotal, availableCredits) : 0;
-    const total = subtotal - creditsToUse;
+    const total = subtotal;
 
     const form = useForm<z.infer<typeof checkoutSchema>>({
         resolver: zodResolver(checkoutSchema),
@@ -173,7 +166,7 @@ export default function CheckoutPage() {
                 customerEmail: values.email,
                 customerPhone: values.phone,
                 subtotal: subtotal,
-                creditUsed: creditsToUse,
+                creditUsed: 0,
                 totalAmount: total,
                 paymentScreenshotUrl: screenshotUrl,
                 orderDate: new Date(),
@@ -182,10 +175,6 @@ export default function CheckoutPage() {
 
             batch.set(newOrderRef, { ...newOrderData, orderDate: serverTimestamp() });
 
-            if (creditsToUse > 0 && userRef) {
-                batch.update(userRef, { storeCredit: availableCredits - creditsToUse });
-            }
-            
             cartItems.forEach(item => {
                 const cartItemRef = doc(firestore, 'users', user.uid, 'cart', item.id);
                 batch.delete(cartItemRef);
@@ -197,6 +186,7 @@ export default function CheckoutPage() {
         } catch (error: any) {
             console.error('Order placement error:', error);
             toast({ variant: 'destructive', title: 'Order Failed', description: error.message || 'Could not place your order.' });
+        } finally {
             setIsSubmitting(false);
         }
     }
@@ -244,7 +234,7 @@ export default function CheckoutPage() {
                                         {cartItems?.map(item => (
                                             <div key={item.id} className="flex items-center gap-4">
                                                 <div className="relative h-16 w-16 overflow-hidden rounded-md">
-                                                    <Image src={item.imageUrl} alt={item.subscriptionName} fill className="object-cover" />
+                                                     <Image src={item.imageUrl} alt={item.subscriptionName} fill className="object-cover" />
                                                 </div>
                                                 <div className="flex-1">
                                                     <p className="font-semibold">{item.subscriptionName}</p>
@@ -268,23 +258,6 @@ export default function CheckoutPage() {
                                             <span>Subtotal</span>
                                             <span>{subtotal.toFixed(2)} PKR</span>
                                         </div>
-                                        {availableCredits > 0 && (
-                                            <>
-                                                <div className="flex items-center justify-between">
-                                                    <Label htmlFor="use-credits" className="flex items-center gap-2">
-                                                        <Wallet className="h-4 w-4" />
-                                                        <span>Use Store Credits</span>
-                                                    </Label>
-                                                    <Switch id="use-credits" checked={useCredits} onCheckedChange={setUseCredits} />
-                                                </div>
-                                                {useCredits && (
-                                                    <div className="flex justify-between text-primary">
-                                                        <span>Credits Applied</span>
-                                                        <span>-{creditsToUse.toFixed(2)} PKR</span>
-                                                    </div>
-                                                )}
-                                            </>
-                                        )}
                                         <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
                                             <span>Total to Pay</span>
                                             <span>{total.toFixed(2)} PKR</span>
@@ -327,7 +300,7 @@ export default function CheckoutPage() {
                                         ) : (
                                             <>
                                                 <CreditCard className="mr-2 h-5 w-5" />
-                                                {total > 0 ? 'Place Order' : 'Redeem with Credits'}
+                                                Place Order
                                             </>
                                         )}
                                     </Button>
@@ -346,4 +319,3 @@ export default function CheckoutPage() {
         </div>
     );
 }
-

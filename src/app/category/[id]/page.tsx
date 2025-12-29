@@ -27,7 +27,7 @@ const categoryIconMap: { [key: string]: React.ElementType } = {
 };
 
 export default function CategoryPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+  const { id } = use(params);
   const firestore = useFirestore();
   
   const categoryRef = useMemoFirebase(
@@ -76,6 +76,9 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
             ))}
           {!isLoadingProducts && products?.map((product) => {
             const Icon = iconMap[product.name] || iconMap.default;
+            const displayPrice = product.discountedPrice && product.discountedPrice < product.price ? product.discountedPrice : product.price;
+            const hasDiscount = product.discountedPrice && product.discountedPrice < product.price;
+            
             return (
               <Link key={product.id} href={`/products/${product.id}`}>
                 <Card
@@ -91,11 +94,15 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
                   </CardHeader>
                   <CardContent className="flex-grow">
                     <div className="text-4xl font-bold">
-                      {product.variants?.length > 0 ? 'From ' : ''}{product.price}
-                      <span className="text-base font-normal text-muted-foreground"> PKR/ month</span>
+                      {product.variants?.length > 0 ? 'From ' : ''}
+                      {hasDiscount && (
+                            <span className="text-2xl font-normal text-muted-foreground line-through mr-2">{product.price}</span>
+                      )}
+                      {displayPrice}
+                      <span className="text-base font-normal text-muted-foreground"> PKR</span>
                     </div>
                     <CardDescription className="mt-2">
-                      Full access, no restrictions. Billed monthly.
+                      {product.description}
                     </CardDescription>
                   </CardContent>
                 </Card>
