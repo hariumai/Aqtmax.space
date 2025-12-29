@@ -20,7 +20,7 @@ import SiteFooter from '@/components/site-footer';
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 
 const formSchema = z.object({
@@ -62,6 +62,8 @@ export default function SignupPage() {
       const newUser = userCredential.user;
       
       await updateProfile(newUser, { displayName: values.name });
+      
+      await sendEmailVerification(newUser);
 
       const userDocRef = doc(firestore, 'users', newUser.uid);
       await setDoc(userDocRef, {
@@ -69,14 +71,15 @@ export default function SignupPage() {
         name: values.name,
         email: values.email,
         createdAt: new Date().toISOString(),
+        emailVerified: false, // Explicitly set to false on creation
         signupCredit: Math.floor(Math.random() * (50 - 5 + 1)) + 5, // Random credit between 5 and 50
       });
 
       toast({
-        title: 'Account Created',
-        description: "You've been successfully signed up.",
+        title: 'Verification Email Sent',
+        description: "Please check your inbox to verify your email address.",
       });
-      router.push('/profile');
+      router.push('/verify-email');
     } catch (error: any) {
       toast({
         variant: 'destructive',

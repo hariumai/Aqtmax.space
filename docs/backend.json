@@ -25,15 +25,20 @@
           "format": "date-time"
         },
         "signupCredit": {
-            "type": "number",
-            "description": "A credit assigned to the user upon signing up."
+          "type": "number",
+          "description": "A credit assigned to the user upon signing up."
+        },
+        "emailVerified": {
+          "type": "boolean",
+          "description": "Indicates if the user has verified their email address."
         }
       },
       "required": [
         "id",
         "email",
         "name",
-        "createdAt"
+        "createdAt",
+        "emailVerified"
       ]
     },
     "Subscription": {

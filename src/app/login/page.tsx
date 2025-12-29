@@ -47,14 +47,25 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!isUserLoading && user) {
-      router.replace('/profile');
+      if (user.emailVerified) {
+        router.replace('/profile');
+      }
     }
   }, [user, isUserLoading, router]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!auth) return;
     try {
-      await signInWithEmailAndPassword(auth, values.email, values.password);
+      const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
+      if (!userCredential.user.emailVerified) {
+        toast({
+            variant: 'destructive',
+            title: 'Email Not Verified',
+            description: 'Please verify your email before logging in.',
+        });
+        auth.signOut(); // Sign out the unverified user
+        return;
+      }
       toast({
         title: 'Login Successful',
         description: "You've been successfully signed in.",
@@ -69,13 +80,23 @@ export default function LoginPage() {
     }
   }
 
-  if (isUserLoading || user) {
+  if (isUserLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
   }
+
+  if(user && user.emailVerified) {
+    router.replace('/profile');
+    return (
+        <div className="flex justify-center items-center h-screen">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
+      );
+  }
+
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -117,6 +138,14 @@ export default function LoginPage() {
                     </FormItem>
                   )}
                 />
+                 <div className="text-right text-sm">
+                  <Link
+                    href="/forgot-password"
+                    className="underline"
+                  >
+                    Forgot your password?
+                  </Link>
+                </div>
                 <Button type="submit" className="w-full">
                   Sign In
                 </Button>
