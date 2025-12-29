@@ -33,6 +33,12 @@ const nextConfig: NextConfig = {
         hostname: 'thechohan.space',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.ctfassets.net',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
