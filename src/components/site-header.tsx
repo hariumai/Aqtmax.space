@@ -1,5 +1,5 @@
 'use client';
-import { Gem, LogOut } from 'lucide-react';
+import { Gem, LogOut, Menu } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from './ui/button';
 import { useAuth, useUser } from '@/firebase';
@@ -13,6 +13,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
+import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
+
+const navLinks = [
+    { href: "/products", label: "Products" },
+    { href: "/categories", label: "Categories" },
+    { href: "/#how-it-works", label: "How It Works" },
+]
 
 export default function SiteHeader() {
   const { user, isUserLoading } = useUser();
@@ -39,15 +46,11 @@ export default function SiteHeader() {
           </span>
         </Link>
         <nav className="hidden items-center gap-6 md:flex">
-          <Link href="/#products" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-            Products
-          </Link>
-          <Link href="/#categories" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-            Categories
-          </Link>
-          <Link href="/#how-it-works" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-            How It Works
-          </Link>
+            {navLinks.map(link => (
+                 <Link key={link.href} href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                    {link.label}
+                 </Link>
+            ))}
         </nav>
         <div className="flex items-center gap-4">
           {isUserLoading ? (
@@ -82,15 +85,50 @@ export default function SiteHeader() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <>
+            <div className="hidden md:flex items-center gap-4">
               <Button asChild variant="ghost">
                 <Link href="/login">Sign In</Link>
               </Button>
               <Button asChild>
                 <Link href="/signup">Sign Up</Link>
               </Button>
-            </>
+            </div>
           )}
+           <div className="md:hidden">
+            <Sheet>
+                <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                        <Menu />
+                        <span className="sr-only">Toggle Menu</span>
+                    </Button>
+                </SheetTrigger>
+                <SheetContent side="left">
+                    <div className="flex flex-col gap-6 p-6">
+                        <Link href="/" className="flex items-center gap-2">
+                            <Gem className="h-6 w-6 text-primary" />
+                            <span className="text-xl font-bold tracking-tighter">SubLime</span>
+                        </Link>
+                        <nav className="flex flex-col gap-4">
+                        {navLinks.map(link => (
+                            <Link key={link.href} href={link.href} className="text-lg font-medium text-foreground hover:text-primary">
+                                {link.label}
+                            </Link>
+                        ))}
+                        </nav>
+                        {!user && (
+                          <div className="flex flex-col gap-2 border-t pt-6">
+                              <Button asChild>
+                                  <Link href="/signup">Sign Up</Link>
+                              </Button>
+                              <Button asChild variant="ghost">
+                                  <Link href="/login">Sign In</Link>
+                              </Button>
+                          </div>
+                        )}
+                    </div>
+                </SheetContent>
+            </Sheet>
+           </div>
         </div>
       </div>
     </header>

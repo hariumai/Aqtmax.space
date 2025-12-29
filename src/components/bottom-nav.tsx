@@ -1,45 +1,57 @@
 'use client';
-
+import { useUser } from '@/firebase';
+import { cn } from '@/lib/utils';
+import { Home, LayoutGrid, Shapes, User } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, LayoutGrid, ShoppingBag, User } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/', label: 'Home', icon: Home },
-  { href: '/#products', label: 'Products', icon: ShoppingBag },
-  { href: '/#categories', label: 'Categories', icon: LayoutGrid },
+  { href: '/products', label: 'Products', icon: LayoutGrid },
+  { href: '/categories', label: 'Categories', icon: Shapes },
   { href: '/profile', label: 'Account', icon: User },
 ];
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const { user } = useUser();
+
+  const getHref = (href: string) => {
+    if (href === '/profile') {
+      return user ? '/profile' : '/login';
+    }
+    return href;
+  }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/10 bg-background/80 backdrop-blur-lg md:hidden">
-      <div className="container mx-auto flex h-16 max-w-7xl items-center justify-around px-4 sm:px-6 lg:px-8">
+    <div className="md:hidden fixed bottom-0 left-0 z-50 w-full h-16 bg-background/80 border-t border-border/10 backdrop-blur-lg">
+      <div className="grid h-full max-w-lg grid-cols-4 mx-auto font-medium">
         {navItems.map((item) => {
-          const isActive =
-            item.href === '/'
-              ? pathname === item.href
-              : pathname.startsWith(item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                'flex flex-col items-center justify-center gap-1 text-xs font-medium transition-colors',
-                isActive
-                  ? 'text-primary'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              <item.icon className="h-5 w-5" />
-              <span>{item.label}</span>
-            </Link>
-          );
+            const isActive = pathname === item.href;
+            return (
+                <Link
+                    key={item.label}
+                    href={getHref(item.href)}
+                    className="inline-flex flex-col items-center justify-center px-5 hover:bg-muted/50 group"
+                >
+                    <item.icon
+                        className={cn(
+                            'w-5 h-5 mb-1 text-muted-foreground group-hover:text-primary',
+                            isActive && 'text-primary'
+                        )}
+                    />
+                    <span
+                        className={cn(
+                            'text-xs text-muted-foreground group-hover:text-primary',
+                            isActive && 'text-primary'
+                        )}
+                    >
+                        {item.label}
+                    </span>
+                </Link>
+            )
         })}
       </div>
-    </nav>
+    </div>
   );
 }
