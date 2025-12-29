@@ -4,9 +4,9 @@ import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { collection, query, doc, addDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
-import { CreditCard, Lock, Upload, Wallet, X, CheckCircle, FileText } from 'lucide-react';
+import { useCollection, useFirestore, useUser, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, query, doc, addDoc, serverTimestamp, writeBatch, updateDoc } from 'firebase/firestore';
+import { CreditCard, Lock, Upload, Wallet, X, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -22,11 +22,12 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useState, useMemo, ChangeEvent, useEffect, use } from 'react';
+import { useState, useMemo, ChangeEvent, useEffect } from 'react';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { type Order } from '@/lib/types';
+import { Switch } from '@/components/ui/switch';
 
 const checkoutSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -76,6 +77,10 @@ export default function CheckoutPage() {
     const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [orderComplete, setOrderComplete] = useState<Order | null>(null);
+    const [useCredit, setUseCredit] = useState(false);
+
+    const userRef = useMemoFirebase(() => (firestore && user ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
+    const { data: userData } = useDoc(userRef);
 
     const settingsRef = useMemoFirebase(() => (firestore ? doc(firestore, 'settings', 'payment') : null), [firestore]);
     const { data: paymentSettings } = useDoc(settingsRef);
@@ -94,7 +99,9 @@ export default function CheckoutPage() {
 
 
     const subtotal = useMemo(() => cartItems?.reduce((acc, item) => acc + item.price * item.quantity, 0) ?? 0, [cartItems]);
-    const total = subtotal;
+    const availableCredit = userData?.storeCredit ?? 0;
+    const creditToUse = useCredit ? Math.min(subtotal, availableCredit) : 0;
+    const total = subtotal - creditToUse;
 
     const form = useForm<z.infer<typeof checkoutSchema>>({
         resolver: zodResolver(checkoutSchema),
@@ -166,7 +173,7 @@ export default function CheckoutPage() {
                 customerEmail: values.email,
                 customerPhone: values.phone,
                 subtotal: subtotal,
-                creditUsed: 0,
+                creditUsed: creditToUse,
                 totalAmount: total,
                 paymentScreenshotUrl: screenshotUrl,
                 orderDate: new Date(),
@@ -174,6 +181,11 @@ export default function CheckoutPage() {
             };
 
             batch.set(newOrderRef, { ...newOrderData, orderDate: serverTimestamp() });
+
+            if (creditToUse > 0) {
+                const newCredit = availableCredit - creditToUse;
+                batch.update(doc(firestore, 'users', user.uid), { storeCredit: newCredit });
+            }
 
             cartItems.forEach(item => {
                 const cartItemRef = doc(firestore, 'users', user.uid, 'cart', item.id);
@@ -183,7 +195,7 @@ export default function CheckoutPage() {
             await batch.commit();
             setOrderComplete(newOrderData);
 
-        } catch (error: any) {
+        } catch (error: any) => {
             console.error('Order placement error:', error);
             toast({ variant: 'destructive', title: 'Order Failed', description: error.message || 'Could not place your order.' });
         } finally {
@@ -253,11 +265,32 @@ export default function CheckoutPage() {
                                     <CardTitle>3. Payment</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
+                                     {availableCredit > 0 && (
+                                        <div className="flex items-center justify-between rounded-lg border p-4">
+                                            <div className="space-y-0.5">
+                                                <Label htmlFor="use-credit" className="text-base">Use Store Credit</Label>
+                                                <p className="text-sm text-muted-foreground">
+                                                    You have {availableCredit.toFixed(2)} PKR available.
+                                                </p>
+                                            </div>
+                                            <Switch
+                                                id="use-credit"
+                                                checked={useCredit}
+                                                onCheckedChange={setUseCredit}
+                                            />
+                                        </div>
+                                    )}
                                     <div className="space-y-2 text-sm">
                                         <div className="flex justify-between">
                                             <span>Subtotal</span>
                                             <span>{subtotal.toFixed(2)} PKR</span>
                                         </div>
+                                        {creditToUse > 0 && (
+                                            <div className="flex justify-between text-primary">
+                                                <span>Credit Used</span>
+                                                <span>-{creditToUse.toFixed(2)} PKR</span>
+                                            </div>
+                                        )}
                                         <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
                                             <span>Total to Pay</span>
                                             <span>{total.toFixed(2)} PKR</span>

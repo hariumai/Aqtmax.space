@@ -88,6 +88,13 @@ export default function ProfilePage() {
                     <CardDescription>{user.email}</CardDescription>
                   </div>
                 </div>
+                <div className="flex items-center gap-2 rounded-lg bg-muted p-3">
+                  <Wallet className="h-6 w-6 text-primary" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Store Credit</p>
+                    <p className="text-lg font-bold">{userData?.storeCredit?.toFixed(2) || '0.00'} PKR</p>
+                  </div>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
