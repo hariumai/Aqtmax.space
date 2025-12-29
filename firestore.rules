@@ -1,0 +1,118 @@
+/**
+ * # Firestore Security Rules
+ *
+ * ## Core Philosophy
+ * This ruleset enforces a hybrid security model designed for a marketplace application.
+ * It combines a strict user-ownership model for private data with a public-read model for shared catalog data.
+ * The primary goal is to ensure that users can only access and manage their own information (profiles, orders)
+ * while allowing anyone to browse the publicly available catalog (categories, subscriptions).
+ *
+ * ## Data Structure
+ * - `/users/{userId}`: Contains private user profile documents. All user-specific data, including subcollections,
+ *   is nested under this path to leverage path-based security.
+ * - `/users/{userId}/orders/{orderId}`: A subcollection containing a user's private order history.
+ * - `/categories/{categoryId}`: A top-level collection for subscription categories, intended for public browsing.
+ * - `/subscriptions/{subscriptionId}`: A top-level collection for subscription products, intended for public browsing.
+ *
+ * ## Key Security Decisions
+ * - **Strict User Scoping**: All paths under `/users/{userId}` are strictly controlled, ensuring a user can only ever
+ *   interact with their own documents.
+ * - **No User Listing**: To protect user privacy, it is not possible to list all documents in the `/users` collection.
+ * - **Public Catalog**: The `/categories` and `/subscriptions` collections are publicly readable to allow browsing
+ *   by any user, including unauthenticated visitors.
+ * - **Admin-Only Writes**: Writes to the public catalog collections (`/categories`, `/subscriptions`) are currently
+ *   disabled (`if false`). This is a secure default because an admin role system has not yet been defined. This
+ *   prevents any user from modifying the public marketplace data.
+ *
+ * ## Denormalization for Authorization
+ * To maintain performance and create simple, secure rules, we enforce relational integrity on document creation.
+ * For example, a new document in the `/users/{userId}/orders` subcollection must contain a `userId` field that
+ * matches the `{userId}` from the path. This creates a durable and easily verifiable link for authorization
+ * without needing extra database reads.
+ *
+ * ## Structural Segregation
+ * The ruleset leverages separate top-level collections for public and private data. Publicly listable data
+ * like `/subscriptions` is stored separately from private, user-owned data like `/users/{userId}/orders`.
+ * This is a critical pattern that makes it safe to allow broad `list` queries on public data without risking
+ * the exposure of private information.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for reusable logic
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Controls access to user profile documents.
+     * @path /users/{userId}
+     * @allow (create) An authenticated user creating their own user document for the first time.
+     * @deny (get) An authenticated user attempting to read another user's profile.
+     * @principle Restricts access to a user's own data tree and prevents user enumeration.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description Controls access to a user's order history.
+       * @path /users/{userId}/orders/{orderId}
+       * @allow (create) An authenticated user creating a new order for themselves.
+       * @deny (list) An authenticated user attempting to list another user's orders.
+       * @principle Enforces path-based ownership for subcollection documents.
+       */
+      match /orders/{orderId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+
+    /**
+     * @description Controls access to public subscription categories.
+     * @path /categories/{categoryId}
+     * @allow (list) Any user, including unauthenticated visitors, listing all categories.
+     * @deny (create) Any user attempting to create a new category.
+     * @principle Enables public read access for catalog data while denying all writes as a secure default.
+     */
+    match /categories/{categoryId} {
+      allow get: if true;
+      allow list: if true;
+      // CRITICAL: Cannot implement admin-only writes. The 'Category' entity is missing an ownership/admin field.
+      allow create: if false; // TODO: Implement admin-only write access.
+      allow update: if false; // TODO: Implement admin-only write access.
+      allow delete: if false; // TODO: Implement admin-only write access.
+    }
+
+    /**
+     * @description Controls access to public subscription details.
+     * @path /subscriptions/{subscriptionId}
+     * @allow (get) Any user, including unauthenticated visitors, viewing a subscription.
+     * @deny (update) Any user attempting to change the price of a subscription.
+     * @principle Enables public read access for catalog data while denying all writes as a secure default.
+     */
+    match /subscriptions/{subscriptionId} {
+      allow get: if true;
+      allow list: if true;
+      // CRITICAL: Cannot implement admin-only writes. The 'Subscription' entity is missing an ownership/admin field.
+      allow create: if false; // TODO: Implement admin-only write access.
+      allow update: if false; // TODO: Implement admin-only write access.
+      allow delete: if false; // TODO: Implement admin-only write access.
+    }
+  }
+}
