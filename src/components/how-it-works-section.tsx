@@ -35,7 +35,7 @@ export default function HowItWorksSection() {
           {steps.map((step, index) => (
             <Card
               key={step.title}
-              className="rounded-3xl border-border/10 bg-card/50 p-8 backdrop-blur-lg"
+              className="rounded-2xl border-border/10 bg-card/50 p-8 backdrop-blur-xl"
             >
               <div className="flex items-center gap-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">

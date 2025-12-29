@@ -51,7 +51,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                 </ul>
               </div>
               <div>
-                <Card className="rounded-3xl border-border/10 bg-card/50 backdrop-blur-lg">
+                <Card className="rounded-2xl border-border/10 bg-card/50 backdrop-blur-xl">
                   <CardHeader>
                     <CardTitle>Complete Your Order</CardTitle>
                     <CardDescription>
@@ -125,7 +125,7 @@ function ProductPageSkeleton() {
         </div>
       </div>
       <div>
-        <Card className="rounded-3xl">
+        <Card className="rounded-2xl">
           <CardHeader>
             <Skeleton className="h-7 w-3/4" />
             <Skeleton className="h-5 w-1/2" />

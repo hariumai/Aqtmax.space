@@ -36,7 +36,7 @@ export default function ProductSection() {
         <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {isLoading &&
             Array.from({ length: 4 }).map((_, i) => (
-              <Card key={i} className="flex flex-col h-full overflow-hidden rounded-3xl p-4">
+              <Card key={i} className="flex flex-col h-full overflow-hidden rounded-2xl p-4">
                 <div className="flex items-center gap-4">
                   <div className="h-12 w-12 rounded-xl bg-muted animate-pulse" />
                   <div className="h-6 w-3/4 rounded bg-muted animate-pulse" />
@@ -50,7 +50,7 @@ export default function ProductSection() {
             return (
               <Link key={product.id} href={`/products/${product.id}`}>
                 <Card
-                  className="flex flex-col h-full overflow-hidden rounded-3xl border-border/10 bg-card/50 backdrop-blur-lg transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl"
+                  className="flex flex-col h-full overflow-hidden rounded-2xl border-border/10 bg-card/50 backdrop-blur-xl transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl"
                 >
                   <CardHeader className="flex-row items-center gap-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
