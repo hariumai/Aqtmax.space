@@ -20,6 +20,7 @@ import AdminManageProducts from '@/components/admin-manage-products';
 import AdminOrders from '@/components/admin-orders';
 import AdminSettings from '@/components/admin-settings';
 import AdminCategories from './admin-categories';
+import { Loader2 } from 'lucide-react';
 
 export type AdminSection = 'users' | 'addProduct' | 'manageProducts' | 'orders' | 'legal' | 'menu' | 'settings' | 'categories';
 
@@ -48,7 +49,7 @@ export function AdminDashboardProvider({ children }: { children: React.ReactNode
 }
 
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ isAuthenticated }: { isAuthenticated: boolean }) {
   const { isMobile, setOpenMobile } = useSidebar();
   const { activeSection, setActiveSection } = useAdminDashboard();
 
@@ -61,6 +62,13 @@ export default function AdminDashboard() {
   }
 
   const renderSection = () => {
+    if (!isAuthenticated) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        );
+    }
     switch (activeSection) {
       case 'users':
         return <AdminUsers />;

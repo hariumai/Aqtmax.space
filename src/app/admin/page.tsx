@@ -88,7 +88,7 @@ export default function AdminPage() {
               <div className="flex flex-col h-full">
                 <AdminHeader onLogout={handleLogout} />
                 <div className="flex-grow">
-                  <AdminDashboard />
+                  <AdminDashboard isAuthenticated={isAuthenticated} />
                 </div>
                 <AdminBottomNav />
               </div>
