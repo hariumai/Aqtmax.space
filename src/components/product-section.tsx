@@ -23,8 +23,9 @@ export default function ProductSection() {
   const { data: products, isLoading } = useCollection(productsQuery);
 
   return (
-    <section id="products" className="py-16 md:py-24 bg-card/20">
-      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section id="products" className="py-16 md:py-24 bg-background">
+       <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-secondary/30 to-transparent"></div>
+      <div className="container relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h2 className="font-headline text-3xl font-bold tracking-tighter sm:text-4xl">
             Our Top Subscriptions
@@ -50,7 +51,7 @@ export default function ProductSection() {
             return (
               <Link key={product.id} href={`/products/${product.id}`}>
                 <Card
-                  className="flex flex-col h-full overflow-hidden rounded-2xl border-border/10 bg-card/50 backdrop-blur-xl transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl"
+                  className="flex flex-col h-full overflow-hidden rounded-2xl border-border bg-card backdrop-blur-xl transition-all duration-300 hover:border-primary/50 hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary/10"
                 >
                   <CardHeader className="flex-row items-center gap-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted">

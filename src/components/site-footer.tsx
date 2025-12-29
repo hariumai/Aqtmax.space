@@ -12,13 +12,13 @@ export default function SiteFooter() {
           </p>
         </div>
         <nav className="flex gap-4 sm:gap-6">
-          <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground">
+          <Link href="/terms" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
             Terms
           </Link>
-          <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground">
+          <Link href="/privacy" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
             Privacy
           </Link>
-          <Link href="/refund" className="text-sm text-muted-foreground hover:text-foreground">
+          <Link href="/refund" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
             Refund Policy
           </Link>
         </nav>

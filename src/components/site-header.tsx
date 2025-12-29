@@ -56,7 +56,7 @@ export default function SiteHeader() {
   return (
     <header className={cn(
       "fixed top-0 z-50 w-full transition-all duration-300 ease-in-out",
-      scrolled ? 'bg-background/80 shadow-md backdrop-blur-lg' : 'bg-transparent'
+      scrolled ? 'border-b border-border/10 bg-background/80 backdrop-blur-lg' : 'bg-transparent'
     )}>
       <div className="container mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex-1 md:flex-none">
@@ -74,14 +74,14 @@ export default function SiteHeader() {
                  </Link>
             ))}
         </nav>
-        <div className="flex items-center gap-4 flex-1 justify-end">
+        <div className="flex items-center gap-2 flex-1 justify-end">
           {isUserLoading ? (
-            <div className="h-10 w-20 animate-pulse rounded-md bg-muted" />
+            <div className="h-10 w-24 animate-pulse rounded-md bg-muted" />
           ) : user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-9 w-9">
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Avatar className="h-10 w-10 border-2 border-primary/50">
                     <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
                     <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
                   </Avatar>
@@ -107,12 +107,12 @@ export default function SiteHeader() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="hidden md:flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-2">
               <Button asChild variant="ghost">
                 <Link href="/login">Sign In</Link>
               </Button>
               <Button asChild>
-                <Link href="/signup">Sign Up</Link>
+                <Link href="/signup">Get Started</Link>
               </Button>
             </div>
           )}

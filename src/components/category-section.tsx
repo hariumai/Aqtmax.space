@@ -49,10 +49,7 @@ export default function CategorySection() {
             const Icon = iconMap[category.name] || iconMap.default;
             return (
               <Link href={`/category/${category.id}`} key={category.id}>
-                <div
-                  
-                  className="group relative rounded-2xl border border-border/10 bg-card/50 p-6 text-center transition-all duration-300 hover:bg-card/70 hover:scale-105 hover:shadow-2xl backdrop-blur-xl"
-                >
+                <div className="group relative rounded-2xl border border-border bg-card p-6 text-center transition-all duration-300 hover:border-primary/50 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10">
                   <div className="flex justify-center">
                     <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-colors duration-300 group-hover:bg-primary group-hover:text-primary-foreground">
                       <Icon className="h-8 w-8" />

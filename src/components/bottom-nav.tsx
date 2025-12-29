@@ -1,7 +1,7 @@
 'use client';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { cn } from '@/lib/utils';
-import { Gem, Home, LayoutGrid, Menu, Shapes, User } from 'lucide-react';
+import { Gem, Home, LayoutGrid, Menu, Shapes, User, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -48,7 +48,7 @@ export default function BottomNav() {
   };
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 z-50 w-full h-16 bg-background/80 border-t border-border/10 backdrop-blur-lg">
+    <div className="md:hidden fixed bottom-0 left-0 z-50 w-full h-16 bg-background/70 border-t border-border/10 backdrop-blur-lg">
       <div className="grid h-full max-w-lg grid-cols-5 mx-auto font-medium">
         {mainNavItems.map(item => {
              const Icon = IconMap[item.label] || Home;
@@ -60,13 +60,13 @@ export default function BottomNav() {
            >
              <Icon
                className={cn(
-                 'w-5 h-5 mb-1 text-muted-foreground group-hover:text-primary',
+                 'w-5 h-5 mb-1 text-muted-foreground transition-colors group-hover:text-primary',
                  pathname === item.href && 'text-primary'
                )}
              />
              <span
                className={cn(
-                 'text-xs text-muted-foreground group-hover:text-primary',
+                 'text-xs text-muted-foreground transition-colors group-hover:text-primary',
                  pathname === item.href && 'text-primary'
                )}
              >
@@ -80,13 +80,13 @@ export default function BottomNav() {
         >
             <User
             className={cn(
-                'w-5 h-5 mb-1 text-muted-foreground group-hover:text-primary',
+                'w-5 h-5 mb-1 text-muted-foreground transition-colors group-hover:text-primary',
                 (pathname === '/profile' || pathname === '/login') && 'text-primary'
             )}
             />
             <span
             className={cn(
-                'text-xs text-muted-foreground group-hover:text-primary',
+                'text-xs text-muted-foreground transition-colors group-hover:text-primary',
                 (pathname === '/profile' || pathname === '/login') && 'text-primary'
             )}
             >
@@ -99,11 +99,11 @@ export default function BottomNav() {
                     type="button"
                     className="inline-flex flex-col items-center justify-center px-5 hover:bg-muted/50 group"
                 >
-                    <Menu className="w-5 h-5 mb-1 text-muted-foreground group-hover:text-primary" />
-                    <span className="text-xs text-muted-foreground group-hover:text-primary">Menu</span>
+                    <Menu className="w-5 h-5 mb-1 text-muted-foreground transition-colors group-hover:text-primary" />
+                    <span className="text-xs text-muted-foreground transition-colors group-hover:text-primary">Menu</span>
                 </button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="w-full h-auto rounded-t-2xl p-0">
+            <SheetContent side="bottom" className="w-full h-auto rounded-t-2xl p-0 bg-background/95 backdrop-blur-xl">
                   <SheetHeader className="sr-only">
                     <SheetTitle>Menu</SheetTitle>
                     <SheetDescription>Main navigation menu for the application.</SheetDescription>
@@ -115,15 +115,15 @@ export default function BottomNav() {
                         </Link>
                         <nav className="flex flex-col gap-4">
                         {menuItems?.map(link => (
-                            <Link key={link.href} href={link.href} className="text-lg font-medium text-foreground hover:text-primary">
+                            <Link key={link.href} href={link.href} className="text-lg font-medium text-foreground hover:text-primary transition-colors">
                                 {link.label}
                             </Link>
                         ))}
                         </nav>
                         {!user && (
-                          <div className="flex flex-col gap-2 border-t pt-6">
-                              <Button asChild>
-                                  <Link href="/signup">Sign Up</Link>
+                          <div className="flex flex-col gap-2 border-t pt-6 mt-2">
+                              <Button asChild size="lg">
+                                  <Link href="/signup">Get Started <ArrowRight className="ml-2 h-4 w-4" /></Link>
                               </Button>
                               <Button asChild variant="ghost">
                                   <Link href="/login">Sign In</Link>
