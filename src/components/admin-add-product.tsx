@@ -22,7 +22,7 @@ const productSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().min(1, 'Description is required'),
   price: z.coerce.number().min(0, 'Base price must be a positive number'),
-  discountedPrice: z.coerce.number().optional(),
+  discountedPrice: z.coerce.number().optional().transform(val => val || null),
   imageUrl: z.string().url('Must be a valid URL'),
   categoryId: z.string().min(1, 'Category ID is required'),
   variants: z.array(variantSchema).optional(),
