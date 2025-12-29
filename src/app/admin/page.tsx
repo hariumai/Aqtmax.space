@@ -50,14 +50,14 @@ const menuItemsSchema = z.object({
 });
 
 
-function AdminDashboard({ isAuthenticated }: { isAuthenticated: boolean }) {
+function AdminDashboard() {
   const firestore = useFirestore();
   const { toast } = useToast();
 
   // Users
   const usersQuery = useMemoFirebase(
-    () => (firestore && isAuthenticated ? query(collection(firestore, 'users')) : null),
-    [firestore, isAuthenticated]
+    () => (firestore ? query(collection(firestore, 'users')) : null),
+    [firestore]
   );
   const { data: users, isLoading: isLoadingUsers } = useCollection(usersQuery);
 
@@ -325,43 +325,40 @@ export default function AdminPage() {
     }
   }, [])
 
-  if (!isAuthenticated) {
-    return (
-        <div className="flex flex-col min-h-screen">
-        <SiteHeader />
-        <main className="flex-grow flex items-center justify-center">
-            <Card className="mx-auto max-w-sm w-full">
-            <CardHeader>
-                <CardTitle className="text-2xl">Admin Access</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div className="space-y-4">
-                <Input
-                    type="password"
-                    placeholder="Enter admin key"
-                    value={key}
-                    onChange={(e) => setKey(e.target.value)}
-                />
-                {error && <p className="text-sm font-medium text-destructive">{error}</p>}
-                <Button onClick={handleLogin} className="w-full">
-                    Enter
-                </Button>
-                </div>
-            </CardContent>
-            </Card>
-        </main>
-        <SiteFooter />
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col min-h-screen">
       <SiteHeader />
       <main className="flex-grow">
-        <AdminDashboard isAuthenticated={isAuthenticated} />
+        {!isAuthenticated ? (
+          <div className="flex items-center justify-center h-full pt-20">
+              <Card className="mx-auto max-w-sm w-full">
+              <CardHeader>
+                  <CardTitle className="text-2xl">Admin Access</CardTitle>
+              </CardHeader>
+              <CardContent>
+                  <div className="space-y-4">
+                  <Input
+                      type="password"
+                      placeholder="Enter admin key"
+                      value={key}
+                      onChange={(e) => setKey(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                  />
+                  {error && <p className="text-sm font-medium text-destructive">{error}</p>}
+                  <Button onClick={handleLogin} className="w-full">
+                      Enter
+                  </Button>
+                  </div>
+              </CardContent>
+              </Card>
+          </div>
+        ) : (
+          <AdminDashboard />
+        )}
       </main>
       <SiteFooter />
     </div>
   );
 }
+
+    
