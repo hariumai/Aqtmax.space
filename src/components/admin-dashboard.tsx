@@ -70,7 +70,7 @@ export default function AdminDashboard() {
     <div className="flex min-h-[calc(100vh-10.5rem)]">
       <Sidebar>
         <SidebarHeader className="hidden">
-            {isMobile && <SidebarTrigger />}
+            <SidebarTrigger />
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>

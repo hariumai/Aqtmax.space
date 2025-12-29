@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Gem, Loader2, LogOut } from 'lucide-react';
+import { Gem, Loader2, LogOut, Menu } from 'lucide-react';
 import AdminDashboard from '@/components/admin-dashboard';
 import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 import SiteFooter from '@/components/site-footer';
-import { useAuth, useUser } from '@/firebase';
+import { useUser } from '@/firebase';
 
 const ADMIN_KEY = '36572515';
 
@@ -18,6 +18,7 @@ function AdminHeader({ onLogout }: { onLogout: () => void }) {
     return (
         <header className="flex h-20 items-center justify-between border-b px-4 md:px-8">
             <div className="flex items-center gap-2">
+                {isMobile && <Button variant="ghost" size="icon" onClick={toggleSidebar}><Menu className="h-5 w-5"/></Button>}
                 <Gem className="h-6 w-6 text-primary" />
                 <span className="text-xl font-bold tracking-tighter">Admin Panel</span>
             </div>
@@ -26,7 +27,6 @@ function AdminHeader({ onLogout }: { onLogout: () => void }) {
                     <LogOut className="mr-2 h-4 w-4" />
                     Logout
                 </Button>
-                {isMobile && <Button variant="ghost" size="icon" onClick={toggleSidebar}><span className="sr-only">Toggle Sidebar</span></Button>}
             </div>
         </header>
     );
