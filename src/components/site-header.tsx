@@ -59,7 +59,15 @@ export default function SiteHeader() {
       scrolled ? 'border-b border-border/10 bg-background/80 backdrop-blur-lg' : 'bg-transparent'
     )}>
       <div className="container mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div className="flex-1 md:flex-none">
+        <nav className="hidden items-center gap-6 md:flex flex-1">
+            {navLinks?.map(link => (
+                 <Link key={link.href} href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                    {link.label}
+                 </Link>
+            ))}
+        </nav>
+        
+        <div className="flex flex-1 justify-center">
             <Link href="/" className="flex items-center gap-2">
             <Gem className="h-6 w-6 text-primary" />
             <span className="text-xl font-bold tracking-tighter text-foreground">
@@ -67,13 +75,7 @@ export default function SiteHeader() {
             </span>
             </Link>
         </div>
-        <nav className="hidden items-center gap-6 md:flex flex-1 justify-center">
-            {navLinks?.map(link => (
-                 <Link key={link.href} href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-                    {link.label}
-                 </Link>
-            ))}
-        </nav>
+
         <div className="flex items-center gap-2 flex-1 justify-end">
           {isUserLoading ? (
             <div className="h-10 w-24 animate-pulse rounded-md bg-muted" />
