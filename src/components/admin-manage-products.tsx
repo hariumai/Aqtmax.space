@@ -53,6 +53,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { Textarea } from './ui/textarea';
+import { ScrollArea } from './ui/scroll-area';
 
 const variantSchema = z.object({
   name: z.string().min(1, 'Variant name is required'),
@@ -112,58 +113,61 @@ function EditProductForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField control={form.control} name="name" render={({ field }) => (<FormItem><FormLabel>Product Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="categoryId" render={({ field }) => (<FormItem><FormLabel>Category ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-        </div>
-        <FormField control={form.control} name="description" render={({ field }) => (<FormItem><FormLabel>Description</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>)} />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FormField control={form.control} name="price" render={({ field }) => (<FormItem><FormLabel>Base Price (PKR)</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="discountedPrice" render={({ field }) => (<FormItem><FormLabel>Discounted Price (PKR)</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="imageUrl" render={({ field }) => (<FormItem><FormLabel>Image URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-        </div>
-        
-        <div>
-            <h3 className="text-lg font-medium mb-2">Product Variants</h3>
-            <div className="space-y-4 max-h-48 overflow-y-auto pr-2">
-            {fields.map((field, index) => (
-                <div key={field.id} className="flex items-end gap-4 p-4 border rounded-lg bg-muted/50">
-                <FormField
-                    control={form.control}
-                    name={`variants.${index}.name`}
-                    render={({ field }) => (
-                    <FormItem className="flex-grow">
-                        <FormLabel>Variant Name</FormLabel>
-                        <FormControl><Input placeholder="e.g., 1 Month" {...field} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name={`variants.${index}.price`}
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Variant Price</FormLabel>
-                        <FormControl><Input type="number" step="1" placeholder="3000" {...field} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)}>
-                    <Trash className="h-4 w-4" />
-                </Button>
-                </div>
-            ))}
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <ScrollArea className="h-[60vh] pr-6">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField control={form.control} name="name" render={({ field }) => (<FormItem><FormLabel>Product Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="categoryId" render={({ field }) => (<FormItem><FormLabel>Category ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
             </div>
-            <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => append({ name: '', price: 0 })}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Variant
-            </Button>
-        </div>
-
-        <DialogFooter>
+            <FormField control={form.control} name="description" render={({ field }) => (<FormItem><FormLabel>Description</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>)} />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField control={form.control} name="price" render={({ field }) => (<FormItem><FormLabel>Base Price (PKR)</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="discountedPrice" render={({ field }) => (<FormItem><FormLabel>Discounted Price (PKR)</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="imageUrl" render={({ field }) => (<FormItem><FormLabel>Image URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+            </div>
+            
+            <div>
+                <h3 className="text-lg font-medium mb-2">Product Variants</h3>
+                <div className="space-y-4">
+                {fields.map((field, index) => (
+                    <div key={field.id} className="flex items-end gap-4 p-4 border rounded-lg bg-muted/50">
+                    <FormField
+                        control={form.control}
+                        name={`variants.${index}.name`}
+                        render={({ field }) => (
+                        <FormItem className="flex-grow">
+                            <FormLabel>Variant Name</FormLabel>
+                            <FormControl><Input placeholder="e.g., 1 Month" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name={`variants.${index}.price`}
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Variant Price</FormLabel>
+                            <FormControl><Input type="number" step="1" placeholder="3000" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)}>
+                        <Trash className="h-4 w-4" />
+                    </Button>
+                    </div>
+                ))}
+                </div>
+                <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => append({ name: '', price: 0 })}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Variant
+                </Button>
+            </div>
+          </div>
+        </ScrollArea>
+        <DialogFooter className="pt-6">
           <DialogClose asChild>
             <Button type="button" variant="ghost">Cancel</Button>
           </DialogClose>
