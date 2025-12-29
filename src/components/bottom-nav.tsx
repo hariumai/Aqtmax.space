@@ -7,6 +7,9 @@ import { usePathname } from 'next/navigation';
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Button } from './ui/button';
@@ -88,7 +91,11 @@ export default function BottomNav() {
                     <span className="text-xs text-muted-foreground group-hover:text-primary">Menu</span>
                 </button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="w-full h-auto rounded-t-2xl">
+            <SheetContent side="bottom" className="w-full h-auto rounded-t-2xl p-0">
+                  <SheetHeader className="sr-only">
+                    <SheetTitle>Menu</SheetTitle>
+                    <SheetDescription>Main navigation menu for the application.</SheetDescription>
+                  </SheetHeader>
                  <div className="flex flex-col gap-6 p-6">
                         <Link href="/" className="flex items-center gap-2">
                             <Gem className="h-6 w-6 text-primary" />
