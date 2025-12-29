@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -5,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Gem, Loader2, LogOut, Menu } from 'lucide-react';
-import AdminDashboard from '@/components/admin-dashboard';
+import AdminDashboard, { AdminDashboardProvider } from '@/components/admin-dashboard';
 import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 import SiteFooter from '@/components/site-footer';
 import { useUser } from '@/firebase';
@@ -83,13 +84,15 @@ export default function AdminPage() {
       <main className="flex-grow">
         {isAuthenticated ? (
           <SidebarProvider>
-            <div className="flex flex-col h-full">
-              <AdminHeader onLogout={handleLogout} />
-              <div className="flex-grow">
-                <AdminDashboard />
+            <AdminDashboardProvider>
+              <div className="flex flex-col h-full">
+                <AdminHeader onLogout={handleLogout} />
+                <div className="flex-grow">
+                  <AdminDashboard />
+                </div>
+                <AdminBottomNav />
               </div>
-              <AdminBottomNav />
-            </div>
+            </AdminDashboardProvider>
           </SidebarProvider>
         ) : (
           <div className="flex items-center justify-center h-full pt-40">

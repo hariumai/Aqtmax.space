@@ -1,5 +1,6 @@
+
 'use client';
-import { useState, createContext, useContext } from 'react';
+import { useState, createContext, useContext, ReactNode } from 'react';
 import {
   Sidebar,
   SidebarContent,
@@ -36,7 +37,7 @@ export function useAdminDashboard() {
   return context;
 }
 
-function AdminDashboardProvider({ children }: { children: React.ReactNode }) {
+export function AdminDashboardProvider({ children }: { children: React.ReactNode }) {
   const [activeSection, setActiveSection] = useState<AdminSection>('orders');
   return (
     <AdminDashboardContext.Provider value={{ activeSection, setActiveSection }}>
@@ -47,14 +48,6 @@ function AdminDashboardProvider({ children }: { children: React.ReactNode }) {
 
 
 export default function AdminDashboard() {
-  return (
-    <AdminDashboardProvider>
-      <DashboardContent />
-    </AdminDashboardProvider>
-  );
-}
-
-function DashboardContent() {
   const { isMobile, setOpenMobile } = useSidebar();
   const { activeSection, setActiveSection } = useAdminDashboard();
 
