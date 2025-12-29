@@ -9,6 +9,7 @@ import AdminDashboard from '@/components/admin-dashboard';
 import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 import SiteFooter from '@/components/site-footer';
 import { useUser } from '@/firebase';
+import AdminBottomNav from '@/components/admin-bottom-nav';
 
 const ADMIN_KEY = '36572515';
 
@@ -61,6 +62,7 @@ export default function AdminPage() {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    setKey('');
     localStorage.removeItem('admin-key');
   }
   
@@ -81,8 +83,13 @@ export default function AdminPage() {
       <main className="flex-grow">
         {isAuthenticated ? (
           <SidebarProvider>
-            <AdminHeader onLogout={handleLogout} />
-            <AdminDashboard />
+            <div className="flex flex-col h-full">
+              <AdminHeader onLogout={handleLogout} />
+              <div className="flex-grow">
+                <AdminDashboard />
+              </div>
+              <AdminBottomNav />
+            </div>
           </SidebarProvider>
         ) : (
           <div className="flex items-center justify-center h-full pt-40">

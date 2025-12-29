@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, createContext, useContext } from 'react';
 import {
   Sidebar,
   SidebarContent,
@@ -10,7 +10,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { Settings, Users, ShoppingCart, FileText, Menu, PlusCircle, ListOrdered } from 'lucide-react';
+import { Settings, Users, ShoppingCart, FileText, Menu as MenuIcon, PlusCircle, ListOrdered } from 'lucide-react';
 import AdminUsers from '@/components/admin-users';
 import AdminAddProduct from '@/components/admin-add-product';
 import AdminLegalPages from '@/components/admin-legal-pages';
@@ -19,11 +19,45 @@ import AdminManageProducts from '@/components/admin-manage-products';
 import AdminOrders from '@/components/admin-orders';
 import AdminSettings from '@/components/admin-settings';
 
-type AdminSection = 'users' | 'addProduct' | 'manageProducts' | 'orders' | 'legal' | 'menu' | 'settings';
+export type AdminSection = 'users' | 'addProduct' | 'manageProducts' | 'orders' | 'legal' | 'menu' | 'settings';
+
+type AdminDashboardContextType = {
+  activeSection: AdminSection;
+  setActiveSection: (section: AdminSection) => void;
+};
+
+const AdminDashboardContext = createContext<AdminDashboardContextType | null>(null);
+
+export function useAdminDashboard() {
+  const context = useContext(AdminDashboardContext);
+  if (!context) {
+    throw new Error('useAdminDashboard must be used within an AdminDashboardProvider');
+  }
+  return context;
+}
+
+function AdminDashboardProvider({ children }: { children: React.ReactNode }) {
+  const [activeSection, setActiveSection] = useState<AdminSection>('orders');
+  return (
+    <AdminDashboardContext.Provider value={{ activeSection, setActiveSection }}>
+      {children}
+    </AdminDashboardContext.Provider>
+  );
+}
+
 
 export default function AdminDashboard() {
+  return (
+    <AdminDashboardProvider>
+      <DashboardContent />
+    </AdminDashboardProvider>
+  );
+}
+
+function DashboardContent() {
   const { isMobile, setOpenMobile } = useSidebar();
-  const [activeSection, setActiveSection] = useState<AdminSection>('orders');
+  const { activeSection, setActiveSection } = useAdminDashboard();
+
 
   const handleSectionClick = (section: AdminSection) => {
     setActiveSection(section);
@@ -106,7 +140,7 @@ export default function AdminDashboard() {
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton onClick={() => handleSectionClick('menu')} isActive={activeSection === 'menu'}>
-                <Menu />
+                <MenuIcon />
                 <span>Menu Items</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -119,7 +153,7 @@ export default function AdminDashboard() {
           </SidebarMenu>
         </SidebarContent>
       </Sidebar>
-      <main className="flex-1 p-4 md:p-8">
+      <main className="flex-1 p-4 md:p-8 pb-20 md:pb-8">
         <div className="flex items-center justify-between mb-6">
             <h1 className="font-headline text-3xl font-extrabold tracking-tighter capitalize">
                 {getSectionTitle()}
