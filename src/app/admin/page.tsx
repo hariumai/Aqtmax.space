@@ -9,6 +9,7 @@ import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
 import { Loader2 } from 'lucide-react';
 import AdminDashboard from '@/components/admin-dashboard';
+import { SidebarProvider } from '@/components/ui/sidebar';
 
 const ADMIN_KEY = '36572515';
 
@@ -56,7 +57,9 @@ export default function AdminPage() {
       <SiteHeader />
       <main className="flex-grow">
         {isAuthenticated ? (
-          <AdminDashboard />
+          <SidebarProvider>
+            <AdminDashboard />
+          </SidebarProvider>
         ) : (
           <div className="flex items-center justify-center h-full pt-20">
               <Card className="mx-auto max-w-sm w-full">
