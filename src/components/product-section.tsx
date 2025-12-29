@@ -48,36 +48,37 @@ export default function ProductSection() {
         </div>
         <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {products.map((product) => (
-            <Card
-              key={product.id}
-              className="flex flex-col overflow-hidden rounded-3xl border-border/10 bg-card/50 backdrop-blur-lg transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl"
-            >
-              <CardHeader className="flex-row items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
-                  <product.icon className="h-6 w-6 text-foreground" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">{product.name}</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="flex-grow">
-                <div className="text-4xl font-bold">
-                  {product.price}
-                  <span className="text-base font-normal text-muted-foreground">{product.duration}</span>
-                </div>
-                <CardDescription className="mt-2">
-                  Full access, no restrictions. Billed monthly.
-                </CardDescription>
-              </CardContent>
-              <CardFooter>
-                <Button asChild className="w-full">
-                  <Link href={`/products/${product.id}`}>
-                    Buy Now <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </CardFooter>
-            </Card>
+            <Link key={product.id} href={`/products/${product.id}`}>
+              <Card
+                className="flex flex-col h-full overflow-hidden rounded-3xl border-border/10 bg-card/50 backdrop-blur-lg transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl"
+              >
+                <CardHeader className="flex-row items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
+                    <product.icon className="h-6 w-6 text-foreground" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">{product.name}</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="flex-grow">
+                  <div className="text-4xl font-bold">
+                    {product.price}
+                    <span className="text-base font-normal text-muted-foreground">{product.duration}</span>
+                  </div>
+                  <CardDescription className="mt-2">
+                    Full access, no restrictions. Billed monthly.
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
+        </div>
+        <div className="mt-12 text-center">
+          <Button asChild variant="outline">
+            <Link href="/products">
+              View All Products <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
         </div>
       </div>
     </section>
