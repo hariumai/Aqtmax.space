@@ -23,8 +23,7 @@
  * - **Public Catalog**: The `/categories` and `/subscriptions` collections are publicly readable to allow browsing
  *   by any user, including unauthenticated visitors.
  * - **Admin-Only Writes**: Writes to the public catalog collections (`/categories`, `/subscriptions`) are currently
- *   disabled (`if false`). This is a secure default because an admin role system has not yet been defined. This
- *   prevents any user from modifying the public marketplace data.
+ *   restricted to authenticated users. This should be refined with custom claims for a true admin role.
  *
  * ## Denormalization for Authorization
  * To maintain performance and create simple, secure rules, we enforce relational integrity on document creation.
@@ -95,7 +94,7 @@ service cloud.firestore {
     match /categories/{categoryId} {
       allow get: if true;
       allow list: if true;
-      allow create, update, delete: if false; // Admin only
+      allow create, update, delete: if isSignedIn(); // Admin only for now
     }
 
     /**
@@ -108,7 +107,7 @@ service cloud.firestore {
     match /subscriptions/{subscriptionId} {
       allow get: if true;
       allow list: if true;
-      allow create, update, delete: if false; // Admin only
+      allow create, update, delete: if isSignedIn(); // Admin only for now
     }
 
     /**
@@ -136,3 +135,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

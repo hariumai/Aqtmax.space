@@ -70,7 +70,8 @@ function AdminDashboard() {
   async function onProductSubmit(values: z.infer<typeof productSchema>) {
     if (!firestore) return;
     try {
-      await addDoc(collection(firestore, 'subscriptions'), { ...values, id: crypto.randomUUID() });
+      const newId = doc(collection(firestore, 'subscriptions')).id;
+      await setDoc(doc(firestore, 'subscriptions', newId), { ...values, id: newId });
       toast({ title: 'Product Added', description: `${values.name} has been successfully added.` });
       productForm.reset();
     } catch (error: any) {
@@ -307,6 +308,7 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [key, setKey] = useState('');
   const [error, setError] = useState('');
+  const { user } = useUser();
 
   const handleLogin = () => {
     if (key === ADMIN_KEY) {
@@ -323,7 +325,7 @@ export default function AdminPage() {
     if (storedKey === ADMIN_KEY) {
         setIsAuthenticated(true);
     }
-  }, [])
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen">
