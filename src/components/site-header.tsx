@@ -1,5 +1,5 @@
 'use client';
-import { Gem, LogOut, Menu } from 'lucide-react';
+import { Gem, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from './ui/button';
 import { useAuth, useUser } from '@/firebase';
@@ -13,7 +13,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 
 const navLinks = [
     { href: "/products", label: "Products" },
@@ -27,7 +26,9 @@ export default function SiteHeader() {
   const router = useRouter();
 
   const handleSignOut = async () => {
-    await auth?.signOut();
+    if (auth) {
+      await auth.signOut();
+    }
     router.push('/');
   };
 
@@ -37,9 +38,9 @@ export default function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/10 bg-background/80 backdrop-blur-lg">
-      <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div className="flex-1 flex justify-center md:justify-start">
+    <header className="absolute top-0 z-50 w-full">
+      <div className="container mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="flex-1 md:flex-none">
             <Link href="/" className="flex items-center gap-2">
             <Gem className="h-6 w-6 text-primary" />
             <span className="text-xl font-bold tracking-tighter text-foreground">
