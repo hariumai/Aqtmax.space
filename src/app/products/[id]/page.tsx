@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, use } from 'react';
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { CheckCircle, Clapperboard, CreditCard, Lock, Music, Palette, ShoppingCart, Tv } from "lucide-react";
 import Link from "next/link";
 import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
-import { doc, collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { doc, collection, addDoc, serverTimestamp, writeBatch, getDocs, where, query, limit } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -23,7 +23,7 @@ const iconMap: { [key: string]: React.ElementType } = {
 };
 
 export default function ProductPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+  const { id } = use(Promise.resolve(params));
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
@@ -36,10 +36,11 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   const { data: product, isLoading } = useDoc(productRef);
 
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
+  const [isAdding, setIsAdding] = useState(false);
   
   const ProductIcon = product ? iconMap[product.name] || iconMap.default : null;
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (redirect: boolean = false) => {
     if (!user) {
       toast({ variant: "destructive", title: "Not logged in", description: "You need to be logged in to add items to your cart."});
       router.push('/login');
@@ -49,40 +50,57 @@ export default function ProductPage({ params }: { params: { id: string } }) {
       toast({ variant: "destructive", title: "No variant selected", description: "Please select a plan to continue."});
       return;
     }
-    if (!firestore) return;
+    if (!firestore || !product) return;
+    setIsAdding(true);
 
-    const cartRef = collection(firestore, 'users', user.uid, 'cart');
-    const itemToAdd = {
-        subscriptionId: product.id,
-        subscriptionName: product.name,
-        variantName: selectedVariant?.name || 'Default',
-        price: selectedVariant?.price || product.discountedPrice || product.price,
-        quantity: 1,
-        imageUrl: product.imageUrl,
-    };
-    
     try {
-        await addDoc(cartRef, {
-            ...itemToAdd,
-            createdAt: serverTimestamp(),
-        });
-        toast({ title: "Added to Cart", description: `${product.name} has been added to your cart.`});
+        const cartRef = collection(firestore, 'users', user.uid, 'cart');
+        
+        // Check if item already exists
+        const itemToAdd = {
+            subscriptionId: product.id,
+            subscriptionName: product.name,
+            variantName: selectedVariant?.name || 'Default',
+            price: selectedVariant?.price || product.discountedPrice || product.price,
+            quantity: 1,
+            imageUrl: product.imageUrl,
+        };
+        
+        const q = query(
+            cartRef, 
+            where('subscriptionId', '==', itemToAdd.subscriptionId), 
+            where('variantName', '==', itemToAdd.variantName),
+            limit(1)
+        );
+
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            await addDoc(cartRef, {
+                ...itemToAdd,
+                createdAt: serverTimestamp(),
+            });
+        } else {
+            // In a real app, you might want to update the quantity.
+            // For now, we'll just inform the user.
+            toast({ title: "Item already in cart", description: `${product.name} is already in your cart.`});
+        }
+
+        if (!redirect) {
+            toast({ title: "Added to Cart", description: `${product.name} has been added to your cart.`});
+        } else {
+            router.push('/checkout');
+        }
+
     } catch(error: any) {
         toast({ variant: "destructive", title: "Error", description: "Could not add item to cart."});
+    } finally {
+        setIsAdding(false);
     }
   };
 
-  const handleBuyNow = () => {
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-    if (!selectedVariant && product?.variants?.length > 0) {
-      toast({ variant: "destructive", title: "No variant selected", description: "Please select a plan to continue."});
-      return;
-    }
-    // Redirect to checkout page with product info
-    router.push(`/checkout?productId=${product.id}&variant=${selectedVariant?.name || 'Default'}`);
+  const handleBuyNow = async () => {
+    await handleAddToCart(true);
   };
 
   return (
@@ -144,12 +162,12 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                     </div>
                   </CardContent>
                   <CardFooter className="flex-col items-stretch gap-4">
-                    <div className="flex gap-2">
-                        <Button size="lg" className="w-full" onClick={handleAddToCart}>
+                    <div className="flex flex-col gap-2">
+                        <Button size="lg" className="w-full" onClick={() => handleAddToCart(false)} disabled={isAdding}>
                             <ShoppingCart className="mr-2 h-5 w-5" />
                             Add to Cart
                         </Button>
-                         <Button size="lg" variant="outline" className="w-full" onClick={handleBuyNow}>
+                         <Button size="lg" variant="outline" className="w-full" onClick={handleBuyNow} disabled={isAdding}>
                             <CreditCard className="mr-2 h-5 w-5" />
                             Buy Now
                         </Button>
@@ -210,7 +228,7 @@ function ProductPageSkeleton() {
             </div>
           </CardContent>
           <CardFooter className="flex-col items-stretch gap-4">
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2">
                 <Skeleton className="h-12 w-full" />
                 <Skeleton className="h-12 w-full" />
             </div>

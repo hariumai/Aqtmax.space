@@ -70,7 +70,7 @@ export default function LoginPage() {
         title: 'Login Successful',
         description: "You've been successfully signed in.",
       });
-      router.push('/profile');
+      // The useEffect will handle the redirect
     } catch (error: any) {
         const errorMessage = (error.message || 'An unexpected error occurred.').replace('Firebase: ', '');
         toast({
@@ -81,21 +81,12 @@ export default function LoginPage() {
     }
   }
 
-  if (isUserLoading) {
+  if (isUserLoading || (user && user.emailVerified)) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
-  }
-
-  if(user && user.emailVerified) {
-    router.replace('/profile');
-    return (
-        <div className="flex justify-center items-center h-screen">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        </div>
-      );
   }
 
 

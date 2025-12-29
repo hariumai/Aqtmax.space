@@ -7,7 +7,7 @@ import { useCollection, useDoc, useFirestore, useUser, useMemoFirebase } from '@
 import { collection, query, doc, addDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { CreditCard, Lock, Upload, Wallet, X } from 'lucide-react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -21,9 +21,10 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useState, use, useMemo, ChangeEvent } from 'react';
+import { useState, use, useMemo, ChangeEvent, useEffect } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { Label } from '@/components/ui/label';
 
 const checkoutSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -53,6 +54,13 @@ export default function CheckoutPage() {
     );
     const { data: cartItems, isLoading } = useCollection(cartQuery);
 
+    useEffect(() => {
+        if (!isLoading && cartItems?.length === 0) {
+            router.replace('/');
+        }
+    }, [isLoading, cartItems, router]);
+
+
     const subtotal = useMemo(() => cartItems?.reduce((acc, item) => acc + item.price * item.quantity, 0) ?? 0, [cartItems]);
     const availableCredits = userData?.storeCredit ?? 0;
     const creditsToUse = useCredits ? Math.min(subtotal, availableCredits) : 0;
@@ -68,7 +76,7 @@ export default function CheckoutPage() {
     });
 
     // Sync form with user data when it loads
-    useState(() => {
+    useEffect(() => {
         if (user) {
             form.reset({
                 name: user.displayName ?? '',
@@ -76,7 +84,7 @@ export default function CheckoutPage() {
                 phone: '',
             });
         }
-    });
+    }, [user, form]);
 
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -140,7 +148,7 @@ export default function CheckoutPage() {
             toast({ title: 'Order Placed!', description: 'Your order is pending verification. We will process it shortly.' });
             router.push('/profile');
 
-        } catch (error: any) {
+        } catch (error: any) => {
             console.error('Order placement error:', error);
             toast({ variant: 'destructive', title: 'Order Failed', description: error.message || 'Could not place your order.' });
         } finally {
@@ -148,11 +156,12 @@ export default function CheckoutPage() {
         }
     }
     
-    if (!isLoading && !cartItems?.length) {
-        if (typeof window !== 'undefined') {
-            router.replace('/');
-        }
-        return null;
+    if (isLoading || !cartItems || cartItems.length === 0) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            </div>
+        );
     }
 
   return (

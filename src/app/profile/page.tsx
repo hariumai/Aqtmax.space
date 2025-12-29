@@ -93,7 +93,7 @@ export default function ProfilePage() {
                         <Wallet className="h-6 w-6 text-primary"/>
                         <div>
                             <p className="text-sm text-muted-foreground">Store Credit</p>
-                            <p className="text-lg font-bold">{(userData.storeCredit || 0).toFixed(2)} PKR</p>
+                            <p className="text-xl font-extrabold">{(userData.storeCredit || 0).toFixed(2)} PKR</p>
                         </div>
                     </div>
                 )}
