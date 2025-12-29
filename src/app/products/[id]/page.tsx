@@ -60,8 +60,8 @@ export default function ProductPage({ params }: { params: { id: string } }) {
         const itemToAdd = {
             subscriptionId: product.id,
             subscriptionName: product.name,
-            variantName: selectedVariant?.name || 'Default',
-            price: selectedVariant?.price || product.discountedPrice || product.price,
+            variantName: selectedVariant?.variantName || 'Default',
+            price: selectedVariant?.variantPrice || product.discountedPrice || product.price,
             quantity: 1,
             imageUrl: product.imageUrl,
         };
@@ -140,13 +140,13 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                   <CardContent>
                     <div className="space-y-4">
                       {product.variants && product.variants.length > 0 ? (
-                        <RadioGroup onValueChange={(value) => setSelectedVariant(product.variants.find((v:any) => v.name === value))}>
+                        <RadioGroup onValueChange={(value) => setSelectedVariant(product.variants.find((v:any) => v.variantName === value))}>
                             <div className="space-y-2">
                                 {product.variants.map((variant: any) => (
-                                    <Label key={variant.name} htmlFor={variant.name} className="flex items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary">
-                                        <span>{variant.name}</span>
-                                        <span className="font-bold">{variant.price} PKR</span>
-                                        <RadioGroupItem value={variant.name} id={variant.name} className="sr-only" />
+                                    <Label key={variant.variantName} htmlFor={variant.variantName} className="flex items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary">
+                                        <span>{variant.variantName}</span>
+                                        <span className="font-bold">{variant.variantPrice} PKR</span>
+                                        <RadioGroupItem value={variant.variantName} id={variant.variantName} className="sr-only" />
                                     </Label>
                                 ))}
                             </div>

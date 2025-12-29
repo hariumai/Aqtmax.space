@@ -57,8 +57,8 @@ import { ScrollArea } from './ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 const variantSchema = z.object({
-  name: z.string().min(1, 'Variant name is required'),
-  price: z.coerce.number().min(0, 'Price must be a positive number'),
+  variantName: z.string().min(1, 'Variant name is required'),
+  variantPrice: z.coerce.number().min(0, 'Price must be a positive number'),
 });
 
 const productSchema = z.object({
@@ -163,7 +163,7 @@ function EditProductForm({
                     <div key={field.id} className="flex items-end gap-4 p-4 border rounded-lg bg-muted/50">
                     <FormField
                         control={form.control}
-                        name={`variants.${index}.name`}
+                        name={`variants.${index}.variantName`}
                         render={({ field }) => (
                         <FormItem className="flex-grow">
                             <FormLabel>Variant Name</FormLabel>
@@ -174,7 +174,7 @@ function EditProductForm({
                     />
                     <FormField
                         control={form.control}
-                        name={`variants.${index}.price`}
+                        name={`variants.${index}.variantPrice`}
                         render={({ field }) => (
                         <FormItem>
                             <FormLabel>Variant Price</FormLabel>
@@ -189,7 +189,7 @@ function EditProductForm({
                     </div>
                 ))}
                 </div>
-                <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => append({ name: '', price: 0 })}>
+                <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => append({ variantName: '', variantPrice: 0 })}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add Variant
                 </Button>

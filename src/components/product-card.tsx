@@ -31,8 +31,9 @@ export default function ProductCard({ product }: { product: any }) {
   );
   const [isAdding, setIsAdding] = useState(false);
 
-  const displayPrice = selectedVariant?.price ?? (product.discountedPrice ?? product.price);
+  const displayPrice = selectedVariant?.variantPrice ?? (product.discountedPrice ?? product.price);
   const hasDiscount = product.discountedPrice && product.discountedPrice < product.price && !selectedVariant;
+  const pricePrefix = product.variants?.length > 0 && !selectedVariant ? 'From' : '';
   
   const handleAddToCart = async (redirect: boolean = false) => {
     if (!user) {
@@ -53,8 +54,8 @@ export default function ProductCard({ product }: { product: any }) {
         const itemToAdd = {
             subscriptionId: product.id,
             subscriptionName: product.name,
-            variantName: selectedVariant?.name || 'Default',
-            price: selectedVariant?.price || product.discountedPrice || product.price,
+            variantName: selectedVariant?.variantName || 'Default',
+            price: selectedVariant?.variantPrice || product.discountedPrice || product.price,
             quantity: 1,
             imageUrl: product.imageUrl,
         };
@@ -108,27 +109,28 @@ export default function ProductCard({ product }: { product: any }) {
       </CardHeader>
       <CardContent className="flex-grow space-y-4">
         <div className="text-4xl font-bold">
+            {pricePrefix && <span className="text-lg font-normal text-muted-foreground mr-1">{pricePrefix}</span>}
             {hasDiscount && (
                 <span className="text-2xl font-normal text-muted-foreground line-through mr-2">{product.price}</span>
             )}
             {displayPrice}
             <span className="text-base font-normal text-muted-foreground"> PKR</span>
         </div>
-        <CardDescription className="mt-2 text-sm">
+        <CardDescription className="mt-2 text-sm min-h-[40px]">
           {product.description}
         </CardDescription>
 
         {product.variants && product.variants.length > 0 && (
           <RadioGroup 
-            value={selectedVariant?.name}
-            onValueChange={(value) => setSelectedVariant(product.variants.find((v:any) => v.name === value))}
+            value={selectedVariant?.variantName}
+            onValueChange={(value) => setSelectedVariant(product.variants.find((v:any) => v.variantName === value))}
           >
               <div className="space-y-2">
                   {product.variants.map((variant: any) => (
-                      <Label key={variant.name} htmlFor={`${product.id}-${variant.name}`} className="flex items-center justify-between rounded-md border-2 border-muted bg-popover p-3 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary">
-                          <span>{variant.name}</span>
-                          <span className="font-bold">{variant.price} PKR</span>
-                          <RadioGroupItem value={variant.name} id={`${product.id}-${variant.name}`} className="sr-only" />
+                      <Label key={variant.variantName} htmlFor={`${product.id}-${variant.variantName}`} className="flex items-center justify-between rounded-md border-2 border-muted bg-popover p-3 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary">
+                          <span>{variant.variantName}</span>
+                          <span className="font-bold">{variant.variantPrice} PKR</span>
+                          <RadioGroupItem value={variant.variantName} id={`${product.id}-${variant.variantName}`} className="sr-only" />
                       </Label>
                   ))}
               </div>

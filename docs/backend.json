@@ -34,10 +34,10 @@
           "items": {
             "type": "object",
             "properties": {
-              "name": { "type": "string", "description": "Name of the variant (e.g., '1 Month')." },
-              "price": { "type": "number", "description": "Price of this specific variant in PKR." }
+              "variantName": { "type": "string", "description": "Name of the variant (e.g., '1 Month')." },
+              "variantPrice": { "type": "number", "description": "Price of this specific variant in PKR." }
             },
-            "required": ["name", "price"]
+            "required": ["variantName", "variantPrice"]
           }
         }
       },
@@ -46,11 +46,11 @@
     "Category": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Category",
-      "type": "object",
+      "type-": "object",
       "description": "Represents a category of subscriptions (e.g., Entertainment, Music).",
       "properties": {
         "id": { "type": "string", "description": "Unique identifier for the category entity." },
-        "name": { "type": "string", "description": "Name of the category (e.g., Entertainment)." },
+        "name": { "type": "string", "description": "Name of the category (eg., Entertainment)." },
         "imageUrl": { "type": "string", "description": "URL of the image representing the category.", "format": "uri" }
       },
       "required": ["id", "name", "imageUrl"]

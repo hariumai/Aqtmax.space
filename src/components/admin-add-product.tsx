@@ -15,8 +15,8 @@ import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 const variantSchema = z.object({
-  name: z.string().min(1, 'Variant name is required'),
-  price: z.coerce.number().min(0, 'Price must be a positive number'),
+  variantName: z.string().min(1, 'Variant name is required'),
+  variantPrice: z.coerce.number().min(0, 'Price must be a positive number'),
 });
 
 const productSchema = z.object({
@@ -118,7 +118,7 @@ export default function AdminAddProduct() {
                   <div key={field.id} className="flex items-end gap-4 p-4 border rounded-lg">
                     <FormField
                       control={productForm.control}
-                      name={`variants.${index}.name`}
+                      name={`variants.${index}.variantName`}
                       render={({ field }) => (
                         <FormItem className="flex-grow">
                           <FormLabel>Variant Name</FormLabel>
@@ -131,7 +131,7 @@ export default function AdminAddProduct() {
                     />
                     <FormField
                       control={productForm.control}
-                      name={`variants.${index}.price`}
+                      name={`variants.${index}.variantPrice`}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Variant Price (PKR)</FormLabel>
@@ -153,7 +153,7 @@ export default function AdminAddProduct() {
                 variant="outline"
                 size="sm"
                 className="mt-4"
-                onClick={() => append({ name: '', price: 0 })}
+                onClick={() => append({ variantName: '', variantPrice: 0 })}
               >
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add Variant
