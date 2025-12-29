@@ -23,7 +23,7 @@ const iconMap: { [key: string]: React.ElementType } = {
 };
 
 export default function ProductPage({ params }: { params: { id: string } }) {
-  const { id } = use(Promise.resolve(params));
+  const { id } = use(params);
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
