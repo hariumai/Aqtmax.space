@@ -13,6 +13,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
+import { useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 const navLinks = [
     { href: "/products", label: "Products" },
@@ -24,6 +26,18 @@ export default function SiteHeader() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   const handleSignOut = async () => {
     if (auth) {
@@ -38,7 +52,10 @@ export default function SiteHeader() {
   }
 
   return (
-    <header className="absolute top-0 z-50 w-full">
+    <header className={cn(
+      "fixed top-0 z-50 w-full transition-all duration-300 ease-in-out",
+      scrolled ? 'bg-background/80 shadow-md backdrop-blur-lg' : 'bg-transparent'
+    )}>
       <div className="container mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex-1 md:flex-none">
             <Link href="/" className="flex items-center gap-2">
