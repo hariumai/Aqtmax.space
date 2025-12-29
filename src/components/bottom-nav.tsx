@@ -36,6 +36,7 @@ export default function BottomNav() {
 
   // Use default items and merge/replace with fetched items if they exist
   const navItems = menuItems ? [...defaultNavItems.filter(defaultItem => !menuItems.some(item => item.href === defaultItem.href)), ...menuItems] : defaultNavItems;
+  navItems.sort((a,b) => (a.order ?? 99) - (b.order ?? 99));
 
   const mainNavItems = navItems.filter(item => ['/', '/products', '/categories'].includes(item.href));
 
@@ -122,15 +123,6 @@ export default function BottomNav() {
                               <Gem className="h-6 w-6 text-primary" />
                               <span className="text-xl font-bold tracking-tighter">SubLime</span>
                           </Link>
-                          <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-                            >
-                              <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                              <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                              <span className="sr-only">Toggle theme</span>
-                          </Button>
                         </div>
                         <nav className="flex flex-col gap-4">
                         {navItems?.map(link => (
@@ -139,6 +131,20 @@ export default function BottomNav() {
                             </Link>
                         ))}
                         </nav>
+                        
+                        <Button
+                            variant="outline"
+                            size="lg"
+                            className="w-full justify-center"
+                            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+                        >
+                            <Sun className="h-6 w-6 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                            <Moon className="absolute h-6 w-6 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                            <span className="ml-2">
+                                {theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+                            </span>
+                        </Button>
+                        
                         {!user && (
                           <div className="flex flex-col gap-2 border-t pt-6 mt-2">
                               <Button asChild size="lg">
