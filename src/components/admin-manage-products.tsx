@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash } from 'lucide-react';
+import { Pencil, Trash, PlusCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -38,7 +38,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {
@@ -52,14 +52,22 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
+import { Textarea } from './ui/textarea';
+
+const variantSchema = z.object({
+  name: z.string().min(1, 'Variant name is required'),
+  price: z.coerce.number().min(0, 'Price must be a positive number'),
+});
 
 const productSchema = z.object({
   id: z.string(),
   name: z.string().min(1, 'Name is required'),
   description: z.string().min(1, 'Description is required'),
-  price: z.coerce.number().min(0, 'Price must be a positive number'),
+  price: z.coerce.number().min(0, 'Base price must be a positive number'),
+  discountedPrice: z.coerce.number().optional(),
   imageUrl: z.string().url('Must be a valid URL'),
   categoryId: z.string().min(1, 'Category ID is required'),
+  variants: z.array(variantSchema).optional(),
 });
 
 type Product = z.infer<typeof productSchema>;
@@ -76,6 +84,11 @@ function EditProductForm({
   const form = useForm<Product>({
     resolver: zodResolver(productSchema),
     defaultValues: product,
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'variants',
   });
 
   async function onSubmit(values: Product) {
@@ -99,77 +112,60 @@ function EditProductForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Product Name</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="price"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Price</FormLabel>
-              <FormControl>
-                <Input type="number" step="0.01" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="imageUrl"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Image URL</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="categoryId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Category ID</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField control={form.control} name="name" render={({ field }) => (<FormItem><FormLabel>Product Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+            <FormField control={form.control} name="categoryId" render={({ field }) => (<FormItem><FormLabel>Category ID</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+        </div>
+        <FormField control={form.control} name="description" render={({ field }) => (<FormItem><FormLabel>Description</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>)} />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <FormField control={form.control} name="price" render={({ field }) => (<FormItem><FormLabel>Base Price (PKR)</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>)} />
+            <FormField control={form.control} name="discountedPrice" render={({ field }) => (<FormItem><FormLabel>Discounted Price (PKR)</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>)} />
+            <FormField control={form.control} name="imageUrl" render={({ field }) => (<FormItem><FormLabel>Image URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+        </div>
+        
+        <div>
+            <h3 className="text-lg font-medium mb-2">Product Variants</h3>
+            <div className="space-y-4 max-h-48 overflow-y-auto pr-2">
+            {fields.map((field, index) => (
+                <div key={field.id} className="flex items-end gap-4 p-4 border rounded-lg bg-muted/50">
+                <FormField
+                    control={form.control}
+                    name={`variants.${index}.name`}
+                    render={({ field }) => (
+                    <FormItem className="flex-grow">
+                        <FormLabel>Variant Name</FormLabel>
+                        <FormControl><Input placeholder="e.g., 1 Month" {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name={`variants.${index}.price`}
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Variant Price</FormLabel>
+                        <FormControl><Input type="number" step="1" placeholder="3000" {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)}>
+                    <Trash className="h-4 w-4" />
+                </Button>
+                </div>
+            ))}
+            </div>
+            <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => append({ name: '', price: 0 })}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Variant
+            </Button>
+        </div>
+
         <DialogFooter>
           <DialogClose asChild>
-            <Button type="button" variant="ghost">
-              Cancel
-            </Button>
+            <Button type="button" variant="ghost">Cancel</Button>
           </DialogClose>
           <Button type="submit">Save Changes</Button>
         </DialogFooter>
@@ -182,6 +178,7 @@ export default function AdminManageProducts() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const productsQuery = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'subscriptions')) : null),
@@ -206,6 +203,11 @@ export default function AdminManageProducts() {
     }
   };
 
+  const handleEditClick = (product: Product) => {
+    setSelectedProduct(product);
+    setIsEditDialogOpen(true);
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -217,39 +219,27 @@ export default function AdminManageProducts() {
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Category</TableHead>
-              <TableHead>Price</TableHead>
+              <TableHead>Base Price</TableHead>
+              <TableHead>Variants</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={4}>Loading products...</TableCell>
+                <TableCell colSpan={5}>Loading products...</TableCell>
               </TableRow>
             )}
             {!isLoading && products?.map((product) => (
                 <TableRow key={product.id}>
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>{product.categoryId}</TableCell>
-                  <TableCell>${product.price.toFixed(2)}</TableCell>
+                  <TableCell>{product.price.toFixed(2)} PKR</TableCell>
+                  <TableCell>{product.variants?.length || 0}</TableCell>
                   <TableCell className="text-right">
-                    <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                      <DialogTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Edit: {product.name}</DialogTitle>
-                        </DialogHeader>
-                        <EditProductForm
-                          product={product}
-                          onFinished={() => setIsEditDialogOpen(false)}
-                        />
-                      </DialogContent>
-                    </Dialog>
-
+                    <Button variant="ghost" size="icon" onClick={() => handleEditClick(product)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
@@ -278,11 +268,25 @@ export default function AdminManageProducts() {
               ))}
             {!isLoading && products?.length === 0 && (
                 <TableRow>
-                    <TableCell colSpan={4} className="text-center">No products found.</TableCell>
+                    <TableCell colSpan={5} className="text-center">No products found.</TableCell>
                 </TableRow>
             )}
           </TableBody>
         </Table>
+
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent className="sm:max-w-[625px]">
+                <DialogHeader>
+                    <DialogTitle>Edit: {selectedProduct?.name}</DialogTitle>
+                </DialogHeader>
+                {selectedProduct && (
+                    <EditProductForm
+                        product={selectedProduct}
+                        onFinished={() => setIsEditDialogOpen(false)}
+                    />
+                )}
+            </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );

@@ -1,4 +1,5 @@
 'use client';
+import { use } from 'react';
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,19 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   
   const ProductIcon = product ? iconMap[product.name] || iconMap.default : null;
 
+  const displayPrice = () => {
+    if (!product) return '';
+    if (product.discountedPrice) {
+      return (
+        <>
+          <span className="text-muted-foreground line-through mr-2">{product.price} PKR</span>
+          <span className="text-primary">{product.discountedPrice} PKR</span>
+        </>
+      )
+    }
+    return `${product.price} PKR`;
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
       <SiteHeader />
@@ -41,7 +55,10 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                 <h1 className="font-headline text-4xl font-extrabold tracking-tighter sm:text-5xl">
                   {product.name}
                 </h1>
-                <p className="mt-4 text-3xl font-bold text-primary">${product.price}<span className="text-lg text-muted-foreground">/month</span></p>
+                <p className="mt-4 text-3xl font-bold">
+                  {displayPrice()}
+                  <span className="text-lg text-muted-foreground">/month</span>
+                </p>
                 <p className="mt-4 text-muted-foreground">
                   {product.description}
                 </p>
@@ -56,24 +73,37 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                   <CardHeader>
                     <CardTitle>Complete Your Order</CardTitle>
                     <CardDescription>
-                      Final step to unlock your premium access.
+                      {product.variants && product.variants.length > 0 
+                        ? 'Select a plan to continue' 
+                        : 'Final step to unlock your premium access.'}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div className="rounded-xl bg-muted/50 p-4">
-                        <div className="flex justify-between items-center">
-                          <span className="font-medium">{product.name}</span>
-                          <span className="font-bold">${product.price}</span>
+                      {product.variants && product.variants.length > 0 ? (
+                        <div className="flex flex-col gap-2">
+                          {product.variants.map((variant: any) => (
+                            <Button key={variant.name} variant="outline" className="w-full justify-between h-12">
+                              <span>{variant.name}</span>
+                              <span className="font-bold">{variant.price} PKR</span>
+                            </Button>
+                          ))}
                         </div>
-                        <div className="flex justify-between items-center mt-2 text-muted-foreground text-sm">
-                          <span>Tax</span>
-                          <span>$0.00</span>
+                      ) : (
+                        <div className="rounded-xl bg-muted/50 p-4">
+                            <div className="flex justify-between items-center">
+                            <span className="font-medium">{product.name}</span>
+                            <span className="font-bold">{product.discountedPrice || product.price} PKR</span>
+                            </div>
+                            <div className="flex justify-between items-center mt-2 text-muted-foreground text-sm">
+                            <span>Tax</span>
+                            <span>0.00 PKR</span>
+                            </div>
                         </div>
-                      </div>
+                      )}
                       <div className="flex justify-between items-center border-t border-border/50 pt-4">
                         <span className="text-lg font-bold">Total</span>
-                        <span className="text-lg font-bold">${product.price}</span>
+                        <span className="text-lg font-bold">{product.discountedPrice || product.price} PKR</span>
                       </div>
                     </div>
                   </CardContent>

@@ -41,7 +41,7 @@ export default function AdminUsers() {
                 <TableRow key={user.id}>
                   <TableCell>{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
-                  <TableCell>${user.signupCredit?.toFixed(2) || '0.00'}</TableCell>
+                  <TableCell>{user.signupCredit?.toFixed(2) || '0.00'} PKR</TableCell>
                 </TableRow>
               ))
             )}

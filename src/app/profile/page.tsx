@@ -28,7 +28,7 @@ function OrderItem({ order }: { order: any }) {
         <p className="text-sm text-muted-foreground">Order Date: {new Date(order.orderDate).toLocaleDateString()}</p>
         <p className="text-sm text-muted-foreground">Status: <span className="capitalize">{order.status}</span></p>
       </div>
-      {subscription && <p className="font-semibold">${subscription.price.toFixed(2)}</p>}
+      {subscription && <p className="font-semibold">{subscription.price.toFixed(2)} PKR</p>}
     </li>
   );
 }

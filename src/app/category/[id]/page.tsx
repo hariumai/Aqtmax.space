@@ -1,4 +1,5 @@
 'use client';
+import { use } from 'react';
 import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -90,8 +91,8 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
                   </CardHeader>
                   <CardContent className="flex-grow">
                     <div className="text-4xl font-bold">
-                      ${product.price}
-                      <span className="text-base font-normal text-muted-foreground">/ month</span>
+                      {product.variants?.length > 0 ? 'From ' : ''}{product.price}
+                      <span className="text-base font-normal text-muted-foreground"> PKR/ month</span>
                     </div>
                     <CardDescription className="mt-2">
                       Full access, no restrictions. Billed monthly.

@@ -24,9 +24,22 @@
         "id": { "type": "string", "description": "Unique identifier for the subscription entity." },
         "name": { "type": "string", "description": "Name of the subscription (e.g., Netflix Premium)." },
         "description": { "type": "string", "description": "Detailed description of the subscription benefits and features." },
-        "price": { "type": "number", "description": "Price of the subscription." },
+        "price": { "type": "number", "description": "The base price of the subscription in PKR." },
+        "discountedPrice": { "type": "number", "description": "The discounted price of the subscription in PKR (optional)." },
         "imageUrl": { "type": "string", "description": "URL of the image representing the subscription.", "format": "uri" },
-        "categoryId": { "type": "string", "description": "Reference to Category. (Relationship: Category 1:N Subscription)" }
+        "categoryId": { "type": "string", "description": "Reference to Category. (Relationship: Category 1:N Subscription)" },
+        "variants": {
+          "type": "array",
+          "description": "Different versions or plans for the subscription (e.g., 1 month, 6 months).",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string", "description": "Name of the variant (e.g., '1 Month')." },
+              "price": { "type": "number", "description": "Price of this specific variant in PKR." }
+            },
+            "required": ["name", "price"]
+          }
+        }
       },
       "required": ["id", "name", "description", "price", "imageUrl", "categoryId"]
     },

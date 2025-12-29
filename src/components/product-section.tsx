@@ -63,8 +63,8 @@ export default function ProductSection() {
                   </CardHeader>
                   <CardContent className="flex-grow">
                     <div className="text-4xl font-bold">
-                      ${product.price}
-                      <span className="text-base font-normal text-muted-foreground">/ month</span>
+                      {product.price}
+                      <span className="text-base font-normal text-muted-foreground"> PKR/ month</span>
                     </div>
                     <CardDescription className="mt-2">
                       Full access, no restrictions. Billed monthly.
