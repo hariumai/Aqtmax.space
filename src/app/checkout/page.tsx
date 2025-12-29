@@ -148,7 +148,7 @@ export default function CheckoutPage() {
             toast({ title: 'Order Placed!', description: 'Your order is pending verification. We will process it shortly.' });
             router.push('/profile');
 
-        } catch (error: any) => {
+        } catch (error: any) {
             console.error('Order placement error:', error);
             toast({ variant: 'destructive', title: 'Order Failed', description: error.message || 'Could not place your order.' });
         } finally {
