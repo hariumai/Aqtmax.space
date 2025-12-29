@@ -41,7 +41,7 @@ export default function ForgotPasswordPage() {
     if (!auth) return;
     try {
       const actionCodeSettings = {
-        url: `${window.location.origin}/reset-password`,
+        url: `${window.location.origin}/actions`,
         handleCodeInApp: true,
       };
       await sendPasswordResetEmail(auth, values.email, actionCodeSettings);

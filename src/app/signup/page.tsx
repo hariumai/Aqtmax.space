@@ -64,7 +64,7 @@ export default function SignupPage() {
       await updateProfile(newUser, { displayName: values.name });
       
       const actionCodeSettings = {
-        url: `${window.location.origin}/confirm-email`,
+        url: `${window.location.origin}/actions`,
         handleCodeInApp: true,
       };
       await sendEmailVerification(newUser, actionCodeSettings);
