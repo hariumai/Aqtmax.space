@@ -179,32 +179,19 @@ export default function AdminOrders() {
   const handleCompleteOrder = async (order: Order, completionData: z.infer<typeof completeOrderSchema>) => {
     if (!firestore) return;
     try {
-        await runTransaction(firestore, async (transaction) => {
-            const orderRef = doc(firestore, 'orders', order.id);
-            const userRef = doc(firestore, 'users', order.userId);
-
-            const userDoc = await transaction.get(userRef);
-            if (!userDoc.exists()) {
-                throw new Error("User not found!");
-            }
-
-            const currentCredit = userDoc.data().storeCredit || 0;
-            const newCredit = currentCredit + order.totalAmount;
-
-            transaction.update(userRef, { storeCredit: newCredit });
-            transaction.update(orderRef, { 
-                status: 'completed',
-                credentials: {
-                    username: completionData.username,
-                    password: completionData.password
-                },
-                note: completionData.note || null,
-            });
+        const orderRef = doc(firestore, 'orders', order.id);
+        await updateDoc(orderRef, {
+            status: 'completed',
+            credentials: {
+                username: completionData.username,
+                password: completionData.password
+            },
+            note: completionData.note || null,
         });
 
         toast({
             title: 'Order Completed',
-            description: `The order has been marked as complete and ${order.totalAmount.toFixed(2)} PKR credit has been added to the user's account.`,
+            description: `The order has been marked as complete.`,
         });
         setIsCompleteDialogOpen(false);
     } catch (error: any) {
