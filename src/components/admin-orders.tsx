@@ -67,6 +67,11 @@ const orderSchema = z.object({
   customerName: z.string().min(1, "Name is required"),
   customerEmail: z.string().email("Invalid email"),
   status: z.enum(['pending', 'completed', 'cancelled']),
+  credentials: z.object({
+    username: z.string().optional(),
+    password: z.string().optional(),
+  }).optional(),
+  note: z.string().optional(),
 });
 
 function EditOrderForm({ order, onFinished }: { order: Order; onFinished: () => void; }) {
@@ -79,6 +84,11 @@ function EditOrderForm({ order, onFinished }: { order: Order; onFinished: () => 
             customerName: order.customerName,
             customerEmail: order.customerEmail,
             status: order.status,
+            credentials: {
+                username: order.credentials?.username || '',
+                password: order.credentials?.password || '',
+            },
+            note: order.note || '',
         },
     });
 
@@ -90,6 +100,8 @@ function EditOrderForm({ order, onFinished }: { order: Order; onFinished: () => 
                 customerName: values.customerName,
                 customerEmail: values.customerEmail,
                 status: values.status,
+                credentials: values.credentials,
+                note: values.note,
             });
             toast({ title: "Order Updated", description: "The order details have been saved." });
             onFinished();
@@ -123,6 +135,21 @@ function EditOrderForm({ order, onFinished }: { order: Order; onFinished: () => 
                                 <FormMessage />
                             </FormItem>
                         )} />
+                        <div className="space-y-2 pt-4 border-t">
+                            <h4 className="font-medium">Subscription Credentials</h4>
+                             <FormField control={form.control} name="credentials.username" render={({ field }) => (
+                                <FormItem><FormLabel>Username/Email</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                             <FormField control={form.control} name="credentials.password" render={({ field }) => (
+                                <FormItem><FormLabel>Password</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                        </div>
+                         <div className="space-y-2 pt-4 border-t">
+                            <h4 className="font-medium">Note to Customer</h4>
+                             <FormField control={form.control} name="note" render={({ field }) => (
+                                <FormItem><FormLabel>Note</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                        </div>
                     </div>
                 </ScrollArea>
                 <DialogFooter className="pt-6">
