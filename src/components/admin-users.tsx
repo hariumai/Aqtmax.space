@@ -20,16 +20,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { CalendarIcon } from 'lucide-react';
-import { Calendar } from './ui/calendar';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
 
 const banSchema = z.object({
   type: z.enum(['temporary', 'permanent']),
   reason: z.string().min(1, 'A reason is required for the ban.'),
-  expiresAt: z.date().optional(),
+  expiresAt: z.coerce.date().optional(),
 }).refine(data => {
   if (data.type === 'temporary') {
     return !!data.expiresAt;
@@ -43,7 +38,6 @@ const banSchema = z.object({
 function BanUserForm({ user, onFinished }: { user: any; onFinished: () => void }) {
   const firestore = useFirestore();
   const { toast } = useToast();
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const form = useForm<z.infer<typeof banSchema>>({
     resolver: zodResolver(banSchema),
@@ -74,6 +68,13 @@ function BanUserForm({ user, onFinished }: { user: any; onFinished: () => void }
   }
 
   const banType = form.watch('type');
+  
+  const getFormattedDateTime = (date?: Date) => {
+    if (!date) return '';
+    // Format to "YYYY-MM-DDTHH:mm"
+    const pad = (num: number) => num.toString().padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  };
 
   return (
     <Form {...form}>
@@ -95,57 +96,24 @@ function BanUserForm({ user, onFinished }: { user: any; onFinished: () => void }
           )}
         />
         {banType === 'temporary' && (
-          <FormField
+           <FormField
             control={form.control}
             name="expiresAt"
             render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Expires At</FormLabel>
-                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                  <PopoverTrigger asChild>
+                <FormItem>
+                    <FormLabel>Expires At</FormLabel>
                     <FormControl>
-                      <Button
-                        variant={"outline"}
-                        className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
-                      >
-                        {field.value ? format(field.value, "PPP HH:mm") : <span>Pick a date</span>}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={(date) => {
-                          const newDate = date || (field.value || new Date());
-                          if (field.value) {
-                             newDate.setHours(field.value.getHours());
-                             newDate.setMinutes(field.value.getMinutes());
-                          }
-                          field.onChange(newDate);
-                      }}
-                      disabled={(date) => date < new Date()}
-                      initialFocus
-                    />
-                     <div className="p-3 border-t border-border">
                         <Input
-                            type="time"
-                            defaultValue={field.value ? format(field.value, 'HH:mm') : ''}
-                            onChange={(e) => {
-                                const [hours, minutes] = e.target.value.split(':');
-                                const newDate = field.value ? new Date(field.value) : new Date();
-                                newDate.setHours(parseInt(hours, 10), parseInt(minutes, 10));
-                                field.onChange(newDate);
-                            }}
+                            type="datetime-local"
+                            {...field}
+                            value={field.value ? getFormattedDateTime(new Date(field.value)) : ''}
+                            onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
                         />
-                    </div>
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
             )}
-          />
+        />
         )}
         <FormField
           control={form.control}
