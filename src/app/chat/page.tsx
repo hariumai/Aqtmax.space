@@ -113,7 +113,7 @@ export default function ChatPage() {
                 <AvatarFallback><Bot className="h-5 w-5" /></AvatarFallback>
             </Avatar>
             <div className="ml-3 flex-1">
-                <h3 className="font-semibold">AI Assistant</h3>
+                <h3 className="font-semibold">SubLime Mat</h3>
                 <div className="flex items-center gap-1">
                     {isLoading ? (
                         <>

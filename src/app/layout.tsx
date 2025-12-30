@@ -36,7 +36,6 @@ export default function RootLayout({
           <FirebaseClientProvider>
             {children}
             <Toaster />
-            <BottomNav />
           </FirebaseClientProvider>
         </ThemeProvider>
       </body>
