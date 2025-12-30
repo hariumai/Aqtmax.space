@@ -48,9 +48,12 @@ export default function BottomNav() {
     : defaultNavItems;
   navItems.sort((a,b) => (a.order ?? 99) - (b.order ?? 99));
 
-  // Show first 4 items in the nav bar. The rest are in the menu.
-  const mainNavItems = navItems.slice(0, 4);
-  const overflowNavItems = navItems.slice(4);
+  // Manually add Account item
+  const accountItem = { id: 'account', href: user ? '/profile' : '/login', label: 'Account', icon: User, order: 4 };
+
+  // Show first 3 items from config, plus Account, then Menu.
+  const mainNavItems = navItems.slice(0, 3);
+  const overflowNavItems = navItems.slice(3);
 
 
   const getHref = (href: string) => {
@@ -91,6 +94,26 @@ export default function BottomNav() {
              </span>
            </Link>
         )})}
+         <Link
+            key={accountItem.id}
+            href={accountItem.href}
+            className="inline-flex flex-col items-center justify-center px-5 hover:bg-muted/50 group"
+          >
+            <User
+              className={cn(
+                'w-5 h-5 mb-1 text-muted-foreground transition-colors group-hover:text-primary',
+                (pathname === '/profile' || pathname === '/login') && 'text-primary'
+              )}
+            />
+            <span
+              className={cn(
+                'text-xs text-muted-foreground transition-colors group-hover:text-primary',
+                (pathname === '/profile' || pathname === '/login') && 'text-primary'
+              )}
+            >
+              {accountItem.label}
+            </span>
+          </Link>
         <Sheet>
             <SheetTrigger asChild>
                 <button
@@ -119,9 +142,6 @@ export default function BottomNav() {
                                 {link.label}
                             </Link>
                         ))}
-                         <Link href={getHref('/profile')} className="text-lg font-medium text-foreground hover:text-primary transition-colors">
-                                Account
-                            </Link>
                         </nav>
                         
                         <Button
