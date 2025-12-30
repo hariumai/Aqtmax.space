@@ -1,3 +1,6 @@
+
+export const runtime = 'nodejs';
+
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
@@ -15,18 +18,17 @@ const BUCKET = "sublime";
 const PUBLIC_URL = "https://sublime.statics.csio.aqtmax.space";
 
 export async function POST(req: Request) {
+  const formData = await req.formData();
+  const file = formData.get("file") as File;
+
+  if (!file) {
+    return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const key = `${randomUUID()}-${file.name.replace(/\s+/g, '_')}`;
+
   try {
-    const formData = await req.formData();
-    const file = formData.get("file") as File;
-
-    if (!file) {
-      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
-    }
-
-    const key = `${randomUUID()}-${file.name}`;
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-
     await s3.send(
       new PutObjectCommand({
         Bucket: BUCKET,
