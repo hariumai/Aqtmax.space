@@ -2,7 +2,7 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, doc, updateDoc, orderBy } from 'firebase/firestore';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from './ui/button';
@@ -13,11 +13,12 @@ import Link from 'next/link';
 
 export default function AdminOrders() {
   const firestore = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
 
   const ordersQuery = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'orders'), orderBy('orderDate', 'desc')) : null),
-    [firestore]
+    () => (firestore && user ? query(collection(firestore, 'orders'), orderBy('orderDate', 'desc')) : null),
+    [firestore, user]
   );
   const { data: orders, isLoading: isLoadingOrders } = useCollection(ordersQuery);
 
