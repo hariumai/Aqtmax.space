@@ -152,7 +152,8 @@ export default function CheckoutPage() {
         setIsSubmitting(true);
 
         try {
-            let screenshotUrl = '';
+            let screenshotUrl: string | undefined = undefined;
+
             if (screenshotFile && total > 0) {
                 const formData = new FormData();
                 formData.append('file', screenshotFile);
@@ -173,7 +174,7 @@ export default function CheckoutPage() {
                     }
                     throw new Error(errorMessage);
                 }
-
+                
                 const { publicUrl } = await uploadResponse.json();
                 screenshotUrl = publicUrl;
             }
@@ -194,11 +195,11 @@ export default function CheckoutPage() {
                 orderDate: new Date(),
                 status: 'pending',
             };
-            
+
             if (screenshotUrl) {
                 newOrderData.paymentScreenshotUrl = screenshotUrl;
             }
-
+            
             batch.set(newOrderRef, { ...newOrderData, orderDate: serverTimestamp() });
 
 
@@ -214,13 +215,7 @@ export default function CheckoutPage() {
 
             await batch.commit();
 
-            // We need to cast here because serverTimestamp() makes the type complex
-            const finalOrder: Order = {
-                 ...newOrderData,
-                 orderDate: new Date(), // Use client date for immediate UI
-                 paymentScreenshotUrl: newOrderData.paymentScreenshotUrl || '',
-            }
-            setOrderComplete(finalOrder);
+            setOrderComplete(newOrderData);
 
         } catch (error: any) {
             console.error('Order placement error:', error);
