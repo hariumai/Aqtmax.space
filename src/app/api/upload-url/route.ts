@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto';
 
 const s3Client = new S3Client({
   region: "auto",
-  endpoint: `https://thechohan.space`, // Use the custom domain as the endpoint
+  endpoint: `https://sublime.statics.csio.aqtmax.space`, // Use the custom domain as the endpoint
   credentials: {
     accessKeyId: process.env.CLOUDFLARE_R2_ACCESS_KEY_ID!,
     secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY!,
