@@ -8,9 +8,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useMemoFirebase } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import { doc, collection, writeBatch, getDocs, query, orderBy, deleteDoc } from 'firebase/firestore';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Trash } from 'lucide-react';
 
 const menuItemSchema = z.object({
@@ -28,6 +28,7 @@ type MenuItem = z.infer<typeof menuItemSchema>;
 
 export default function AdminMenuItems() {
   const firestore = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
 
   const menuItemsForm = useForm<z.infer<typeof menuItemsSchema>>({
@@ -42,20 +43,23 @@ export default function AdminMenuItems() {
 
   useEffect(() => {
     async function fetchMenuItems() {
-        if (!firestore) return;
+        if (!firestore || !user) return;
         const menuItemsQuery = query(collection(firestore, 'menuItems'), orderBy('order'));
         const menuItemsSnapshot = await getDocs(menuItemsQuery);
         const items = menuItemsSnapshot.docs.map(d => ({ ...d.data(), id: d.id })) as MenuItem[];
         menuItemsForm.reset({ items });
     }
-    if (firestore) {
+    if (firestore && user) {
       fetchMenuItems();
     }
-  }, [firestore, menuItemsForm]);
+  }, [firestore, user, menuItemsForm]);
 
 
   async function onMenuItemsSubmit(values: z.infer<typeof menuItemsSchema>) {
-    if (!firestore) return;
+    if (!firestore || !user) {
+        toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to update menu items.' });
+        return;
+    }
     try {
         const batch = writeBatch(firestore);
 
