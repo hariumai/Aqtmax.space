@@ -152,31 +152,27 @@ export default function CheckoutPage() {
         setIsSubmitting(true);
 
         try {
-            let screenshotUrl: string | undefined = undefined;
-
+            let screenshotUrl = '';
             if (screenshotFile && total > 0) {
                 const formData = new FormData();
                 formData.append('file', screenshotFile);
 
-                const uploadResponse = await fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData,
-                });
+                const uploadResponse = await fetch('/api/upload', { method: 'POST', body: formData });
 
-                if (!uploadResponse.ok) {
+                if (uploadResponse.ok) {
+                    const data = await uploadResponse.json();
+                    screenshotUrl = data.publicUrl;
+                } else {
                     let errorMessage = 'Upload failed';
                     try {
-                        const errJson = await uploadResponse.json();
-                        errorMessage = errJson.error || errorMessage;
-                    } catch (e) {
-                        // Response was not valid JSON
-                        errorMessage = uploadResponse.statusText || errorMessage;
+                        const data = await uploadResponse.json();
+                        errorMessage = data.error || errorMessage;
+                    } catch {
+                        errorMessage = (await uploadResponse.text()) || errorMessage;
                     }
+                    console.error('Upload failed response:', errorMessage);
                     throw new Error(errorMessage);
                 }
-                
-                const { publicUrl } = await uploadResponse.json();
-                screenshotUrl = publicUrl;
             }
 
             const newOrderRef = doc(collection(firestore, 'orders'));

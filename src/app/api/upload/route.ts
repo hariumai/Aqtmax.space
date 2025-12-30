@@ -1,4 +1,4 @@
-export const runtime = 'nodejs';
+export const runtime = 'nodejs'; // crucial for AWS SDK / Cloudflare R2
 
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { NextResponse } from 'next/server';
