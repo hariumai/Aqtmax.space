@@ -126,7 +126,7 @@ function BanUserForm({ user, onFinished }: { user: any; onFinished: () => void }
                             onChange={(e) => {
                                 const [hours, minutes] = e.target.value.split(':');
                                 const newDate = field.value ? new Date(field.value) : new Date();
-                                newDate.setHours(parseInt(hours), parseInt(minutes));
+                                newDate.setHours(parseInt(hours, 10), parseInt(minutes, 10));
                                 field.onChange(newDate);
                             }}
                         />
