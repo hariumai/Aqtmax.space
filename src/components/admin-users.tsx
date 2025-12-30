@@ -82,6 +82,7 @@ export default function AdminUsers() {
     }
     try {
       const userRef = doc(firestore, 'users', selectedUser.id);
+      // Only update the storeCredit field to comply with security rules
       await updateDoc(userRef, {
         storeCredit: Number(creditAmount)
       });
