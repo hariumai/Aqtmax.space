@@ -1,11 +1,11 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Send, Bot, User, Loader2 } from 'lucide-react';
+import { Send, Bot, User, Loader2, Plus } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,7 @@ import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@
 import { doc, collection, query, where } from 'firebase/firestore';
 import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const chatSchema = z.object({
   message: z.string().min(1, 'Message cannot be empty'),
@@ -24,16 +25,32 @@ type Message = {
   content: string;
 };
 
-function AvatarIcon({ role }: { role: 'user' | 'assistant'}) {
-    const Icon = role === 'user' ? User : Bot;
+function ChatBubble({ message }: { message: Message }) {
+    const isUser = message.role === 'user';
     return (
-        <div className={cn(
-            "flex h-8 w-8 items-center justify-center rounded-full shrink-0",
-             role === 'user' ? "bg-muted" : "bg-primary/20 text-primary"
-        )}>
-            <Icon className="h-5 w-5" />
+        <div className={cn('flex items-end gap-2', isUser ? 'justify-end' : 'justify-start')}>
+            {!isUser && (
+                <Avatar className="h-8 w-8">
+                    <AvatarFallback><Bot className="h-5 w-5" /></AvatarFallback>
+                </Avatar>
+            )}
+            <div
+                className={cn(
+                    'max-w-xs sm:max-w-lg rounded-2xl p-3 text-sm',
+                    isUser
+                        ? 'bg-primary text-primary-foreground rounded-br-none'
+                        : 'bg-muted rounded-bl-none'
+                )}
+            >
+                <p className="whitespace-pre-wrap">{message.content}</p>
+            </div>
+             {isUser && (
+                <Avatar className="h-8 w-8">
+                    <AvatarFallback><User className="h-5 w-5" /></AvatarFallback>
+                </Avatar>
+            )}
         </div>
-    )
+    );
 }
 
 export default function ChatPage() {
@@ -99,47 +116,29 @@ export default function ChatPage() {
     <div className="flex flex-col min-h-screen">
       <SiteHeader />
       <main className="flex-grow flex items-center justify-center py-16">
-        <div
-          className="w-full max-w-2xl h-[70vh] bg-card/80 backdrop-blur-xl rounded-2xl shadow-2xl flex flex-col overflow-hidden border"
-        >
-          <header className="flex items-center justify-between p-4 border-b">
-            <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-primary/20 text-primary">
-                    <Bot className="h-6 w-6" />
-                </div>
-                <div>
-                    <h3 className="font-semibold">AI Support</h3>
-                    <p className="text-xs text-muted-foreground">Typically replies instantly</p>
+        <div className="w-full max-w-2xl h-[70vh] bg-card rounded-2xl shadow-2xl flex flex-col overflow-hidden border">
+          <header className="flex items-center p-4 border-b">
+            <Avatar className="h-10 w-10">
+                <AvatarFallback><Bot className="h-5 w-5" /></AvatarFallback>
+            </Avatar>
+            <div className="ml-3">
+                <h3 className="font-semibold">AI Assistant</h3>
+                <div className="flex items-center gap-1">
+                    <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <p className="text-xs text-muted-foreground">Online</p>
                 </div>
             </div>
           </header>
-          <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
-            <div className="space-y-4">
+          <ScrollArea className="flex-1 p-6" ref={scrollAreaRef}>
+            <div className="space-y-6">
               {messages.map((message, index) => (
-                <div
-                  key={index}
-                  className={cn(
-                    'flex items-end gap-2',
-                    message.role === 'user' ? 'justify-end' : 'justify-start'
-                  )}
-                >
-                    {message.role === 'assistant' && <AvatarIcon role='assistant' />}
-                    <div
-                        className={cn(
-                        'max-w-xs sm:max-w-lg rounded-2xl p-3 text-sm',
-                        message.role === 'user'
-                            ? 'bg-primary text-primary-foreground rounded-br-none'
-                            : 'bg-muted rounded-bl-none'
-                        )}
-                    >
-                        <p className="whitespace-pre-wrap">{message.content}</p>
-                    </div>
-                    {message.role === 'user' && <AvatarIcon role='user' />}
-                </div>
+                <ChatBubble key={index} message={message} />
               ))}
               {isLoading && (
                 <div className="flex items-end gap-2 justify-start">
-                    <AvatarIcon role='assistant' />
+                    <Avatar className="h-8 w-8">
+                        <AvatarFallback><Bot className="h-5 w-5" /></AvatarFallback>
+                    </Avatar>
                     <div className="bg-muted rounded-2xl p-3 rounded-bl-none">
                         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                     </div>
@@ -150,6 +149,9 @@ export default function ChatPage() {
           <div className="p-4 border-t bg-background/50">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="flex items-center gap-2">
+                <Button type="button" variant="ghost" size="icon" className="shrink-0 rounded-full">
+                    <Plus className="h-5 w-5" />
+                </Button>
                 <FormField
                   control={form.control}
                   name="message"
@@ -158,8 +160,8 @@ export default function ChatPage() {
                       <FormControl>
                         <Textarea
                           {...field}
-                          placeholder="Ask about orders, products, or policies..."
-                          className="min-h-0 resize-none"
+                          placeholder="Type your message..."
+                          className="min-h-0 resize-none rounded-full border-0 shadow-none focus-visible:ring-0 px-4 py-2 bg-muted"
                           rows={1}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
@@ -169,11 +171,10 @@ export default function ChatPage() {
                           }}
                         />
                       </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
-                <Button type="submit" size="icon" disabled={isLoading}>
+                <Button type="submit" size="icon" disabled={isLoading} className="rounded-full">
                   <Send className="h-5 w-5" />
                 </Button>
               </form>
