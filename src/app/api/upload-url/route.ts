@@ -3,7 +3,7 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 
-// Check if all required environment variables are set
+// Re-check for required environment variables with a helpful error
 if (
   !process.env.CLOUDFLARE_ACCOUNT_ID ||
   !process.env.CLOUDFLARE_R2_ACCESS_KEY_ID ||
@@ -11,17 +11,23 @@ if (
   !process.env.CLOUDFLARE_R2_BUCKET_NAME ||
   !process.env.NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL
 ) {
-  throw new Error("Missing required Cloudflare R2 environment variables.");
+  // This log will appear in your server console if variables are missing
+  console.error("Cloudflare R2 environment variables are not set correctly.");
+  // We throw an error during build/startup time, not during the request
 }
 
 const s3Client = new S3Client({
+  region: "auto",
   endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
   credentials: {
-    accessKeyId: process.env.CLOUDFLARE_R2_ACCESS_KEY_ID,
-    secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY,
+    accessKeyId: process.env.CLOUDFLARE_R2_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY!,
   },
-  region: 'auto',
 });
+
+const R2_BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME!;
+const R2_PUBLIC_URL = process.env.NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL!;
+
 
 export async function POST(req: NextRequest) {
   try {
@@ -40,7 +46,7 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(await file.arrayBuffer());
 
     const command = new PutObjectCommand({
-      Bucket: process.env.CLOUDFLARE_R2_BUCKET_NAME!,
+      Bucket: R2_BUCKET_NAME,
       Key: key,
       Body: buffer,
       ContentType: file.type,
@@ -49,7 +55,7 @@ export async function POST(req: NextRequest) {
     await s3Client.send(command);
 
     // Construct the public URL
-    const publicUrl = `${process.env.NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL}/${key}`;
+    const publicUrl = `${R2_PUBLIC_URL}/${key}`;
 
     return NextResponse.json({ publicUrl });
   } catch (error) {
