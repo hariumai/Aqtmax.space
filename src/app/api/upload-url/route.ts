@@ -43,16 +43,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ uploadUrl, publicUrl });
   } catch (error) {
     console.error("Error creating presigned URL:", error);
-    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during URL generation.";
     
-    // Provide a more helpful error for the likely CORS issue
-    if (errorMessage.includes('credentials')) {
-         return NextResponse.json({ 
-            error: `Failed to create upload URL. Server error: Authorization failed. Please check your R2 API token permissions.` 
-        }, { status: 500 });
-    }
-
-    const origin = req.headers.get('origin') || 'your-app-domain.com';
+    // Improved error guidance for CORS
+    const origin = req.headers.get('origin') || 'YOUR_APP_DOMAIN';
     const corsErrorGuidance = `This is likely a CORS issue on your Cloudflare R2 bucket. Please go to your R2 bucket settings > CORS Policy and add the following JSON: 
 [
   {

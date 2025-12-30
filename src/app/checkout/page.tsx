@@ -177,7 +177,6 @@ export default function CheckoutPage() {
                 });
 
                 if (!uploadResponse.ok) {
-                    // This error is less likely now, but good to have
                     throw new Error('Failed to upload file directly to storage.');
                 }
 
