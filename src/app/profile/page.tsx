@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { collection, query, doc, where } from 'firebase/firestore';
 import { useDoc } from '@/firebase';
-import { Wallet, Info, AlertTriangle } from 'lucide-react';
+import { Wallet, Info, AlertTriangle, MessageCircle, ShieldX } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -72,6 +72,42 @@ function OrderItem({ order }: { order: any }) {
   );
 }
 
+function BannedProfile({ user, banInfo, settings, onSignOut }: { user: any, banInfo: any, settings: any, onSignOut: () => void }) {
+    const isTemporary = banInfo.type === 'temporary';
+    const expirationDate = isTemporary && banInfo.expiresAt ? new Date(banInfo.expiresAt).toLocaleString() : null;
+
+    return (
+        <Card className="mx-auto max-w-lg w-full text-center">
+            <CardHeader>
+                <div className="flex justify-center">
+                    <ShieldX className="h-16 w-16 text-destructive" />
+                </div>
+                <CardTitle className="text-2xl mt-4">Account Banned</CardTitle>
+                <CardDescription>Your account has been {isTemporary ? 'temporarily' : 'permanently'} banned.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="text-left space-y-2 p-4 border rounded-md bg-muted/50">
+                    <p><strong>Reason:</strong> {banInfo.reason || 'No reason provided.'}</p>
+                    {isTemporary && expirationDate && (
+                         <p><strong>Expires:</strong> {expirationDate}</p>
+                    )}
+                </div>
+                <div className="flex flex-col gap-2">
+                   {settings?.whatsappNumber && (
+                     <Button asChild>
+                       <a href={`https://wa.me/${settings.whatsappNumber.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer">
+                         <MessageCircle className="mr-2 h-4 w-4" />
+                         Request Appeal
+                       </a>
+                     </Button>
+                   )}
+                   <Button onClick={onSignOut} variant="outline">Sign Out</Button>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
 export default function ProfilePage() {
   const { user, isUserLoading, userError } = useUser();
   const auth = useAuth();
@@ -79,15 +115,19 @@ export default function ProfilePage() {
   const firestore = useFirestore();
 
   const userRef = useMemoFirebase(() => (firestore && user ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
-  const { data: userData } = useDoc(userRef);
+  const { data: userData, isLoading: isUserDataLoading } = useDoc(userRef);
 
   const ordersQuery = useMemoFirebase(
     () => (firestore && user ? query(collection(firestore, 'orders'), where('userId', '==', user.uid)) : null),
     [firestore, user]
   );
   const { data: orders, isLoading: isLoadingOrders } = useCollection(ordersQuery);
+  
+  const settingsRef = useMemoFirebase(() => (firestore ? doc(firestore, 'settings', 'payment') : null), [firestore]);
+  const { data: settingsData } = useDoc(settingsRef);
 
-  if (isUserLoading) {
+
+  if (isUserLoading || isUserDataLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -111,67 +151,74 @@ export default function ProfilePage() {
     }
     router.push('/');
   };
+  
+  const now = new Date();
+  const isBanActive = userData?.ban?.isBanned && (userData.ban.type === 'permanent' || (userData.ban.expiresAt && new Date(userData.ban.expiresAt) > now));
 
   return (
     <div className="flex flex-col min-h-screen">
       <SiteHeader />
-      <main className="flex-grow container mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="space-y-8">
-          <Card>
-            <CardHeader>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-16 w-16">
-                    <AvatarImage src={user.photoURL ?? ''} />
-                    <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <CardTitle className="text-2xl">{user.displayName || 'User'}</CardTitle>
-                    <CardDescription>{user.email}</CardDescription>
+      <main className="flex-grow container mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8 flex items-center justify-center">
+        {isBanActive ? (
+            <BannedProfile user={user} banInfo={userData.ban} settings={settingsData} onSignOut={handleSignOut} />
+        ) : (
+          <div className="space-y-8 w-full">
+            <Card>
+              <CardHeader>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-16 w-16">
+                      <AvatarImage src={user.photoURL ?? ''} />
+                      <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <CardTitle className="text-2xl">{user.displayName || 'User'}</CardTitle>
+                      <CardDescription>{user.email}</CardDescription>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-lg bg-muted p-3">
+                    <Wallet className="h-6 w-6 text-primary" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Store Credit</p>
+                      <p className="text-lg font-bold">{userData?.storeCredit?.toFixed(2) || '0.00'} PKR</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 rounded-lg bg-muted p-3">
-                  <Wallet className="h-6 w-6 text-primary" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Store Credit</p>
-                    <p className="text-lg font-bold">{userData?.storeCredit?.toFixed(2) || '0.00'} PKR</p>
-                  </div>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={handleSignOut} variant="destructive">
-                Sign Out
-              </Button>
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={handleSignOut} variant="destructive">
+                  Sign Out
+                </Button>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>My Orders</CardTitle>
-              <CardDescription>
-                Here is a list of your recent subscription orders. Click an order to see details.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoadingOrders && <p>Loading orders...</p>}
-              {!isLoadingOrders && orders && orders.length > 0 ? (
-                <Accordion type="single" collapsible className="w-full">
-                  {orders.map((order) => (
-                    <OrderItem key={order.id} order={order} />
-                  ))}
-                </Accordion>
-              ) : (
-                <div className="text-center py-8">
-                    <p className="text-muted-foreground">You have not placed any orders yet.</p>
-                    <Button asChild variant="link" className="mt-2">
-                        <Link href="/products">Start Shopping</Link>
-                    </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>My Orders</CardTitle>
+                <CardDescription>
+                  Here is a list of your recent subscription orders. Click an order to see details.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoadingOrders && <p>Loading orders...</p>}
+                {!isLoadingOrders && orders && orders.length > 0 ? (
+                  <Accordion type="single" collapsible className="w-full">
+                    {orders.map((order) => (
+                      <OrderItem key={order.id} order={order} />
+                    ))}
+                  </Accordion>
+                ) : (
+                  <div className="text-center py-8">
+                      <p className="text-muted-foreground">You have not placed any orders yet.</p>
+                      <Button asChild variant="link" className="mt-2">
+                          <Link href="/products">Start Shopping</Link>
+                      </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </main>
       <SiteFooter />
     </div>
