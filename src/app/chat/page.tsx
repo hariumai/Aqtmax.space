@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -112,7 +113,7 @@ export default function ChatPage() {
 
       const input = {
         query: values.message,
-        userContext: user ? { userProfile: sanitizedUserData, userOrders: sanitizedOrders } : undefined,
+        userContext: user ? { userProfile: sanitizedUserData, userOrders: sanitizedOrders || [] } : undefined,
       };
 
       const response = await askSupport(input);
