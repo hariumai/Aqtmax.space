@@ -101,10 +101,11 @@ function BanUserForm({ user, onFinished }: { user: any; onFinished: () => void }
                 <FormItem>
                     <FormLabel>Expires At</FormLabel>
                     <FormControl>
-                        <Input type="datetime-local"
-                           value={field.value ? format(field.value, "yyyy-MM-dd'T'HH:mm") : ''}
-                           onChange={(e) => field.onChange(e.target.valueAsDate)}
-                         />
+                         <Input
+                          type="datetime-local"
+                          defaultValue={field.value ? format(field.value, "yyyy-MM-dd'T'HH:mm") : ''}
+                          onChange={(e) => field.onChange(new Date(e.target.value))}
+                        />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
