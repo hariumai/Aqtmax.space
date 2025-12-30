@@ -19,7 +19,8 @@
             "isBanned": { "type": "boolean", "description": "Whether the user is currently banned." },
             "type": { "type": "string", "enum": ["temporary", "permanent"], "description": "The type of ban." },
             "reason": { "type": "string", "description": "The reason for the ban." },
-            "expiresAt": { "type": "string", "format": "date-time", "description": "When the ban expires." }
+            "expiresAt": { "type": "string", "format": "date-time", "description": "When the ban expires." },
+            "appealRequested": { "type": "boolean", "description": "Whether the user has requested an appeal." }
           }
         }
       },

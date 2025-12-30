@@ -6,13 +6,14 @@ import SiteFooter from '@/components/site-footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { collection, query, doc, where } from 'firebase/firestore';
+import { collection, query, doc, where, updateDoc } from 'firebase/firestore';
 import { useDoc } from '@/firebase';
-import { Wallet, Info, AlertTriangle, MessageCircle, ShieldX } from 'lucide-react';
+import { Wallet, Info, AlertTriangle, MessageCircle, ShieldX, Bell } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 function OrderItem({ order }: { order: any }) {
   const itemNames = order.items.map((item: any) => item.subscriptionName).join(', ');
@@ -76,6 +77,30 @@ function OrderItem({ order }: { order: any }) {
 function BannedProfile({ user, banInfo, settings, onSignOut }: { user: any, banInfo: any, settings: any, onSignOut: () => void }) {
     const isTemporary = banInfo.type === 'temporary';
     const expirationDate = isTemporary && banInfo.expiresAt ? new Date(banInfo.expiresAt).toLocaleString() : null;
+    const firestore = useFirestore();
+    const { toast } = useToast();
+
+    const handleAppealRequest = async () => {
+        if (!firestore || !user) return;
+        const userRef = doc(firestore, 'users', user.uid);
+        try {
+            await updateDoc(userRef, { 'ban.appealRequested': true });
+            toast({
+                title: 'Appeal Requested',
+                description: 'Our support team will review your case shortly.',
+            });
+             if (settings?.whatsappNumber) {
+               window.open(`https://wa.me/${settings.whatsappNumber.replace(/[^0-9]/g, '')}`, '_blank');
+             }
+        } catch (error: any) {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Could not submit your appeal request.',
+            });
+        }
+    };
+
 
     return (
         <Card className="mx-auto max-w-lg w-full text-center">
@@ -94,13 +119,16 @@ function BannedProfile({ user, banInfo, settings, onSignOut }: { user: any, banI
                     )}
                 </div>
                 <div className="flex flex-col gap-2">
-                   {settings?.whatsappNumber && (
-                     <Button asChild>
-                       <a href={`https://wa.me/${settings.whatsappNumber.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer">
-                         <MessageCircle className="mr-2 h-4 w-4" />
-                         Request Appeal
-                       </a>
-                     </Button>
+                   {banInfo.appealRequested ? (
+                       <Button disabled>
+                           <Bell className="mr-2 h-4 w-4" />
+                           Appeal Requested
+                       </Button>
+                   ) : (
+                       <Button onClick={handleAppealRequest}>
+                           <MessageCircle className="mr-2 h-4 w-4" />
+                           Request Appeal
+                       </Button>
                    )}
                    <Button onClick={onSignOut} variant="outline">Sign Out</Button>
                 </div>
@@ -133,8 +161,7 @@ export default function ProfilePage() {
     }
   }, [user, isUserLoading, router]);
 
-
-  if (isUserLoading || isUserDataLoading || !user) {
+  if (isUserLoading || isUserDataLoading || !userData) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -151,7 +178,6 @@ export default function ProfilePage() {
     if (auth) {
       await auth.signOut();
     }
-    router.push('/');
   };
   
   const now = new Date();
@@ -226,3 +252,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    

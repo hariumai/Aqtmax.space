@@ -6,12 +6,12 @@ import { useCollection, useFirestore, useAuth, useMemoFirebase, useUser } from '
 import { collection, query, doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from './ui/button';
-import { Mail, Trash, Edit, Ban } from 'lucide-react';
+import { Mail, Trash, Edit, Ban, Bell } from 'lucide-react';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose, DialogDescription } from './ui/dialog';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
@@ -20,6 +20,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Calendar } from './ui/calendar';
+import { cn } from '@/lib/utils';
+import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
 
 const banSchema = z.object({
   type: z.enum(['temporary', 'permanent']),
@@ -58,6 +63,7 @@ function BanUserForm({ user, onFinished }: { user: any; onFinished: () => void }
           type: values.type,
           reason: values.reason,
           expiresAt: values.type === 'temporary' ? values.expiresAt?.toISOString() : null,
+          appealRequested: false, // Reset appeal status on new ban
         }
       });
       toast({ title: 'User Banned', description: `${user.name} has been banned.` });
@@ -68,13 +74,6 @@ function BanUserForm({ user, onFinished }: { user: any; onFinished: () => void }
   }
 
   const banType = form.watch('type');
-  
-  const getFormattedDateTime = (date?: Date) => {
-    if (!date) return '';
-    // Format to "YYYY-MM-DDTHH:mm"
-    const pad = (num: number) => num.toString().padStart(2, '0');
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-  };
 
   return (
     <Form {...form}>
@@ -103,12 +102,10 @@ function BanUserForm({ user, onFinished }: { user: any; onFinished: () => void }
                 <FormItem>
                     <FormLabel>Expires At</FormLabel>
                     <FormControl>
-                        <Input
-                            type="datetime-local"
-                            {...field}
-                            value={field.value ? getFormattedDateTime(new Date(field.value)) : ''}
-                            onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
-                        />
+                        <Input type="datetime-local"
+                           value={field.value ? format(field.value, "yyyy-MM-dd'T'HH:mm") : ''}
+                           onChange={(e) => field.onChange(e.target.valueAsDate)}
+                         />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
@@ -144,6 +141,7 @@ export default function AdminUsers() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isCreditDialogOpen, setIsCreditDialogOpen] = useState(false);
   const [isBanDialogOpen, setIsBanDialogOpen] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const usersQuery = useMemoFirebase(
     () => (firestore && user ? query(collection(firestore, 'users')) : null),
@@ -207,6 +205,7 @@ export default function AdminUsers() {
       const userRef = doc(firestore, 'users', userId);
       await updateDoc(userRef, {
         "ban.isBanned": false,
+        "ban.appealRequested": false, // Reset appeal status on unban
       });
       toast({ title: "User Unbanned", description: "The user's ban has been lifted." });
     } catch (error: any) {
@@ -263,7 +262,12 @@ export default function AdminUsers() {
             ) : (
               users?.map((user) => (
                 <TableRow key={user.id} className={user.ban?.isBanned ? 'bg-destructive/10' : ''}>
-                  <TableCell>{user.name}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                        {user.name}
+                        {user.ban?.appealRequested && <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600"><Bell className="h-3 w-3 mr-1" />Appeal</Badge>}
+                    </div>
+                  </TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -368,3 +372,5 @@ export default function AdminUsers() {
     </>
   );
 }
+
+    
