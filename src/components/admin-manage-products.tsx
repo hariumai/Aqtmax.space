@@ -1,3 +1,4 @@
+
 'use client';
 import {
   collection,
@@ -23,7 +24,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
@@ -51,7 +51,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Textarea } from './ui/textarea';
 import { ScrollArea } from './ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -219,6 +219,20 @@ export default function AdminManageProducts() {
   );
   const { data: products, isLoading } = useCollection<Product>(productsQuery);
 
+  const categoriesQuery = useMemoFirebase(
+    () => (firestore ? query(collection(firestore, 'categories')) : null),
+    [firestore]
+  );
+  const { data: categories, isLoading: isLoadingCategories } = useCollection(categoriesQuery);
+
+  const categoryMap = useMemo(() => {
+    if (!categories) return {};
+    return categories.reduce((acc, category) => {
+      acc[category.id] = category.name;
+      return acc;
+    }, {} as Record<string, string>);
+  }, [categories]);
+
   const handleDelete = async (productId: string) => {
     if (!firestore) return;
     try {
@@ -241,6 +255,8 @@ export default function AdminManageProducts() {
     setIsEditDialogOpen(true);
   }
 
+  const pageIsLoading = isLoading || isLoadingCategories;
+
   return (
     <Card>
       <CardHeader>
@@ -258,15 +274,15 @@ export default function AdminManageProducts() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading && (
+            {pageIsLoading && (
               <TableRow>
                 <TableCell colSpan={5}>Loading products...</TableCell>
               </TableRow>
             )}
-            {!isLoading && products?.map((product) => (
+            {!pageIsLoading && products?.map((product) => (
                 <TableRow key={product.id}>
                   <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>{product.categoryId}</TableCell>
+                  <TableCell>{categoryMap[product.categoryId] || product.categoryId}</TableCell>
                   <TableCell>{product.price.toFixed(2)} PKR</TableCell>
                   <TableCell>{product.variants?.length || 0}</TableCell>
                   <TableCell className="text-right">
@@ -299,7 +315,7 @@ export default function AdminManageProducts() {
                   </TableCell>
                 </TableRow>
               ))}
-            {!isLoading && products?.length === 0 && (
+            {!pageIsLoading && products?.length === 0 && (
                 <TableRow>
                     <TableCell colSpan={5} className="text-center">No products found.</TableCell>
                 </TableRow>
