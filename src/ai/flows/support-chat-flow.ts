@@ -12,9 +12,9 @@ import fs from 'fs';
 import path from 'path';
 
 // Read the contents of the legal pages and security rules directly from the filesystem.
-const termsContent = fs.readFileSync(path.join(process.cwd(), 'src', 'app', '(nav)', 'terms', 'page.tsx'), 'utf8');
-const privacyContent = fs.readFileSync(path.join(process.cwd(), 'src', 'app', '(nav)', 'privacy', 'page.tsx'), 'utf8');
-const refundContent = fs.readFileSync(path.join(process.cwd(), 'src', 'app', '(nav)', 'refund', 'page.tsx'), 'utf8');
+const termsContent = fs.readFileSync(path.join(process.cwd(), 'src', 'app', '(legal)', 'terms', 'page.tsx'), 'utf8');
+const privacyContent = fs.readFileSync(path.join(process.cwd(), 'src', 'app', '(legal)', 'privacy', 'page.tsx'), 'utf8');
+const refundContent = fs.readFileSync(path.join(process.cwd(), 'src', 'app', '(legal)', 'refund', 'page.tsx'), 'utf8');
 const securityRules = fs.readFileSync(path.join(process.cwd(), 'firestore.rules'),'utf8');
 
 
