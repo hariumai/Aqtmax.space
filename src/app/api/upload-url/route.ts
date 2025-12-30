@@ -16,8 +16,8 @@ const s3Client = new S3Client({
   },
 });
 
-const R2_BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME!;
-const R2_PUBLIC_URL = process.env.NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL!;
+const R2_BUCKET_NAME = "sublime";
+const R2_PUBLIC_URL = "https://sublime.statics.csio.aqtmax.space";
 
 export async function POST(req: NextRequest) {
   try {
@@ -36,16 +36,40 @@ export async function POST(req: NextRequest) {
       ContentType: fileType,
     });
 
-    // Generate a presigned URL for the PUT request
-    const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 60 }); // URL expires in 60 seconds
+    const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 60 });
 
-    // The public URL is what we will store in Firestore
     const publicUrl = `${R2_PUBLIC_URL}/${key}`;
 
     return NextResponse.json({ uploadUrl, publicUrl });
   } catch (error) {
     console.error("Error creating presigned URL:", error);
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during URL generation.";
-    return NextResponse.json({ error: `Failed to create upload URL. Server error: ${errorMessage}` }, { status: 500 });
+    
+    // Provide a more helpful error for the likely CORS issue
+    if (errorMessage.includes('credentials')) {
+         return NextResponse.json({ 
+            error: `Failed to create upload URL. Server error: Authorization failed. Please check your R2 API token permissions.` 
+        }, { status: 500 });
+    }
+
+    const origin = req.headers.get('origin') || 'your-app-domain.com';
+    const corsErrorGuidance = `This is likely a CORS issue on your Cloudflare R2 bucket. Please go to your R2 bucket settings > CORS Policy and add the following JSON: 
+[
+  {
+    "AllowedOrigins": [
+      "${origin}"
+    ],
+    "AllowedMethods": [
+      "PUT",
+      "GET"
+    ],
+    "AllowedHeaders": [
+      "content-type"
+    ],
+    "MaxAgeSeconds": 3600
+  }
+]`;
+
+    return NextResponse.json({ error: `Failed to create upload URL. ${corsErrorGuidance}` }, { status: 500 });
   }
 }

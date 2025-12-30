@@ -177,7 +177,8 @@ export default function CheckoutPage() {
                 });
 
                 if (!uploadResponse.ok) {
-                    throw new Error('Failed to upload screenshot to cloud storage.');
+                    // This error is less likely now, but good to have
+                    throw new Error('Failed to upload file directly to storage.');
                 }
 
                 screenshotUrl = publicUrl;
@@ -218,7 +219,7 @@ export default function CheckoutPage() {
 
         } catch (error: any) {
             console.error('Order placement error:', error);
-            toast({ variant: 'destructive', title: 'Order Failed', description: error.message || 'Could not place your order.' });
+            toast({ variant: 'destructive', title: 'Order Failed', description: error.message || 'Could not place your order.', duration: 20000 });
         } finally {
             setIsSubmitting(false);
         }
