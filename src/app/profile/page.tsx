@@ -12,6 +12,7 @@ import { Wallet, Info, AlertTriangle, MessageCircle, ShieldX } from 'lucide-reac
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { useEffect } from 'react';
 
 function OrderItem({ order }: { order: any }) {
   const itemNames = order.items.map((item: any) => item.subscriptionName).join(', ');
@@ -109,7 +110,7 @@ function BannedProfile({ user, banInfo, settings, onSignOut }: { user: any, banI
 }
 
 export default function ProfilePage() {
-  const { user, isUserLoading, userError } = useUser();
+  const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
   const firestore = useFirestore();
@@ -126,18 +127,19 @@ export default function ProfilePage() {
   const settingsRef = useMemoFirebase(() => (firestore ? doc(firestore, 'settings', 'payment') : null), [firestore]);
   const { data: settingsData } = useDoc(settingsRef);
 
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.replace('/login');
+    }
+  }, [user, isUserLoading, router]);
 
-  if (isUserLoading || isUserDataLoading) {
+
+  if (isUserLoading || isUserDataLoading || !user) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
-  }
-
-  if (!user) {
-    router.replace('/login');
-    return null;
   }
   
   const getInitials = (name?: string | null) => {
