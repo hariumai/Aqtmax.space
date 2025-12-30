@@ -140,11 +140,12 @@
         "$schema": "http://json-schema.org/draft-07/schema#",
         "title": "App Settings",
         "type": "object",
-        "description": "Stores global application settings, such as payment details.",
+        "description": "Stores global application settings, such as payment details and support contacts.",
         "properties": {
             "bankName": { "type": "string", "description": "The name of the bank for payments." },
             "accountNumber": { "type": "string", "description": "The bank account number." },
-            "accountHolderName": { "type": "string", "description": "The name of the account holder." }
+            "accountHolderName": { "type": "string", "description": "The name of the account holder." },
+            "whatsappNumber": { "type": "string", "description": "The contact number for WhatsApp support." }
         },
         "required": ["bankName", "accountNumber", "accountHolderName"]
     }
@@ -189,3 +190,5 @@
     ]
   }
 }
+
+    

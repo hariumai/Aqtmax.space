@@ -17,7 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import Link from 'next/link';
 import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
-import { useAuth, useUser, useFirestore } from '@/firebase';
+import { useAuth, useUser, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -38,6 +38,9 @@ export default function LoginPage() {
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
+
+  const settingsRef = useMemoFirebase(() => (firestore ? doc(firestore, 'settings', 'payment') : null), [firestore]);
+  const { data: settingsData } = useDoc(settingsRef);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -70,10 +73,14 @@ export default function LoginPage() {
         const now = new Date();
         
         if (banInfo.type === 'permanent' || (banInfo.expiresAt && new Date(banInfo.expiresAt) > now)) {
+           let description = `Your account has been banned. Reason: ${banInfo.reason || 'Not specified'}.`;
+           if (settingsData?.whatsappNumber) {
+             description += ` Please contact support on WhatsApp at ${settingsData.whatsappNumber}.`;
+           }
            toast({
             variant: 'destructive',
             title: 'Account Banned',
-            description: `Your account has been banned. Reason: ${banInfo.reason || 'Not specified'}.`,
+            description: description,
             duration: 10000,
           });
           await auth.signOut();
@@ -181,3 +188,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    

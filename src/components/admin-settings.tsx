@@ -16,6 +16,7 @@ const settingsSchema = z.object({
     bankName: z.string().min(1, 'Bank name is required'),
     accountHolderName: z.string().min(1, 'Account holder name is required'),
     accountNumber: z.string().min(1, 'Account number is required'),
+    whatsappNumber: z.string().optional(),
 });
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
@@ -33,6 +34,7 @@ export default function AdminSettings() {
       bankName: '',
       accountHolderName: '',
       accountNumber: '',
+      whatsappNumber: '',
     },
   });
 
@@ -45,8 +47,8 @@ export default function AdminSettings() {
   async function onSubmit(values: SettingsFormValues) {
     if (!firestore || !settingsRef) return;
     try {
-      await setDoc(settingsRef, values);
-      toast({ title: 'Settings Saved', description: 'Payment details have been updated.' });
+      await setDoc(settingsRef, values, { merge: true });
+      toast({ title: 'Settings Saved', description: 'Global settings have been updated.' });
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Error Saving Settings', description: error.message });
     }
@@ -61,8 +63,8 @@ export default function AdminSettings() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <h3 className="text-lg font-medium">Bank Account Details</h3>
             <div className="space-y-4 p-4 border rounded-lg">
+                <h3 className="text-lg font-medium">Bank Account Details</h3>
                 <FormField control={form.control} name="bankName" render={({ field }) => (
                     <FormItem><FormLabel>Bank Name</FormLabel><FormControl><Input placeholder="e.g., HBL" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
@@ -71,6 +73,12 @@ export default function AdminSettings() {
                 )} />
                  <FormField control={form.control} name="accountNumber" render={({ field }) => (
                     <FormItem><FormLabel>Account Number</FormLabel><FormControl><Input placeholder="e.g., 0123456789" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+            </div>
+            <div className="space-y-4 p-4 border rounded-lg">
+                <h3 className="text-lg font-medium">Support Settings</h3>
+                 <FormField control={form.control} name="whatsappNumber" render={({ field }) => (
+                    <FormItem><FormLabel>WhatsApp Support Number</FormLabel><FormControl><Input placeholder="e.g., +923001234567" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
             </div>
             <Button type="submit" disabled={isLoading || form.formState.isSubmitting}>
@@ -82,3 +90,5 @@ export default function AdminSettings() {
     </Card>
   );
 }
+
+    
