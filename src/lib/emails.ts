@@ -32,31 +32,31 @@ const emailWrapper = (content: string, preheader: string) => `
     <title>AQT Max</title>
     <style>
         body {
-            background-color: #0c0a09; color: #f2f2f2; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            background-color: #f8fafc; color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; margin: 0; padding: 0;
         }
         .container {
             width: 100%; max-width: 600px; margin: 0 auto; padding: 20px;
         }
         .header {
-            text-align: center; padding-bottom: 20px; border-bottom: 1px solid #27272a;
+            text-align: center; padding-bottom: 20px;
         }
         .header h1 {
-            color: #3b82f6; font-size: 24px; font-weight: bold; margin: 0;
+            color: #2563eb; font-size: 24px; font-weight: bold; margin: 0;
         }
         .main-content {
-            background-color: #18181b; border-radius: 12px; padding: 24px; margin-top: 24px;
+            background-color: #ffffff; border-radius: 12px; padding: 32px; margin-top: 24px; border: 1px solid #e2e8f0;
         }
         .footer {
-            text-align: center; padding-top: 20px; font-size: 12px; color: #a1a1aa;
+            text-align: center; padding-top: 20px; font-size: 12px; color: #64748b;
         }
         .button {
-            display: inline-block; background-color: #3b82f6; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;
+            display: inline-block; background-color: #2563eb; color: #ffffff !important; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;
         }
         .credentials-box {
-            background-color: #0c0a09; border: 1px solid #27272a; padding: 16px; border-radius: 8px; margin-top: 16px;
+            background-color: #f1f5f9; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; margin: 24px 0;
         }
-         .rules-box {
-            background-color: #3f2323; border-left: 4px solid #ef4444; color: #fecaca; padding: 16px; border-radius: 4px; margin: 16px 0;
+        .rules-box {
+            background-color: #fff1f2; border-left: 4px solid #f43f5e; color: #9f1239; padding: 16px; border-radius: 4px; margin: 24px 0;
         }
     </style>
 </head>
@@ -79,28 +79,28 @@ const emailWrapper = (content: string, preheader: string) => `
 
 
 export async function sendOrderConfirmationEmail(order: Order) {
-    const subject = `Your AQT Max Order #${order.id} has been placed!`;
+    const subject = `Your AQT Max Order #${order.id} is confirmed!`;
     const itemsHtml = order.items.map(item => `
-        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #27272a;">
+        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
             <span>${item.subscriptionName} (${item.variantName})</span>
-            <span>${item.price.toFixed(2)} PKR</span>
+            <span style="font-weight: 500;">${item.price.toFixed(2)} PKR</span>
         </div>
     `).join('');
 
     const content = `
-        <h2 style="color: #f2f2f2; font-size: 20px; font-weight: 600;">Thank you for your order, ${order.customerName}!</h2>
-        <p style="color: #a1a1aa; line-height: 1.5;">We've received your order and are now processing it. We will notify you again once your subscription credentials are ready. This usually takes less than 24 hours.</p>
+        <h2 style="color: #1e293b; font-size: 20px; font-weight: 600;">Thank you for your order, ${order.customerName}!</h2>
+        <p style="color: #475569; line-height: 1.5;">We've received your order and are processing it now. You'll get another email with your subscription details once everything is ready. This usually takes less than 24 hours.</p>
         
-        <h3 style="color: #f2f2f2; font-size: 16px; font-weight: 600; margin-top: 24px;">Order Summary (ID: ${order.id})</h3>
+        <h3 style="color: #1e293b; font-size: 16px; font-weight: 600; margin-top: 32px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Order Summary</h3>
         <div style="margin-top: 12px;">
             ${itemsHtml}
-            <div style="display: flex; justify-content: space-between; padding-top: 12px; margin-top: 8px; font-weight: bold; font-size: 16px;">
+            <div style="display: flex; justify-content: space-between; padding-top: 16px; margin-top: 8px; font-weight: bold; font-size: 18px;">
                 <span>Total</span>
                 <span>${order.totalAmount.toFixed(2)} PKR</span>
             </div>
         </div>
 
-        <div style="text-align: center; margin-top: 24px;">
+        <div style="text-align: center; margin: 32px 0;">
             <a href="${process.env.NEXT_PUBLIC_APP_URL}/profile" class="button">View My Orders</a>
         </div>
     `;
@@ -110,30 +110,30 @@ export async function sendOrderConfirmationEmail(order: Order) {
 }
 
 export async function sendOrderFulfilledEmail(order: Order) {
-    const subject = `🚀 Your AQT Max Order #${order.id} is Complete!`;
+    const subject = `🚀 Your AQT Max Order #${order.id} is Ready!`;
 
     const content = `
-        <h2 style="color: #f2f2f2; font-size: 20px; font-weight: 600;">Your order is ready, ${order.customerName}!</h2>
-        <p style="color: #a1a1aa; line-height: 1.5;">Your subscription is now active! Please find your account credentials below. You can also access this information from your profile page on our website.</p>
+        <h2 style="color: #1e293b; font-size: 20px; font-weight: 600;">Your order is ready, ${order.customerName}!</h2>
+        <p style="color: #475569; line-height: 1.5;">Your subscription is now active! Please find your account credentials below. You can also access this information from your profile page on our website.</p>
         
         <div class="credentials-box">
-            <p style="color: #a1a1aa; margin: 0 0 4px;">Username/Email:</p>
-            <p style="color: #f2f2f2; font-weight: bold; font-size: 16px; margin: 0 0 12px;">${order.credentials?.username}</p>
-            <p style="color: #a1a1aa; margin: 0 0 4px;">Password:</p>
-            <p style="color: #f2f2f2; font-weight: bold; font-size: 16px; margin: 0;">${order.credentials?.password}</p>
-            ${order.note ? `<p style="margin: 12px 0 0 0; color: #a1a1aa; border-top: 1px solid #27272a; padding-top: 12px;"><em>Note: ${order.note}</em></p>` : ''}
+            <p style="color: #475569; margin: 0 0 4px; font-size: 14px;">Username/Email:</p>
+            <p style="color: #0f172a; font-weight: 600; font-size: 16px; margin: 0 0 16px; font-family: monospace;">${order.credentials?.username}</p>
+            <p style="color: #475569; margin: 0 0 4px; font-size: 14px;">Password:</p>
+            <p style="color: #0f172a; font-weight: 600; font-size: 16px; margin: 0; font-family: monospace;">${order.credentials?.password}</p>
+            ${order.note ? `<p style="margin: 16px 0 0 0; color: #475569; border-top: 1px solid #d1d5db; padding-top: 16px; font-size: 14px; font-style: italic;">Note: ${order.note}</p>` : ''}
         </div>
 
         <div class="rules-box">
-            <h4 style="margin: 0 0 8px; font-weight: 600; color: #fecaca;">⚠️ Important Account Rules</h4>
-            <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #fecaca; line-height: 1.6;">
+            <h4 style="margin: 0 0 8px; font-weight: 600; color: #9f1239;">⚠️ Important Account Rules</h4>
+            <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #c026d3; line-height: 1.6;">
                 <li>Do not change any account details (password, email, etc.).</li>
                 <li>Do not add or change the profile PIN.</li>
                 <li>Violation of these rules will result in a permanent ban without refund.</li>
             </ul>
         </div>
         
-        <div style="text-align: center; margin-top: 24px;">
+        <div style="text-align: center; margin: 32px 0;">
             <a href="${process.env.NEXT_PUBLIC_APP_URL}/profile" class="button">Go to My Profile</a>
         </div>
     `;

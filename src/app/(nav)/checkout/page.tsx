@@ -145,6 +145,7 @@ export default function CheckoutPage() {
     const { data: cartItems, isLoading } = useCollection(cartQuery);
 
     useEffect(() => {
+        // Only redirect if the cart is empty AND an order has not just been completed.
         if (!isLoading && cartItems?.length === 0 && !orderComplete) {
             router.replace('/');
         }
@@ -249,10 +250,10 @@ export default function CheckoutPage() {
         });
 
         await batch.commit();
-        setOrderComplete(newOrderData);
         
         await sendOrderConfirmationEmail(newOrderData);
 
+        setOrderComplete(newOrderData);
 
       } catch (err: any) {
         console.error('Order placement error:', err);
@@ -402,4 +403,5 @@ export default function CheckoutPage() {
     );
 
     
+
 
