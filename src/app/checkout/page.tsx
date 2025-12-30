@@ -5,7 +5,7 @@ import SiteFooter from '@/components/site-footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCollection, useFirestore, useUser, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, doc, addDoc, serverTimestamp, writeBatch, updateDoc } from 'firebase/firestore';
+import { collection, query, doc, addDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { CreditCard, Lock, Upload, Wallet, X, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -23,7 +23,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useState, useMemo, ChangeEvent, useEffect } from 'react';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { type Order } from '@/lib/types';
@@ -156,10 +155,36 @@ export default function CheckoutPage() {
         try {
             let screenshotUrl = '';
             if (screenshotFile && total > 0) {
-                const storage = getStorage();
-                const storageRef = ref(storage, `payment_screenshots/${user.uid}/${Date.now()}_${screenshotFile.name}`);
-                const uploadResult = await uploadBytes(storageRef, screenshotFile);
-                screenshotUrl = await getDownloadURL(uploadResult.ref);
+                // 1. Get pre-signed URL from our API route
+                const presignedUrlResponse = await fetch('/api/upload-url', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fileName: screenshotFile.name, fileType: screenshotFile.type }),
+                });
+
+                if (!presignedUrlResponse.ok) {
+                    throw new Error('Could not get an upload URL.');
+                }
+                const { uploadUrl, key } = await presignedUrlResponse.json();
+
+                // 2. Upload file to R2 using the pre-signed URL
+                const uploadResponse = await fetch(uploadUrl, {
+                    method: 'PUT',
+                    body: screenshotFile,
+                    headers: { 'Content-Type': screenshotFile.type },
+                });
+
+                if (!uploadResponse.ok) {
+                    throw new Error('Failed to upload screenshot.');
+                }
+                
+                // 3. Construct the public URL
+                const r2PublicUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL;
+                if (!r2PublicUrl) {
+                    console.error("R2 public URL is not configured.");
+                    throw new Error("Could not construct screenshot URL.");
+                }
+                screenshotUrl = `${r2PublicUrl}/${key}`;
             }
 
             const newOrderRef = doc(collection(firestore, 'orders'));
@@ -338,7 +363,7 @@ export default function CheckoutPage() {
                                         )}
                                     </Button>
                                     <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-2">
-                                        <Lock className="h-3 w-3" /> Secure payments with SubLime Payment Gateway
+                                        <Lock className="h-3 w-3" /> Secure payments
                                     </p>
                                 </CardContent>
                             </Card>
