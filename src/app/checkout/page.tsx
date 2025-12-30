@@ -177,7 +177,8 @@ export default function CheckoutPage() {
                 });
 
                 if (!uploadResponse.ok) {
-                    throw new Error('Failed to upload file directly to storage.');
+                     const errorText = await uploadResponse.text();
+                     throw new Error(`Failed to upload file. Server responded with: ${errorText}`);
                 }
 
                 screenshotUrl = publicUrl;
