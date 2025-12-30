@@ -226,6 +226,7 @@ export default function CheckoutPage() {
         const newOrderRef = doc(collection(firestore, 'orders'));
         const batch = writeBatch(firestore);
 
+        const orderDate = new Date();
         const newOrderData: Order = {
           id: newOrderRef.id,
           userId: user.uid,
@@ -236,7 +237,7 @@ export default function CheckoutPage() {
           subtotal: total,
           totalAmount: total,
           paymentScreenshotUrl: paymentProofId, // Saving the document ID
-          orderDate: new Date(),
+          orderDate: orderDate.toISOString(),
           status: 'pending',
         };
 
@@ -401,3 +402,4 @@ export default function CheckoutPage() {
     );
 
     
+
