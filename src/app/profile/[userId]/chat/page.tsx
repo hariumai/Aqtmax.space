@@ -1,6 +1,6 @@
 
 'use client';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, use } from 'react';
 import { Button } from '@/components/ui/button';
 import { Send, Bot, User, Loader2, Plus, Home } from 'lucide-react';
 import { z } from 'zod';
@@ -68,6 +68,7 @@ const convertTimestamps = (obj: any): any => {
 };
 
 export default function AuthenticatedChatPage({ params }: { params: { userId: string } }) {
+  const resolvedParams = use(params);
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: "Hello! As a logged-in user, I have access to your account details. Ask me about your orders or store credit. How can I help?" },
   ]);
@@ -78,7 +79,7 @@ export default function AuthenticatedChatPage({ params }: { params: { userId: st
   const firestore = useFirestore();
 
   // SECURE: Ensure we are only loading data for the user specified in the URL if it matches the logged-in user.
-  const effectiveUserId = !isUserLoading && user?.uid === params.userId ? params.userId : undefined;
+  const effectiveUserId = !isUserLoading && user?.uid === resolvedParams.userId ? resolvedParams.userId : undefined;
 
   const userRef = useMemoFirebase(() => (firestore && effectiveUserId ? doc(firestore, 'users', effectiveUserId) : null), [firestore, effectiveUserId]);
   const { data: userData } = useDoc(userRef);
@@ -148,7 +149,7 @@ export default function AuthenticatedChatPage({ params }: { params: { userId: st
       )
   }
 
-  if (!user || user.uid !== params.userId) {
+  if (!user || user.uid !== resolvedParams.userId) {
        return (
             <div className="flex h-screen items-center justify-center text-center p-4">
                 <div>
