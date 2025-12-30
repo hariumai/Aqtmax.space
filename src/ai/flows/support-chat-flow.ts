@@ -8,7 +8,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import backendConfig from '@/../docs/backend.json';
-import securityRules from '@/../firestore.rules';
+import securityRules from '@/../firestore.rules?raw-loader';
 import termsContent from '!!raw-loader!@/app/(legal)/terms/page.tsx';
 import privacyContent from '!!raw-loader!@/app/(legal)/privacy/page.tsx';
 import refundContent from '!!raw-public-loader!@/app/(legal)/refund/page.tsx';
