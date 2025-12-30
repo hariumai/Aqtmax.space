@@ -203,10 +203,10 @@ export default function ProfilePage() {
   }, [user, userData, form]);
 
   async function onSubmit(values: ProfileFormValues) {
-    if (!user || !firestore) return;
+    if (!user || !firestore || !userRef) return;
     try {
       await updateProfile(user, { displayName: values.name });
-      await updateDoc(userRef!, {
+      await updateDoc(userRef, {
         name: values.name,
         phone: values.phone,
       });
