@@ -229,7 +229,7 @@ export default function ProfilePage() {
                 Sign Out
               </Button>
                <Button asChild variant="outline">
-                  <Link href="/chat">
+                  <Link href={`/profile/${user.uid}/chat`}>
                       <Bot className="mr-2 h-4 w-4" /> AI Support
                   </Link>
               </Button>
