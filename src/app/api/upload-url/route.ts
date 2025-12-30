@@ -13,7 +13,6 @@ if (
 ) {
   // This log will appear in your server console if variables are missing
   console.error("Cloudflare R2 environment variables are not set correctly.");
-  // We throw an error during build/startup time, not during the request
 }
 
 const s3Client = new S3Client({
@@ -54,7 +53,7 @@ export async function POST(req: NextRequest) {
 
     await s3Client.send(command);
 
-    // Construct the public URL
+    // Construct the public URL using the custom domain
     const publicUrl = `${R2_PUBLIC_URL}/${key}`;
 
     return NextResponse.json({ publicUrl });
