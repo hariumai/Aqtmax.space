@@ -139,88 +139,80 @@ export default function CheckoutPage() {
     };
 
     async function onSubmit(values: z.infer<typeof checkoutSchema>) {
-        if (!firestore || !user || !cartItems || cartItems.length === 0) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong. Please try again.' });
-            return;
+      if (!firestore || !user || !cartItems?.length) return;
+
+      setIsSubmitting(true);
+      let screenshotUrl: string | null = null;
+
+      try {
+        if (screenshotFile && total > 0) {
+          const formData = new FormData();
+          formData.append('file', screenshotFile);
+
+          const uploadResponse = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (!uploadResponse.ok) {
+            let errorMessage = 'Upload failed';
+            try {
+              const data = await uploadResponse.json();
+              errorMessage = data.error || errorMessage;
+            } catch {
+              errorMessage = await uploadResponse.text() || errorMessage;
+            }
+            console.error('Upload failed response:', errorMessage);
+            throw new Error(errorMessage);
+          }
+
+          const data = await uploadResponse.json();
+          screenshotUrl = data.publicUrl;
         }
 
-        if (total > 0 && !screenshotFile) {
-            toast({ variant: 'destructive', title: 'Screenshot Required', description: 'Please upload a payment screenshot to proceed.' });
-            return;
+        const newOrderRef = doc(collection(firestore, 'orders'));
+        const batch = writeBatch(firestore);
+
+        const newOrderData: Order = {
+          id: newOrderRef.id,
+          userId: user.uid,
+          items: cartItems,
+          customerName: values.name,
+          customerEmail: values.email,
+          customerPhone: values.phone,
+          subtotal: subtotal,
+          creditUsed: creditToUse,
+          totalAmount: total,
+          paymentScreenshotUrl: screenshotUrl || null,
+          orderDate: new Date(),
+          status: 'pending',
+        };
+
+        batch.set(newOrderRef, { ...newOrderData, orderDate: serverTimestamp() });
+
+        if (creditToUse > 0) {
+          batch.update(doc(firestore, 'users', user.uid), { storeCredit: availableCredit - creditToUse });
         }
-        
-        setIsSubmitting(true);
 
-        try {
-            let screenshotUrl: string | null = null;
-            
-            if (screenshotFile && total > 0) {
-                const formData = new FormData();
-                formData.append('file', screenshotFile);
+        cartItems.forEach(item => {
+          const cartItemRef = doc(firestore, 'users', user.uid, 'cart', item.id);
+          batch.delete(cartItemRef);
+        });
 
-                const uploadResponse = await fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData,
-                });
+        await batch.commit();
+        setOrderComplete(newOrderData);
 
-                if (uploadResponse.ok) {
-                    const data = await uploadResponse.json();
-                    screenshotUrl = data.publicUrl;
-                } else {
-                    let errorMessage = 'Upload failed';
-                    try {
-                        const data = await uploadResponse.json();
-                        errorMessage = data.error || errorMessage;
-                    } catch {
-                        errorMessage = await uploadResponse.text() || errorMessage;
-                    }
-                    console.error('Upload failed response:', errorMessage);
-                    throw new Error(errorMessage);
-                }
-            }
-
-            const newOrderRef = doc(collection(firestore, 'orders'));
-            const batch = writeBatch(firestore);
-
-            const newOrderData: any = {
-                id: newOrderRef.id,
-                userId: user.uid,
-                items: cartItems,
-                customerName: values.name,
-                customerEmail: values.email,
-                customerPhone: values.phone,
-                subtotal: subtotal,
-                creditUsed: creditToUse,
-                totalAmount: total,
-                orderDate: new Date(),
-                status: 'pending',
-            };
-            
-            if (screenshotUrl) {
-                newOrderData.paymentScreenshotUrl = screenshotUrl;
-            }
-
-            batch.set(newOrderRef, { ...newOrderData, orderDate: serverTimestamp() });
-
-            if (creditToUse > 0) {
-                const newCredit = availableCredit - creditToUse;
-                batch.update(doc(firestore, 'users', user.uid), { storeCredit: newCredit });
-            }
-
-            cartItems.forEach(item => {
-                const cartItemRef = doc(firestore, 'users', user.uid, 'cart', item.id);
-                batch.delete(cartItemRef);
-            });
-
-            await batch.commit();
-            setOrderComplete(newOrderData);
-
-        } catch (error: any) {
-            console.error('Order placement error:', error);
-            toast({ variant: 'destructive', title: 'Order Failed', description: error.message || 'Could not place your order.', duration: 20000 });
-        } finally {
-            setIsSubmitting(false);
-        }
+      } catch (err: any) {
+        console.error('Order placement error:', err);
+        toast({
+          variant: 'destructive',
+          title: 'Order Failed',
+          description: err.message || 'Could not place your order.',
+          duration: 20000,
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
     }
     
     if (isLoading) {

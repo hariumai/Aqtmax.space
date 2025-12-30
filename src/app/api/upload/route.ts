@@ -1,4 +1,4 @@
-export const runtime = 'nodejs'; // crucial for AWS SDK / Cloudflare R2
+export const runtime = 'nodejs'; // Must use Node runtime for AWS SDK
 
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { NextResponse } from 'next/server';
@@ -41,8 +41,8 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error('Upload API error:', err);
     if (err instanceof Error) {
-        console.error('Error message:', err.message);
-        console.error('Error stack:', err.stack);
+      console.error('Error message:', err.message);
+      console.error('Error stack:', err.stack);
     }
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
