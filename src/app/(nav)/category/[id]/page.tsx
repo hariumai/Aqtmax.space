@@ -18,7 +18,8 @@ const categoryIconMap: { [key: string]: React.ElementType } = {
 };
 
 export default function CategoryPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+  const resolvedParams = use(Promise.resolve(params));
+  const { id } = resolvedParams;
   const firestore = useFirestore();
   
   const categoryRef = useMemoFirebase(
