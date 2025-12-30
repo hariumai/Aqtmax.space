@@ -1,9 +1,8 @@
-
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, doc, updateDoc, orderBy } from 'firebase/firestore';
+import { collection, query, doc, updateDoc, orderBy, runTransaction } from 'firebase/firestore';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from './ui/button';
 import { CheckCircle, Clock, ExternalLink } from 'lucide-react';
@@ -22,14 +21,28 @@ export default function AdminOrders() {
   );
   const { data: orders, isLoading: isLoadingOrders } = useCollection(ordersQuery);
 
-  const handleCompleteOrder = async (orderId: string) => {
+  const handleCompleteOrder = async (order: any) => {
     if (!firestore) return;
     try {
-        const orderRef = doc(firestore, 'orders', orderId);
-        await updateDoc(orderRef, { status: 'completed' });
+        await runTransaction(firestore, async (transaction) => {
+            const orderRef = doc(firestore, 'orders', order.id);
+            const userRef = doc(firestore, 'users', order.userId);
+
+            const userDoc = await transaction.get(userRef);
+            if (!userDoc.exists()) {
+                throw new Error("User not found!");
+            }
+
+            const currentCredit = userDoc.data().storeCredit || 0;
+            const newCredit = currentCredit + order.totalAmount;
+
+            transaction.update(userRef, { storeCredit: newCredit });
+            transaction.update(orderRef, { status: 'completed' });
+        });
+
         toast({
             title: 'Order Completed',
-            description: 'The order has been marked as complete.',
+            description: `The order has been marked as complete and ${order.totalAmount.toFixed(2)} PKR credit has been added to the user's account.`,
         });
     } catch (error: any) {
         toast({
@@ -77,7 +90,7 @@ export default function AdminOrders() {
                   <TableCell>
                     {order.paymentScreenshotUrl ? (
                       <Button variant="ghost" size="icon" asChild>
-                        <Link href={order.paymentScreenshotUrl} target="_blank">
+                        <Link href={`/api/proof/${order.paymentScreenshotUrl}`} target="_blank">
                           <ExternalLink className="h-4 w-4" />
                         </Link>
                       </Button>
@@ -91,7 +104,7 @@ export default function AdminOrders() {
                   </TableCell>
                   <TableCell className="text-right">
                     {order.status === 'pending' && (
-                        <Button size="sm" onClick={() => handleCompleteOrder(order.id)}>
+                        <Button size="sm" onClick={() => handleCompleteOrder(order)}>
                             Complete Order
                         </Button>
                     )}
