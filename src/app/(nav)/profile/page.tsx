@@ -1,5 +1,3 @@
-
-
 'use client';
 import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
@@ -20,6 +18,7 @@ import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { updateProfile } from 'firebase/auth';
+import { type Order } from '@/lib/types';
 
 const profileFormSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -28,75 +27,29 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-function OrderItem({ order, settings }: { order: any; settings: any }) {
+function OrderItemRow({ order }: { order: Order }) {
   const itemNames = order.items.map((item: any) => item.subscriptionName).join(', ');
 
   return (
-    <AccordionItem value={order.id}>
-      <AccordionTrigger className="py-4 w-full">
-        <div className="flex justify-between items-center w-full">
-          <div>
-            <p className="font-semibold text-left">{itemNames}</p>
-            <p className="text-sm text-muted-foreground text-left">
-              Order Date: {new Date(order.orderDate.toDate()).toLocaleDateString()}
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="font-semibold">{order.totalAmount.toFixed(2)} PKR</p>
-            <Badge variant={order.status === 'completed' ? 'default' : 'secondary'} className="capitalize mt-1">
-              {order.status}
-            </Badge>
-          </div>
-        </div>
-      </AccordionTrigger>
-      <AccordionContent>
-        <div className="bg-muted/50 p-4 rounded-md space-y-4">
-          {order.status === 'completed' && order.credentials ? (
-            <div className='space-y-4'>
-               <h4 className="font-semibold">Subscription Details</h4>
-               <div className="text-sm space-y-2">
-                 <p><strong>Username/Email:</strong> {order.credentials.username}</p>
-                 <p><strong>Password:</strong> {order.credentials.password}</p>
-               </div>
-               <div className="border-l-4 border-destructive pl-4 py-2 bg-destructive/10 text-red-950 dark:text-red-200">
-                  <div className="flex items-center gap-2">
-                     <AlertTriangle className="h-5 w-5" />
-                     <h5 className="font-semibold">Important Account Rules</h5>
-                  </div>
-                  <ul className="text-xs list-disc pl-5 mt-2">
-                    <li>Do not pin a profile.</li>
-                    <li>Do not change any account details (password, email, etc.).</li>
-                    <li>Violation will result in a permanent ban and no refund.</li>
-                  </ul>
-               </div>
-               {settings?.whatsappNumber && (
-                <div className="border-l-4 border-primary pl-4 py-2 bg-primary/10">
-                    <div className="flex items-center gap-2">
-                        <Phone className="h-5 w-5 text-primary" />
-                        <h5 className="font-semibold text-primary">OTP Verification Support</h5>
-                    </div>
-                    <p className="text-xs mt-2 text-primary/90">
-                        If OTP (One-Time Password) verification is needed for login, please contact our support team on WhatsApp at {settings.whatsappNumber}.
-                    </p>
-                </div>
-               )}
-               {order.note && (
-                <div className="border-t pt-4 mt-4">
-                    <h5 className="font-semibold mb-2 flex items-center gap-2"><Info className="h-4 w-4" /> Note from Admin</h5>
-                    <p className="text-sm text-muted-foreground italic">"{order.note}"</p>
-                </div>
-               )}
+    <Link href={`/order/details/${order.id}`}>
+        <div className="flex justify-between items-center py-4 px-4 hover:bg-muted/50 rounded-lg cursor-pointer">
+            <div>
+                <p className="font-semibold text-left">{itemNames}</p>
+                <p className="text-sm text-muted-foreground text-left">
+                {new Date(order.orderDate).toLocaleDateString()}
+                </p>
             </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Your order is currently {order.status}. You will find your subscription details here once the order is completed.
-            </p>
-          )}
+            <div className="text-right">
+                <p className="font-semibold">{order.totalAmount.toFixed(2)} PKR</p>
+                <Badge variant={order.status === 'completed' ? 'default' : 'secondary'} className="capitalize mt-1">
+                {order.status}
+                </Badge>
+            </div>
         </div>
-      </AccordionContent>
-    </AccordionItem>
+    </Link>
   );
 }
+
 
 function BannedProfile({ user, banInfo, settings, onSignOut }: { user: any, banInfo: any, settings: any, onSignOut: () => void }) {
     const isTemporary = banInfo.type === 'temporary';
@@ -175,7 +128,7 @@ export default function ProfilePage() {
     () => (firestore && user ? query(collection(firestore, 'orders'), where('userId', '==', user.uid)) : null),
     [firestore, user]
   );
-  const { data: orders, isLoading: isLoadingOrders } = useCollection(ordersQuery);
+  const { data: orders, isLoading: isLoadingOrders } = useCollection<Order>(ordersQuery);
   
   const settingsRef = useMemoFirebase(() => (firestore ? doc(firestore, 'settings', 'payment') : null), [firestore]);
   const { data: settingsData } = useDoc(settingsRef);
@@ -329,11 +282,11 @@ export default function ProfilePage() {
             <CardContent>
               {isLoadingOrders && <p>Loading orders...</p>}
               {!isLoadingOrders && orders && orders.length > 0 ? (
-                <Accordion type="single" collapsible className="w-full">
+                 <div className="divide-y divide-border">
                   {orders.map((order) => (
-                    <OrderItem key={order.id} order={order} settings={settingsData} />
+                    <OrderItemRow key={order.id} order={order} />
                   ))}
-                </Accordion>
+                </div>
               ) : (
                 <div className="text-center py-8">
                     <p className="text-muted-foreground">You have not placed any orders yet.</p>
@@ -349,3 +302,4 @@ export default function ProfilePage() {
     </main>
   );
 }
+```

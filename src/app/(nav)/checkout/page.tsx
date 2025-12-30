@@ -19,14 +19,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useState, useMemo, ChangeEvent, useEffect, useRef } from 'react';
+import { useState, useMemo, ChangeEvent, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { type Order } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 import { sendOrderConfirmationEmail } from '@/lib/emails';
+
 
 const checkoutSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -34,92 +33,6 @@ const checkoutSchema = z.object({
   phone: z.string().min(1, 'Phone number is required'),
 });
 
-function OrderSuccess({ order }: { order: Order }) {
-    const orderCardRef = useRef<HTMLDivElement>(null);
-    const { toast } = useToast();
-
-    const handleDownload = async (format: 'png' | 'pdf') => {
-        if (!orderCardRef.current) return;
-
-        try {
-            const canvas = await html2canvas(orderCardRef.current, {
-                useCORS: true,
-                backgroundColor: null, 
-            });
-            const imgData = canvas.toDataURL('image/png');
-
-            if (format === 'png') {
-                const link = document.createElement('a');
-                link.download = `order-receipt-${order.id}.png`;
-                link.href = imgData;
-                link.click();
-            } else {
-                const pdf = new jsPDF({
-                    orientation: 'portrait',
-                    unit: 'px',
-                    format: [canvas.width, canvas.height]
-                });
-                pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-                pdf.save(`order-receipt-${order.id}.pdf`);
-            }
-        } catch (error) {
-            console.error('Failed to generate receipt:', error);
-            toast({
-                variant: 'destructive',
-                title: 'Download Failed',
-                description: 'Could not generate your order receipt. Please try again.'
-            });
-        }
-    };
-
-    return (
-        <Card className="w-full max-w-md mx-auto">
-            <div ref={orderCardRef} className="bg-card rounded-t-lg">
-                <CardHeader className="text-center">
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50">
-                       <CheckCircle className="h-6 w-6 text-green-500" />
-                    </div>
-                    <CardTitle className="text-2xl mt-4">Order Placed Successfully!</CardTitle>
-                    <CardDescription>Your order is pending verification. We will process it shortly.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="space-y-2 rounded-lg border p-4">
-                        <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Order ID</span>
-                            <span className="font-mono text-xs">{order.id}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Status</span>
-                            <span className="font-medium capitalize">{order.status}</span>
-                        </div>
-                         <div className="flex justify-between text-sm font-bold pt-2 border-t">
-                            <span>Total Paid</span>
-                            <span>{order.totalAmount.toFixed(2)} PKR</span>
-                        </div>
-                    </div>
-                </CardContent>
-            </div>
-            <CardContent className="pt-6 space-y-4">
-                 <div className="grid grid-cols-2 gap-2">
-                    <Button onClick={() => handleDownload('png')} variant="outline">
-                        <ImageIcon className="mr-2 h-4 w-4" /> Save as Image
-                    </Button>
-                    <Button onClick={() => handleDownload('pdf')} variant="outline">
-                        <FileDown className="mr-2 h-4 w-4" /> Download PDF
-                    </Button>
-                </div>
-                 <Button asChild className="w-full" size="lg">
-                    <Link href="/profile">View My Orders</Link>
-                </Button>
-                 <Button asChild className="w-full" size="lg" variant="secondary">
-                    <Link href="/products">
-                        <ShoppingCart className="mr-2 h-4 w-4" /> Continue Shopping
-                    </Link>
-                </Button>
-            </CardContent>
-        </Card>
-    )
-}
 
 export default function CheckoutPage() {
     const { user } = useUser();
@@ -129,7 +42,6 @@ export default function CheckoutPage() {
     
     const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [orderComplete, setOrderComplete] = useState<Order | null>(null);
     const [agreedToPolicies, setAgreedToPolicies] = useState(false);
 
     const userRef = useMemoFirebase(() => (firestore && user ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
@@ -145,11 +57,11 @@ export default function CheckoutPage() {
     const { data: cartItems, isLoading } = useCollection(cartQuery);
 
     useEffect(() => {
-        // Only redirect if the cart is empty AND an order has not just been completed.
-        if (!isLoading && cartItems?.length === 0 && !orderComplete) {
+        // Redirect if cart is empty and page is done loading
+        if (!isLoading && cartItems?.length === 0) {
             router.replace('/');
         }
-    }, [isLoading, cartItems, router, orderComplete]);
+    }, [isLoading, cartItems, router]);
 
     const total = useMemo(() => cartItems?.reduce((acc, item) => acc + item.price * item.quantity, 0) ?? 0, [cartItems]);
     
@@ -197,8 +109,8 @@ export default function CheckoutPage() {
       const res = await fetch('/api/upload', { method: 'POST', body: formData });
 
       if (!res.ok) {
-        let msg = 'Upload failed';
         const text = await res.text();
+        let msg = 'Upload failed';
         try {
           const data = JSON.parse(text);
           msg = data.error || msg;
@@ -227,7 +139,6 @@ export default function CheckoutPage() {
         const newOrderRef = doc(collection(firestore, 'orders'));
         const batch = writeBatch(firestore);
 
-        const orderDate = new Date();
         const newOrderData: Order = {
           id: newOrderRef.id,
           userId: user.uid,
@@ -238,7 +149,7 @@ export default function CheckoutPage() {
           subtotal: total,
           totalAmount: total,
           paymentScreenshotUrl: paymentProofId, // Saving the document ID
-          orderDate: orderDate.toISOString(),
+          orderDate: new Date(),
           status: 'pending',
         };
 
@@ -251,9 +162,12 @@ export default function CheckoutPage() {
 
         await batch.commit();
         
-        await sendOrderConfirmationEmail(newOrderData);
+        await sendOrderConfirmationEmail({
+            ...newOrderData,
+            orderDate: newOrderData.orderDate.toISOString() 
+        });
 
-        setOrderComplete(newOrderData);
+        router.push(`/order/details/${newOrderRef.id}`);
 
       } catch (err: any) {
         console.error('Order placement error:', err);
@@ -278,9 +192,6 @@ export default function CheckoutPage() {
   
     return (
         <main className="flex-grow container mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
-            {orderComplete ? (
-                <OrderSuccess order={orderComplete} />
-            ) : (
             <>
                 <div className="text-center mb-12">
                     <h1 className="font-headline text-4xl font-extrabold tracking-tighter sm:text-5xl">Checkout</h1>
@@ -390,7 +301,7 @@ export default function CheckoutPage() {
                                         )}
                                     </Button>
                                     <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-2">
-                                        <Lock className="h-3 w-3" /> Secure payments
+                                        <Lock className="h-3 w-3" /> Secure payments with AQT Max
                                     </p>
                                 </CardContent>
                             </Card>
@@ -398,10 +309,6 @@ export default function CheckoutPage() {
                     </form>
                 </Form>
             </>
-        )}
         </main>
     );
-
-    
-
-
+```
