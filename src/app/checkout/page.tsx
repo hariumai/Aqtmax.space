@@ -167,15 +167,37 @@ export default function CheckoutPage() {
                 }
                 const { uploadUrl, key } = await presignedUrlResponse.json();
 
-                // 2. Upload file to R2 using the pre-signed URL
-                const uploadResponse = await fetch(uploadUrl, {
-                    method: 'PUT',
-                    body: screenshotFile,
-                    headers: { 'Content-Type': screenshotFile.type },
-                });
+                try {
+                    // 2. Upload file to R2 using the pre-signed URL
+                    const uploadResponse = await fetch(uploadUrl, {
+                        method: 'PUT',
+                        body: screenshotFile,
+                        headers: { 'Content-Type': screenshotFile.type },
+                    });
 
-                if (!uploadResponse.ok) {
-                    throw new Error('Failed to upload screenshot.');
+                    if (!uploadResponse.ok) {
+                        throw new Error('Failed to upload screenshot.');
+                    }
+                } catch (uploadError: any) {
+                    if (uploadError.name === 'TypeError' && uploadError.message === 'Failed to fetch') {
+                         toast({
+                            variant: "destructive",
+                            title: "Upload Failed: CORS Issue",
+                            description: (
+                                <span>
+                                    This is likely a CORS issue with your R2 bucket. Please
+                                    <a href="https://developers.cloudflare.com/r2/data-access/cors-configuration/" target="_blank" rel="noopener noreferrer" className="underline font-bold ml-1">
+                                        configure CORS on your R2 bucket
+                                    </a>
+                                    .
+                                </span>
+                            ),
+                            duration: 10000,
+                        });
+                        setIsSubmitting(false);
+                        return;
+                    }
+                    throw uploadError;
                 }
                 
                 // 3. Construct the public URL
