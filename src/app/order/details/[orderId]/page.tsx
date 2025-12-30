@@ -213,4 +213,3 @@ export default function OrderDetailsPage({ params }: { params: { orderId: string
         </main>
     );
 }
-```
