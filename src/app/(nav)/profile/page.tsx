@@ -7,12 +7,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { collection, query, doc, where, updateDoc } from 'firebase/firestore';
 import { useDoc } from '@/firebase';
-import { Info, AlertTriangle, MessageCircle, ShieldX, Bell, Phone } from 'lucide-react';
+import { Info, AlertTriangle, MessageCircle, ShieldX, Bell, Phone, User as UserIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { updateProfile } from 'firebase/auth';
+
+const profileFormSchema = z.object({
+  name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
+  phone: z.string().optional(),
+});
+
+type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 function OrderItem({ order, settings }: { order: any; settings: any }) {
   const itemNames = order.items.map((item: any) => item.subscriptionName).join(', ');
@@ -152,6 +165,7 @@ export default function ProfilePage() {
   const auth = useAuth();
   const router = useRouter();
   const firestore = useFirestore();
+  const { toast } = useToast();
 
   const userRef = useMemoFirebase(() => (firestore && user ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
   const { data: userData, isLoading: isUserDataLoading } = useDoc(userRef);
@@ -165,11 +179,49 @@ export default function ProfilePage() {
   const settingsRef = useMemoFirebase(() => (firestore ? doc(firestore, 'settings', 'payment') : null), [firestore]);
   const { data: settingsData } = useDoc(settingsRef);
 
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: {
+      name: '',
+      phone: '',
+    },
+  });
+
   useEffect(() => {
     if (!isUserLoading && !user) {
       router.replace('/login');
     }
   }, [user, isUserLoading, router]);
+
+  useEffect(() => {
+    if (user && userData) {
+      form.reset({
+        name: user.displayName || '',
+        phone: (userData as any).phone || '',
+      });
+    }
+  }, [user, userData, form]);
+
+  async function onSubmit(values: ProfileFormValues) {
+    if (!user || !firestore) return;
+    try {
+      await updateProfile(user, { displayName: values.name });
+      await updateDoc(userRef!, {
+        name: values.name,
+        phone: values.phone,
+      });
+      toast({
+        title: 'Profile Updated',
+        description: 'Your profile has been successfully updated.',
+      });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Update Failed',
+        description: error.message || 'An unexpected error occurred.',
+      });
+    }
+  }
 
   if (isUserLoading || isUserDataLoading || !user) {
     return (
@@ -204,23 +256,59 @@ export default function ProfilePage() {
         <div className="space-y-8 w-full">
           <Card>
             <CardHeader>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-16 w-16">
-                    <AvatarImage src={user.photoURL ?? ''} />
-                    <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <CardTitle className="text-2xl">{user.displayName || 'User'}</CardTitle>
-                    <CardDescription>{user.email}</CardDescription>
-                  </div>
-                </div>
+              <div className="flex items-center gap-4">
+                <UserIcon className="h-8 w-8 text-primary" />
+                <CardTitle className="text-2xl">My Profile</CardTitle>
               </div>
             </CardHeader>
-            <CardContent className="flex flex-wrap gap-2">
-              <Button onClick={handleSignOut} variant="destructive">
-                Sign Out
-              </Button>
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-16 w-16">
+                      <AvatarImage src={user.photoURL ?? ''} />
+                      <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Name</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Your name" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone Number</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., +923001234567" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                   <CardDescription>{user.email}</CardDescription>
+                  <div className="flex gap-2 pt-4">
+                    <Button type="submit" disabled={form.formState.isSubmitting}>
+                      {form.formState.isSubmitting ? 'Saving...' : 'Save Changes'}
+                    </Button>
+                    <Button onClick={handleSignOut} variant="destructive">
+                      Sign Out
+                    </Button>
+                  </div>
+                </form>
+              </Form>
             </CardContent>
           </Card>
 

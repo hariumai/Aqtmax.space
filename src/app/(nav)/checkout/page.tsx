@@ -76,6 +76,9 @@ export default function CheckoutPage() {
     const [orderComplete, setOrderComplete] = useState<Order | null>(null);
     const [agreedToPolicies, setAgreedToPolicies] = useState(false);
 
+    const userRef = useMemoFirebase(() => (firestore && user ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
+    const { data: userData } = useDoc(userRef);
+
     const settingsRef = useMemoFirebase(() => (firestore ? doc(firestore, 'settings', 'payment') : null), [firestore]);
     const { data: paymentSettings } = useDoc(settingsRef);
 
@@ -103,14 +106,14 @@ export default function CheckoutPage() {
     });
 
     useEffect(() => {
-        if (user) {
+        if (user || userData) {
             form.reset({
-                name: user.displayName ?? '',
-                email: user.email ?? '',
-                phone: form.getValues().phone || '',
+                name: user?.displayName ?? '',
+                email: user?.email ?? '',
+                phone: (userData as any)?.phone || '',
             });
         }
-    }, [user, form]);
+    }, [user, userData, form]);
 
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
