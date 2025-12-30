@@ -1,4 +1,3 @@
-
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -28,7 +27,7 @@ const productSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().min(1, 'Description is required'),
   price: z.coerce.number().min(0, 'Base price must be a positive number'),
-  discountedPrice: z.coerce.number().nullable().optional().transform(val => val || null),
+  discountedPrice: z.coerce.number().nullable().optional(),
   imageUrl: z.string().url('Must be a valid URL'),
   categoryId: z.string().min(1, 'Category ID is required'),
   variants: z.array(variantGroupSchema).optional(),
@@ -50,6 +49,7 @@ export default function AdminAddProduct() {
       name: '',
       description: '',
       price: 0,
+      discountedPrice: null,
       imageUrl: '',
       categoryId: '',
       variants: [],
@@ -112,7 +112,7 @@ export default function AdminAddProduct() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField control={productForm.control} name="price" render={({ field }) => (<FormItem><FormLabel>Base Price (PKR)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="3000" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField control={productForm.control} name="discountedPrice" render={({ field }) => (<FormItem><FormLabel>Discounted Price (PKR)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="2499" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={productForm.control} name="discountedPrice" render={({ field }) => (<FormItem><FormLabel>Discounted Price (PKR)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="2499" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? null : Number(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
                 <FormField control={productForm.control} name="imageUrl" render={({ field }) => (<FormItem><FormLabel>Image URL</FormLabel><FormControl><Input placeholder="https://example.com/image.png" {...field} /></FormControl><FormMessage /></FormItem>)} />
             </div>
 
@@ -204,5 +204,3 @@ function VariantOptionsArray({ groupIndex, control }: { groupIndex: number, cont
     </div>
   );
 }
-
-    

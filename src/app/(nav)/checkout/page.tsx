@@ -305,9 +305,9 @@ export default function CheckoutPage() {
                                         <Switch id="terms-agreement" checked={agreedToPolicies} onCheckedChange={setAgreedToPolicies} />
                                         <Label htmlFor="terms-agreement" className="text-xs text-muted-foreground">
                                             I have read and agree to the 
-                                            <Link href="/terms" className="underline hover:text-primary"> Terms of Service</Link>, 
-                                            <Link href="/privacy" className="underline hover:text-primary"> Privacy Policy</Link>, and 
-                                            <Link href="/refund" className="underline hover:text-primary"> Refund Policy</Link>.
+                                            <Link href="/legal/terms" className="underline hover:text-primary"> Terms of Service</Link>, 
+                                            <Link href="/legal/privacy" className="underline hover:text-primary"> Privacy Policy</Link>, and 
+                                            <Link href="/legal/refund" className="underline hover:text-primary"> Refund Policy</Link>.
                                         </Label>
                                     </div>
 

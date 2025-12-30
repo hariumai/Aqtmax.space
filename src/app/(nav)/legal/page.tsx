@@ -6,19 +6,19 @@ import Link from 'next/link';
 
 const legalLinks = [
     {
-        href: '/terms',
+        href: '/legal/terms',
         title: 'Terms of Service',
         description: 'Read the terms and conditions for using our service.',
         icon: FileText
     },
     {
-        href: '/privacy',
+        href: '/legal/privacy',
         title: 'Privacy Policy',
         description: 'Learn how we collect, use, and protect your data.',
         icon: Shield
     },
     {
-        href: '/refund',
+        href: '/legal/refund',
         title: 'Refund Policy',
         description: 'Understand our policy on refunds and returns.',
         icon: Undo2
