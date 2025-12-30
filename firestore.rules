@@ -63,10 +63,10 @@ service cloud.firestore {
      * @principle Restricts access to a user's own data tree and allows admins to list users.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId) || isSignedIn(); // Allow admin to get user doc for credits
+      allow get: if isOwner(userId) || isSignedIn(); // Allow admin to get user doc
       allow list: if isSignedIn(); // Admin-level access for now
       allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isOwner(userId) || (isSignedIn() && request.resource.data.keys().hasOnly(['storeCredit']));
+      allow update: if isOwner(userId) || (isSignedIn() && (request.resource.data.keys().hasOnly(['storeCredit']) || request.resource.data.keys().hasOnly(['ban'])));
       allow delete: if isExistingOwner(userId);
       
       /**
@@ -92,8 +92,8 @@ service cloud.firestore {
       allow get: if isOwner(resource.data.userId) || isSignedIn(); // User can get own order, admin can get any
       allow list: if isSignedIn(); // Admin-level access for now
       allow create: if isOwner(request.resource.data.userId);
-      allow update: if isSignedIn(); // Admin can update to add credentials/note
-      allow delete: if isSignedIn(); // Admin only for now
+      allow update: if isSignedIn(); // Admin can update order
+      allow delete: if isSignedIn(); // Admin only
     }
 
     /**

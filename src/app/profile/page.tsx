@@ -43,12 +43,12 @@ function OrderItem({ order }: { order: any }) {
                  <p><strong>Username/Email:</strong> {order.credentials.username}</p>
                  <p><strong>Password:</strong> {order.credentials.password}</p>
                </div>
-               <div className="border-l-4 border-destructive pl-4 py-2 bg-destructive/10 text-destructive-foreground">
+               <div className="border-l-4 border-destructive pl-4 py-2 bg-destructive/10 text-destructive-foreground/90">
                   <div className="flex items-center gap-2">
-                     <AlertTriangle className="h-5 w-5" />
-                     <h5 className="font-semibold">Important Account Rules</h5>
+                     <AlertTriangle className="h-5 w-5 text-destructive-foreground" />
+                     <h5 className="font-semibold text-destructive-foreground">Important Account Rules</h5>
                   </div>
-                  <ul className="text-xs list-disc pl-5 mt-2">
+                  <ul className="text-xs list-disc pl-5 mt-2 text-destructive-foreground/80">
                     <li>Do not pin a profile.</li>
                     <li>Do not change any account details (password, email, etc.).</li>
                     <li>Violation will result in a permanent ban and no refund.</li>

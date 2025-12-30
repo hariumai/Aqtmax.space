@@ -6,14 +6,157 @@ import { useCollection, useFirestore, useAuth, useMemoFirebase, useUser } from '
 import { collection, query, doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from './ui/button';
-import { Mail, Trash, Edit } from 'lucide-react';
+import { Mail, Trash, Edit, Ban } from 'lucide-react';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose, DialogDescription } from './ui/dialog';
 import { useState } from 'react';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { Badge } from './ui/badge';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { CalendarIcon } from 'lucide-react';
+import { Calendar } from './ui/calendar';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+
+const banSchema = z.object({
+  type: z.enum(['temporary', 'permanent']),
+  reason: z.string().min(1, 'A reason is required for the ban.'),
+  expiresAt: z.date().optional(),
+}).refine(data => {
+  if (data.type === 'temporary') {
+    return !!data.expiresAt;
+  }
+  return true;
+}, {
+  message: 'Expiration date is required for temporary bans.',
+  path: ['expiresAt'],
+});
+
+function BanUserForm({ user, onFinished }: { user: any; onFinished: () => void }) {
+  const firestore = useFirestore();
+  const { toast } = useToast();
+  const form = useForm<z.infer<typeof banSchema>>({
+    resolver: zodResolver(banSchema),
+    defaultValues: {
+      type: user.ban?.type || 'temporary',
+      reason: user.ban?.reason || '',
+      expiresAt: user.ban?.expiresAt ? new Date(user.ban.expiresAt) : undefined,
+    }
+  });
+
+  async function onSubmit(values: z.infer<typeof banSchema>) {
+    if (!firestore) return;
+    try {
+      const userRef = doc(firestore, 'users', user.id);
+      await updateDoc(userRef, {
+        ban: {
+          isBanned: true,
+          type: values.type,
+          reason: values.reason,
+          expiresAt: values.type === 'temporary' ? values.expiresAt?.toISOString() : null,
+        }
+      });
+      toast({ title: 'User Banned', description: `${user.name} has been banned.` });
+      onFinished();
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Error banning user', description: e.message });
+    }
+  }
+
+  const banType = form.watch('type');
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Ban Type</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                <SelectContent>
+                  <SelectItem value="temporary">Temporary</SelectItem>
+                  <SelectItem value="permanent">Permanent</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormItem>
+          )}
+        />
+        {banType === 'temporary' && (
+          <FormField
+            control={form.control}
+            name="expiresAt"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Expires At</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
+                      >
+                        {field.value ? format(field.value, "PPP HH:mm") : <span>Pick a date</span>}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={(date) => date < new Date()}
+                      initialFocus
+                    />
+                     <div className="p-3 border-t border-border">
+                        <Input
+                            type="time"
+                            defaultValue={field.value ? format(field.value, 'HH:mm') : ''}
+                            onChange={(e) => {
+                                const [hours, minutes] = e.target.value.split(':');
+                                const newDate = field.value ? new Date(field.value) : new Date();
+                                newDate.setHours(parseInt(hours), parseInt(minutes));
+                                field.onChange(newDate);
+                            }}
+                        />
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+        <FormField
+          control={form.control}
+          name="reason"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Reason</FormLabel>
+              <FormControl><Input placeholder="e.g., ToS Violation" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <DialogFooter>
+          <DialogClose asChild><Button variant="ghost">Cancel</Button></DialogClose>
+          <Button type="submit">Apply Ban</Button>
+        </DialogFooter>
+      </form>
+    </Form>
+  )
+}
 
 export default function AdminUsers() {
   const firestore = useFirestore();
@@ -23,6 +166,7 @@ export default function AdminUsers() {
   const [creditAmount, setCreditAmount] = useState(0);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isCreditDialogOpen, setIsCreditDialogOpen] = useState(false);
+  const [isBanDialogOpen, setIsBanDialogOpen] = useState(false);
 
   const usersQuery = useMemoFirebase(
     () => (firestore && user ? query(collection(firestore, 'users')) : null),
@@ -75,6 +219,24 @@ export default function AdminUsers() {
     setIsCreditDialogOpen(true);
   };
 
+  const openBanDialog = (user: any) => {
+    setSelectedUser(user);
+    setIsBanDialogOpen(true);
+  };
+  
+  const handleUnban = async (userId: string) => {
+    if (!firestore) return;
+    try {
+      const userRef = doc(firestore, 'users', userId);
+      await updateDoc(userRef, {
+        "ban.isBanned": false,
+      });
+      toast({ title: "User Unbanned", description: "The user's ban has been lifted." });
+    } catch (error: any) {
+       toast({ variant: 'destructive', title: 'Error Unbanning User', description: error.message });
+    }
+  };
+
   const handleUpdateCredit = async () => {
     if (!firestore || !selectedUser || !user) {
         toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to perform this action.' });
@@ -82,7 +244,6 @@ export default function AdminUsers() {
     }
     try {
       const userRef = doc(firestore, 'users', selectedUser.id);
-      // Only update the storeCredit field to comply with security rules
       await updateDoc(userRef, {
         storeCredit: Number(creditAmount)
       });
@@ -98,6 +259,7 @@ export default function AdminUsers() {
 
 
   return (
+    <>
     <Card>
       <CardHeader>
         <CardTitle>Users</CardTitle>
@@ -112,17 +274,18 @@ export default function AdminUsers() {
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Store Credit</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoadingUsers ? (
               <TableRow>
-                <TableCell colSpan={4}>Loading users...</TableCell>
+                <TableCell colSpan={5}>Loading users...</TableCell>
               </TableRow>
             ) : (
               users?.map((user) => (
-                <TableRow key={user.id}>
+                <TableRow key={user.id} className={user.ban?.isBanned ? 'bg-destructive/10' : ''}>
                   <TableCell>{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
@@ -133,11 +296,26 @@ export default function AdminUsers() {
                         </Button>
                     </div>
                   </TableCell>
+                  <TableCell>
+                    {user.ban?.isBanned ? (
+                      <Badge variant="destructive" className="capitalize">{user.ban.type}</Badge>
+                    ) : (
+                      <Badge variant="secondary">Active</Badge>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => handlePasswordReset(user.email)}>
                         <Mail className="h-4 w-4" />
                         <span className="sr-only">Send Password Reset</span>
                     </Button>
+                     {user.ban?.isBanned ? (
+                        <Button variant="ghost" size="sm" onClick={() => handleUnban(user.id)}>Unban</Button>
+                    ) : (
+                        <Button variant="ghost" size="icon" onClick={() => openBanDialog(user)}>
+                            <Ban className="h-4 w-4" />
+                            <span className="sr-only">Ban User</span>
+                        </Button>
+                    )}
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
@@ -168,7 +346,7 @@ export default function AdminUsers() {
             )}
             {!isLoadingUsers && users?.length === 0 && (
                 <TableRow>
-                    <TableCell colSpan={4} className="text-center">No users found.</TableCell>
+                    <TableCell colSpan={5} className="text-center">No users found.</TableCell>
                 </TableRow>
             )}
           </TableBody>
@@ -197,8 +375,19 @@ export default function AdminUsers() {
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+        
+        <Dialog open={isBanDialogOpen} onOpenChange={setIsBanDialogOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Ban User: {selectedUser?.name}</DialogTitle>
+                    <DialogDescription>Select the type of ban and provide a reason.</DialogDescription>
+                </DialogHeader>
+                {selectedUser && <BanUserForm user={selectedUser} onFinished={() => setIsBanDialogOpen(false)} />}
+            </DialogContent>
+        </Dialog>
 
       </CardContent>
     </Card>
+    </>
   );
 }

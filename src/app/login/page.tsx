@@ -17,10 +17,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import Link from 'next/link';
 import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useUser, useFirestore } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 
 const formSchema = z.object({
   email: z.string().email({
@@ -34,6 +35,7 @@ const formSchema = z.object({
 export default function LoginPage() {
   const { toast } = useToast();
   const auth = useAuth();
+  const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
 
@@ -54,18 +56,41 @@ export default function LoginPage() {
   }, [user, isUserLoading, router]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!auth) return;
+    if (!auth || !firestore) return;
     try {
       const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
-      if (!userCredential.user.emailVerified) {
+      const loggedInUser = userCredential.user;
+
+      // Check ban status from Firestore
+      const userDocRef = doc(firestore, 'users', loggedInUser.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists() && userDoc.data().ban?.isBanned) {
+        const banInfo = userDoc.data().ban;
+        const now = new Date();
+        
+        if (banInfo.type === 'permanent' || (banInfo.expiresAt && new Date(banInfo.expiresAt) > now)) {
+           toast({
+            variant: 'destructive',
+            title: 'Account Banned',
+            description: `Your account has been banned. Reason: ${banInfo.reason || 'Not specified'}.`,
+            duration: 10000,
+          });
+          await auth.signOut();
+          return;
+        }
+      }
+
+      if (!loggedInUser.emailVerified) {
         toast({
             variant: 'destructive',
             title: 'Email Not Verified',
             description: 'Please verify your email before logging in.',
         });
-        auth.signOut(); // Sign out the unverified user
+        await auth.signOut(); 
         return;
       }
+
       toast({
         title: 'Login Successful',
         description: "You've been successfully signed in.",
