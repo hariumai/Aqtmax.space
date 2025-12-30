@@ -197,11 +197,12 @@ export default function CheckoutPage() {
 
       if (!res.ok) {
         let msg = 'Upload failed';
+        const text = await res.text();
         try {
-          const data = await res.json();
+          const data = JSON.parse(text);
           msg = data.error || msg;
         } catch {
-          msg = await res.text() || msg;
+          msg = text || msg;
         }
         throw new Error(msg);
       }
@@ -398,4 +399,5 @@ export default function CheckoutPage() {
         )}
         </main>
     );
-}
+
+    
