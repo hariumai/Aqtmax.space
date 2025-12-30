@@ -1,3 +1,4 @@
+
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextRequest, NextResponse } from 'next/server';
@@ -28,7 +29,6 @@ export async function POST(req: NextRequest) {
     const command = new PutObjectCommand({
       Bucket: R2_BUCKET_NAME,
       Key: key,
-      ContentType: fileType,
     });
 
     const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 60 });

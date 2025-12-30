@@ -173,7 +173,6 @@ export default function CheckoutPage() {
                 const uploadResponse = await fetch(uploadUrl, {
                     method: 'PUT',
                     body: screenshotFile,
-                    headers: { 'Content-Type': screenshotFile.type },
                 });
 
                 if (!uploadResponse.ok) {
