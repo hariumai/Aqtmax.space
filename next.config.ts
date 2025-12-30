@@ -36,12 +36,29 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'https',
+        protocol: 'https'
+        ,
         hostname: 'images.ctfassets.net',
         port: '',
         pathname: '/**',
       }
     ],
+  },
+   webpack(config) {
+    config.module.rules.push({
+      resourceQuery: /raw-loader/,
+      type: 'asset/source',
+    });
+    config.module.rules.push({
+      resourceQuery: /public-loader/,
+      type: 'asset/source',
+      loader: 'raw-loader',
+    });
+    config.module.rules.push({
+      test: /\.rules$/,
+      type: 'asset/source',
+    });
+    return config;
   },
 };
 
