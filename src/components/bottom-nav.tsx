@@ -51,8 +51,12 @@ export default function BottomNav() {
   // Manually add Account item
   const accountItem = { id: 'account', href: user ? '/profile' : '/login', label: 'Account', icon: User, order: 4 };
 
-  // Show first 3 items from config, plus Account, then Menu.
+  // Show first 3 items from config.
   const mainNavItems = navItems.slice(0, 3);
+  // Place Account link after the main items.
+  mainNavItems.push(accountItem);
+
+  // Everything else goes in the overflow.
   const overflowNavItems = navItems.slice(3);
 
 
@@ -72,48 +76,29 @@ export default function BottomNav() {
       <div className="grid h-full max-w-lg grid-cols-5 mx-auto font-medium">
         {mainNavItems.map(item => {
              const Icon = item.icon || Home;
+             const itemPath = getHref(item.href);
              return (
              <Link
              key={item.id}
-             href={item.href}
+             href={itemPath}
              className="inline-flex flex-col items-center justify-center px-5 hover:bg-muted/50 group"
            >
              <Icon
                className={cn(
                  'w-5 h-5 mb-1 text-muted-foreground transition-colors group-hover:text-primary',
-                 pathname === item.href && 'text-primary'
+                 pathname === itemPath && 'text-primary'
                )}
              />
              <span
                className={cn(
                  'text-xs text-muted-foreground transition-colors group-hover:text-primary',
-                 pathname === item.href && 'text-primary'
+                 pathname === itemPath && 'text-primary'
                )}
              >
                {item.label}
              </span>
            </Link>
         )})}
-         <Link
-            key={accountItem.id}
-            href={accountItem.href}
-            className="inline-flex flex-col items-center justify-center px-5 hover:bg-muted/50 group"
-          >
-            <User
-              className={cn(
-                'w-5 h-5 mb-1 text-muted-foreground transition-colors group-hover:text-primary',
-                (pathname === '/profile' || pathname === '/login') && 'text-primary'
-              )}
-            />
-            <span
-              className={cn(
-                'text-xs text-muted-foreground transition-colors group-hover:text-primary',
-                (pathname === '/profile' || pathname === '/login') && 'text-primary'
-              )}
-            >
-              {accountItem.label}
-            </span>
-          </Link>
         <Sheet>
             <SheetTrigger asChild>
                 <button
