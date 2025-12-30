@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'File name and type are required.' }, { status: 400 });
     }
 
-    const safeFileName = fileName.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+    const safeFileName = fileName.replace(/[^a-zA-Z0-9.-_]/g, '_');
     const key = `${randomUUID()}-${safeFileName}`;
 
     const command = new PutObjectCommand({
@@ -44,7 +44,6 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Error creating presigned URL:", error);
     
-    // Improved error guidance for CORS
     const origin = req.headers.get('origin') || 'YOUR_APP_DOMAIN';
     const corsErrorGuidance = `This is likely a CORS issue on your Cloudflare R2 bucket. Please go to your R2 bucket settings > CORS Policy and add the following JSON: 
 [
