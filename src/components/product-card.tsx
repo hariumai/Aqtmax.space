@@ -1,10 +1,11 @@
+
 'use client';
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { collection, addDoc, serverTimestamp, query, where, limit, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -107,7 +108,7 @@ export default function ProductCard({ product }: { product: any }) {
           </Link>
         </div>
       </CardHeader>
-      <CardContent className="flex-grow space-y-4">
+      <CardContent className="flex-grow flex flex-col space-y-4">
         <div className="text-4xl font-bold">
             {pricePrefix && <span className="text-lg font-normal text-muted-foreground mr-1">{pricePrefix}</span>}
             {hasDiscount && (
@@ -116,7 +117,7 @@ export default function ProductCard({ product }: { product: any }) {
             {displayPrice}
             <span className="text-base font-normal text-muted-foreground"> PKR</span>
         </div>
-        <CardDescription className="mt-2 text-sm min-h-[40px]">
+        <CardDescription className="mt-2 text-sm min-h-[40px] flex-grow">
           {product.description}
         </CardDescription>
 
@@ -124,6 +125,7 @@ export default function ProductCard({ product }: { product: any }) {
           <RadioGroup 
             value={selectedVariant?.variantName}
             onValueChange={(value) => setSelectedVariant(product.variants.find((v:any) => v.variantName === value))}
+            className="flex-grow"
           >
               <div className="space-y-2">
                   {product.variants.map((variant: any) => (
@@ -137,7 +139,7 @@ export default function ProductCard({ product }: { product: any }) {
           </RadioGroup>
         )}
       </CardContent>
-      <CardFooter className="flex flex-col gap-2">
+      <CardFooter className="flex flex-col gap-2 pt-4">
           <Button size="sm" className="w-full" onClick={() => handleAddToCart(false)} disabled={isAdding}>
               <ShoppingCart className="mr-2 h-4 w-4" />
               Add to Cart
