@@ -51,26 +51,14 @@ export async function askSupport(input: SupportChatInput): Promise<z.infer<typeo
   return result;
 }
 
-// Define the Genkit prompt
+// Define the Genkit prompt for guest users
 const supportPrompt = ai.definePrompt({
   name: 'supportChatPrompt',
-  input: { schema: z.object({
-    query: z.string(),
-    userContextString: z.string().optional(),
-  }) },
-  output: { schema: SupportChatOutputSchema },
   system: `You are a friendly and helpful AI support agent for a digital marketplace called "SubLime Marketplace". Your goal is to assist users with their questions about the platform, their orders, subscriptions, and company policies.
 
 You MUST be concise and to the point. Answer the user's question directly based on the context provided. Do not invent information.
 
-{{#if userContextString}}
-You are speaking to a logged-in user. Here is their information:
-{{{userContextString}}}
-
-Use this information to answer their questions specifically (e.g., "What was my last order?", "What's my store credit balance?").
-{{else}}
 You are speaking to a guest who is not logged in.
-{{/if}}
 
 You have been provided with the following context about the application:
 
@@ -109,45 +97,41 @@ const supportChatFlow = ai.defineFlow(
     outputSchema: SupportChatOutputSchema,
   },
   async (input) => {
-    // Rule-based logic for logged-in users
-    if (input.userContext?.userProfile) {
+    // Rule-based logic for logged-in users. This section does NOT call the Gemini API.
+    if (input.userContext && input.userContext.userProfile) {
       const lowerQuery = input.query.toLowerCase();
+      const userProfile = input.userContext.userProfile;
 
       // Rule for store credit
-      if (lowerQuery.includes('store credit')) {
-        const credit = input.userContext.userProfile.storeCredit?.toFixed(2) || '0.00';
-        return `Your current store credit balance is ${credit} PKR.`;
+      if (lowerQuery.includes('credit') || lowerQuery.includes('balance')) {
+        const credit = userProfile.storeCredit?.toFixed(2) || '0.00';
+        return `Your current store credit balance is ${credit} PKR. You can use this at checkout.`;
       }
 
       // Rule for tracking orders
-      if (lowerQuery.includes('order') || lowerQuery.includes('track')) {
+      if (lowerQuery.includes('order') || lowerQuery.includes('track') || lowerQuery.includes('status')) {
         const orders = input.userContext.userOrders;
         if (!orders || orders.length === 0) {
           return "You haven't placed any orders yet. Feel free to browse our products!";
         }
         
-        const recentOrders = orders.slice(0, 3);
+        const recentOrders = orders.slice(0, 3); // Show the 3 most recent orders
         let response = `Here are your most recent orders:\n`;
         recentOrders.forEach((order: any, index: number) => {
           const itemNames = order.items.map((item: any) => item.subscriptionName).join(', ');
-          response += `\n${index + 1}. ${itemNames} - Status: ${order.status}`;
+          response += `\n${index + 1}. Order for **${itemNames}** is currently **${order.status}**.`;
         });
         
-        response += `\n\nFor more details, please visit your profile page.`;
+        response += `\n\nFor more details, please visit your profile page. Once an order is 'completed', you will find the subscription credentials there.`;
         return response;
       }
+      
+      // Default response for logged-in user if no rules match
+      return "I can help with questions about your store credit and order status. For anything else, please contact our human support team.";
     }
 
-    // Fallback to Gemini for general queries
-    let userContextString: string | undefined;
-    if (input.userContext) {
-      userContextString = `
-- User Profile: ${JSON.stringify(input.userContext.userProfile, null, 2)}
-- User Orders: ${JSON.stringify(input.userContext.userOrders, null, 2)}
-      `;
-    }
-
-    const { output } = await supportPrompt({ query: input.query, userContextString }, {
+    // Fallback to Gemini for guest users
+    const { output } = await supportPrompt({ query: input.query }, {
       dataStructure: JSON.stringify(backendConfig, null, 2),
       securityRules,
       terms: extractContent(termsContent),

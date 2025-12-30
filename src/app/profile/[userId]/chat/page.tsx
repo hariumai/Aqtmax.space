@@ -57,7 +57,7 @@ const convertTimestamps = (obj: any): any => {
     if (Array.isArray(obj)) {
         return obj.map(convertTimestamps);
     }
-    if (typeof obj === 'object') {
+    if (typeof obj === 'object' && obj !== null) {
         const newObj: { [key: string]: any } = {};
         for (const key in obj) {
             newObj[key] = convertTimestamps(obj[key]);
@@ -69,16 +69,16 @@ const convertTimestamps = (obj: any): any => {
 
 export default function AuthenticatedChatPage({ params }: { params: { userId: string } }) {
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: "Hello! As a logged-in user, I have access to your account details. How can I help you today?" },
+    { role: 'assistant', content: "Hello! As a logged-in user, I have access to your account details. Ask me about your orders or store credit. How can I help?" },
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
-  // Ensure we are only loading data for the user specified in the URL, and that it matches the logged in user
-  const effectiveUserId = user?.uid === params.userId ? params.userId : undefined;
+  // SECURE: Ensure we are only loading data for the user specified in the URL if it matches the logged-in user.
+  const effectiveUserId = !isUserLoading && user?.uid === params.userId ? params.userId : undefined;
 
   const userRef = useMemoFirebase(() => (firestore && effectiveUserId ? doc(firestore, 'users', effectiveUserId) : null), [firestore, effectiveUserId]);
   const { data: userData } = useDoc(userRef);
@@ -104,6 +104,12 @@ export default function AuthenticatedChatPage({ params }: { params: { userId: st
   }, [messages]);
 
   const onSubmit = async (values: z.infer<typeof chatSchema>) => {
+    if (!effectiveUserId) {
+        // Don't allow interaction if the user is not authorized for this chat
+        setMessages(prev => [...prev, {role: 'assistant', content: "Sorry, you are not authorized to access this chat."}]);
+        return;
+    }
+
     setIsLoading(true);
     const userMessage: Message = { role: 'user', content: values.message };
     setMessages((prev) => [...prev, userMessage]);
@@ -112,11 +118,11 @@ export default function AuthenticatedChatPage({ params }: { params: { userId: st
     try {
       // Sanitize data before sending to server action
       const sanitizedUserData = convertTimestamps(userData);
-      const sanitizedOrders = convertTimestamps(userOrders);
+      const sanitizedOrders = userOrders ? convertTimestamps(userOrders) : [];
 
       const input = {
         query: values.message,
-        userContext: user ? { userProfile: sanitizedUserData, userOrders: sanitizedOrders || [] } : undefined,
+        userContext: { userProfile: sanitizedUserData, userOrders: sanitizedOrders },
       };
 
       const response = await askSupport(input);
@@ -134,8 +140,30 @@ export default function AuthenticatedChatPage({ params }: { params: { userId: st
     }
   };
 
+  if (isUserLoading) {
+      return (
+          <div className="flex h-screen items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+      )
+  }
+
+  if (!user || user.uid !== params.userId) {
+       return (
+            <div className="flex h-screen items-center justify-center text-center p-4">
+                <div>
+                    <h1 className="text-2xl font-bold">Access Denied</h1>
+                    <p className="text-muted-foreground">You are not authorized to view this chat.</p>
+                    <Button asChild variant="link" className="mt-4">
+                        <Link href="/">Return to Home</Link>
+                    </Button>
+                </div>
+            </div>
+       )
+  }
+
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground">
+    <div className="flex flex-col h-screen bg-background text-foreground">
         <header className="flex items-center p-4 border-b bg-card shadow-sm z-10">
             <Avatar className="h-10 w-10">
                 <AvatarFallback><Bot className="h-5 w-5" /></AvatarFallback>
