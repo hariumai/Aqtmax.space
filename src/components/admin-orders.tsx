@@ -2,24 +2,111 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, doc, updateDoc, orderBy, runTransaction } from 'firebase/firestore';
+import { collection, query, doc, updateDoc, orderBy, runTransaction, deleteDoc } from 'firebase/firestore';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from './ui/button';
-import { CheckCircle, Clock, ExternalLink } from 'lucide-react';
+import { CheckCircle, Clock, ExternalLink, Pencil, Trash } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from './ui/badge';
 import Link from 'next/link';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from './ui/dialog';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
+import { Input } from './ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { useState } from 'react';
+import { type Order } from '@/lib/types';
+import { ScrollArea } from './ui/scroll-area';
+
+
+const orderSchema = z.object({
+  id: z.string(),
+  customerName: z.string().min(1, "Name is required"),
+  customerEmail: z.string().email("Invalid email"),
+  status: z.enum(['pending', 'completed', 'cancelled']),
+});
+
+function EditOrderForm({ order, onFinished }: { order: Order; onFinished: () => void; }) {
+    const firestore = useFirestore();
+    const { toast } = useToast();
+    const form = useForm<z.infer<typeof orderSchema>>({
+        resolver: zodResolver(orderSchema),
+        defaultValues: {
+            id: order.id,
+            customerName: order.customerName,
+            customerEmail: order.customerEmail,
+            status: order.status,
+        },
+    });
+
+    async function onSubmit(values: z.infer<typeof orderSchema>) {
+        if (!firestore) return;
+        try {
+            const docRef = doc(firestore, 'orders', values.id);
+            await updateDoc(docRef, {
+                customerName: values.customerName,
+                customerEmail: values.customerEmail,
+                status: values.status,
+            });
+            toast({ title: "Order Updated", description: "The order details have been saved." });
+            onFinished();
+        } catch (e: any) {
+            toast({ variant: "destructive", title: "Error updating order", description: e.message });
+        }
+    }
+
+    return (
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+                <ScrollArea className="h-[60vh] pr-6">
+                    <div className="space-y-6">
+                        <FormField control={form.control} name="customerName" render={({ field }) => (
+                            <FormItem><FormLabel>Customer Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField control={form.control} name="customerEmail" render={({ field }) => (
+                            <FormItem><FormLabel>Customer Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField control={form.control} name="status" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Status</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="pending">Pending</SelectItem>
+                                        <SelectItem value="completed">Completed</SelectItem>
+                                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                    </div>
+                </ScrollArea>
+                <DialogFooter className="pt-6">
+                    <DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose>
+                    <Button type="submit">Save Changes</Button>
+                </DialogFooter>
+            </form>
+        </Form>
+    );
+}
+
 
 export default function AdminOrders() {
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const ordersQuery = useMemoFirebase(
     () => (firestore && user ? query(collection(firestore, 'orders'), orderBy('orderDate', 'desc')) : null),
     [firestore, user]
   );
-  const { data: orders, isLoading: isLoadingOrders } = useCollection(ordersQuery);
+  const { data: orders, isLoading: isLoadingOrders } = useCollection<Order>(ordersQuery);
 
   const handleCompleteOrder = async (order: any) => {
     if (!firestore) return;
@@ -53,7 +140,23 @@ export default function AdminOrders() {
     }
   };
 
+  const handleDeleteOrder = async (orderId: string) => {
+      if (!firestore) return;
+      try {
+          await deleteDoc(doc(firestore, 'orders', orderId));
+          toast({ title: 'Order Deleted', description: 'The order has been successfully deleted.' });
+      } catch (e: any) {
+          toast({ variant: 'destructive', title: 'Error deleting order', description: e.message });
+      }
+  };
+
+  const handleEditClick = (order: Order) => {
+      setSelectedOrder(order);
+      setIsEditDialogOpen(true);
+  };
+
   return (
+    <>
     <Card>
       <CardHeader>
         <CardTitle>Orders</CardTitle>
@@ -108,6 +211,26 @@ export default function AdminOrders() {
                             Complete Order
                         </Button>
                     )}
+                    <Button variant="ghost" size="icon" onClick={() => handleEditClick(order)}>
+                        <Pencil className="h-4 w-4" />
+                    </Button>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                <Trash className="h-4 w-4" />
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                <AlertDialogDescription>This will permanently delete this order. This action cannot be undone.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteOrder(order.id)}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                   </TableCell>
                 </TableRow>
               ))
@@ -121,5 +244,20 @@ export default function AdminOrders() {
         </Table>
       </CardContent>
     </Card>
+
+    <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+                <DialogTitle>Edit Order</DialogTitle>
+            </DialogHeader>
+            {selectedOrder && (
+                <EditOrderForm
+                    order={selectedOrder}
+                    onFinished={() => setIsEditDialogOpen(false)}
+                />
+            )}
+        </DialogContent>
+    </Dialog>
+    </>
   );
 }

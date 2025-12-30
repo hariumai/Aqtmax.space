@@ -19,7 +19,7 @@ export type Order = {
     subtotal: number;
     creditUsed: number;
     totalAmount: number;
-    paymentScreenshotUrl: string | null; // Can be a string (Mongo ID) or null
-    orderDate: Date;
+    paymentScreenshotUrl: string | null;
+    orderDate: any; // Can be Date or FieldValue
     status: 'pending' | 'completed' | 'cancelled';
 }
