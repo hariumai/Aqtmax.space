@@ -1,7 +1,5 @@
 
 'use client';
-import SiteHeader from '@/components/site-header';
-import SiteFooter from '@/components/site-footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCollection, useFirestore, useUser, useMemoFirebase, useDoc } from '@/firebase';
@@ -226,8 +224,6 @@ export default function CheckoutPage() {
     }
   
     return (
-        <div className="flex flex-col min-h-screen">
-        <SiteHeader />
         <main className="flex-grow container mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
             {orderComplete ? (
                 <OrderSuccess order={orderComplete} />
@@ -362,7 +358,5 @@ export default function CheckoutPage() {
             </>
         )}
         </main>
-        <SiteFooter />
-        </div>
     );
 }

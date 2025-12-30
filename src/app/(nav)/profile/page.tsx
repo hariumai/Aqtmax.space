@@ -2,8 +2,6 @@
 'use client';
 import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import SiteHeader from '@/components/site-header';
-import SiteFooter from '@/components/site-footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -199,76 +197,72 @@ export default function ProfilePage() {
     );
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <SiteHeader />
-      <main className="flex-grow container mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8 flex items-center justify-center">
-        {isBanActive && userData ? (
-            <BannedProfile user={user} banInfo={userData.ban} settings={settingsData} onSignOut={handleSignOut} />
-        ) : (
-          <div className="space-y-8 w-full">
-            <Card>
-              <CardHeader>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-16 w-16">
-                      <AvatarImage src={user.photoURL ?? ''} />
-                      <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <CardTitle className="text-2xl">{user.displayName || 'User'}</CardTitle>
-                      <CardDescription>{user.email}</CardDescription>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 rounded-lg bg-muted p-3">
-                    <Wallet className="h-6 w-6 text-primary" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Store Credit</p>
-                      <p className="text-lg font-bold">{userData?.storeCredit?.toFixed(2) || '0.00'} PKR</p>
-                    </div>
+    <main className="flex-grow container mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8 flex items-center justify-center">
+      {isBanActive && userData ? (
+          <BannedProfile user={user} banInfo={userData.ban} settings={settingsData} onSignOut={handleSignOut} />
+      ) : (
+        <div className="space-y-8 w-full">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-16 w-16">
+                    <AvatarImage src={user.photoURL ?? ''} />
+                    <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <CardTitle className="text-2xl">{user.displayName || 'User'}</CardTitle>
+                    <CardDescription>{user.email}</CardDescription>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent className="flex flex-wrap gap-2">
-                <Button onClick={handleSignOut} variant="destructive">
-                  Sign Out
-                </Button>
-                 <Button asChild variant="outline">
-                    <Link href="/chat">
-                        <Bot className="mr-2 h-4 w-4" /> AI Support
-                    </Link>
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>My Orders</CardTitle>
-                <CardDescription>
-                  Here is a list of your recent subscription orders. Click an order to see details.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isLoadingOrders && <p>Loading orders...</p>}
-                {!isLoadingOrders && orders && orders.length > 0 ? (
-                  <Accordion type="single" collapsible className="w-full">
-                    {orders.map((order) => (
-                      <OrderItem key={order.id} order={order} settings={settingsData} />
-                    ))}
-                  </Accordion>
-                ) : (
-                  <div className="text-center py-8">
-                      <p className="text-muted-foreground">You have not placed any orders yet.</p>
-                      <Button asChild variant="link" className="mt-2">
-                          <Link href="/products">Start Shopping</Link>
-                      </Button>
+                <div className="flex items-center gap-2 rounded-lg bg-muted p-3">
+                  <Wallet className="h-6 w-6 text-primary" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Store Credit</p>
+                    <p className="text-lg font-bold">{userData?.storeCredit?.toFixed(2) || '0.00'} PKR</p>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        )}
-      </main>
-      <SiteFooter />
-    </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-2">
+              <Button onClick={handleSignOut} variant="destructive">
+                Sign Out
+              </Button>
+               <Button asChild variant="outline">
+                  <Link href="/chat">
+                      <Bot className="mr-2 h-4 w-4" /> AI Support
+                  </Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>My Orders</CardTitle>
+              <CardDescription>
+                Here is a list of your recent subscription orders. Click an order to see details.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoadingOrders && <p>Loading orders...</p>}
+              {!isLoadingOrders && orders && orders.length > 0 ? (
+                <Accordion type="single" collapsible className="w-full">
+                  {orders.map((order) => (
+                    <OrderItem key={order.id} order={order} settings={settingsData} />
+                  ))}
+                </Accordion>
+              ) : (
+                <div className="text-center py-8">
+                    <p className="text-muted-foreground">You have not placed any orders yet.</p>
+                    <Button asChild variant="link" className="mt-2">
+                        <Link href="/products">Start Shopping</Link>
+                    </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </main>
   );
 }

@@ -15,8 +15,6 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
-import SiteHeader from '@/components/site-header';
-import SiteFooter from '@/components/site-footer';
 import { useAuth, useUser } from '@/firebase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { confirmPasswordReset, applyActionCode, User } from 'firebase/auth';
@@ -44,26 +42,22 @@ export default function ActionsPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <SiteHeader />
-      <main className="flex-grow flex items-center justify-center">
-        <Card className="mx-auto max-w-sm w-full text-center">
-          <CardHeader>
-            <ShieldX className="mx-auto h-12 w-12 text-destructive" />
-            <CardTitle className="text-2xl">Invalid Action</CardTitle>
-            <CardDescription>
-              The link is invalid or has expired. Please try again.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild>
-              <Link href="/">Go to Homepage</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </main>
-      <SiteFooter />
-    </div>
+    <main className="flex-grow flex items-center justify-center">
+      <Card className="mx-auto max-w-sm w-full text-center">
+        <CardHeader>
+          <ShieldX className="mx-auto h-12 w-12 text-destructive" />
+          <CardTitle className="text-2xl">Invalid Action</CardTitle>
+          <CardDescription>
+            The link is invalid or has expired. Please try again.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild>
+            <Link href="/">Go to Homepage</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    </main>
   );
 }
 
@@ -107,59 +101,51 @@ function ResetPasswordComponent({ oobCode }: { oobCode: string | null }) {
 
   if (!oobCode) {
     return (
-      <div className="flex flex-col min-h-screen">
-        <SiteHeader />
-        <main className="flex-grow flex items-center justify-center">
-          <Card className="mx-auto max-w-sm w-full text-center">
-            <CardHeader>
-              <CardTitle className="text-2xl">Invalid Link</CardTitle>
-              <CardDescription>This password reset link is invalid or has expired.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild>
-                <Link href="/forgot-password">Request a new link</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </main>
-        <SiteFooter />
-      </div>
+      <main className="flex-grow flex items-center justify-center">
+        <Card className="mx-auto max-w-sm w-full text-center">
+          <CardHeader>
+            <CardTitle className="text-2xl">Invalid Link</CardTitle>
+            <CardDescription>This password reset link is invalid or has expired.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild>
+              <Link href="/forgot-password">Request a new link</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </main>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <SiteHeader />
-      <main className="flex-grow flex items-center justify-center">
-        <Card className="mx-auto max-w-sm w-full">
-          <CardHeader>
-            <CardTitle className="text-2xl">Reset Password</CardTitle>
-            <CardDescription>Enter your new password below.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>New Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" className="w-full">Set New Password</Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-      </main>
-      <SiteFooter />
-    </div>
+    <main className="flex-grow flex items-center justify-center">
+      <Card className="mx-auto max-w-sm w-full">
+        <CardHeader>
+          <CardTitle className="text-2xl">Reset Password</CardTitle>
+          <CardDescription>Enter your new password below.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>New Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="••••••••" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full">Set New Password</Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </main>
   );
 }
 
@@ -212,31 +198,27 @@ function VerifyEmailComponent({ oobCode }: { oobCode: string | null }) {
   }, [auth, firestore, oobCode, router]);
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <SiteHeader />
-      <main className="flex-grow flex items-center justify-center">
-        <Card className="mx-auto max-w-md w-full text-center">
-          <CardHeader>
-            {status === 'loading' && <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />}
-            {status === 'success' && <ShieldCheck className="mx-auto h-12 w-12 text-green-500" />}
-            {status === 'error' && <ShieldX className="mx-auto h-12 w-12 text-destructive" />}
-            <CardTitle className="text-2xl mt-4">
-              {status === 'loading' && 'Verifying...'}
-              {status === 'success' && 'Email Verified!'}
-              {status === 'error' && 'Verification Failed'}
-            </CardTitle>
-            <CardDescription>{message}</CardDescription>
-          </CardHeader>
-          {(status === 'success' || status === 'error') && (
-            <CardContent>
-              <Button asChild>
-                <Link href="/login">Go to Login</Link>
-              </Button>
-            </CardContent>
-          )}
-        </Card>
-      </main>
-      <SiteFooter />
-    </div>
+    <main className="flex-grow flex items-center justify-center">
+      <Card className="mx-auto max-w-md w-full text-center">
+        <CardHeader>
+          {status === 'loading' && <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />}
+          {status === 'success' && <ShieldCheck className="mx-auto h-12 w-12 text-green-500" />}
+          {status === 'error' && <ShieldX className="mx-auto h-12 w-12 text-destructive" />}
+          <CardTitle className="text-2xl mt-4">
+            {status === 'loading' && 'Verifying...'}
+            {status === 'success' && 'Email Verified!'}
+            {status === 'error' && 'Verification Failed'}
+          </CardTitle>
+          <CardDescription>{message}</CardDescription>
+        </CardHeader>
+        {(status === 'success' || status === 'error') && (
+          <CardContent>
+            <Button asChild>
+              <Link href="/login">Go to Login</Link>
+            </Button>
+          </CardContent>
+        )}
+      </Card>
+    </main>
   );
 }

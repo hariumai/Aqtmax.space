@@ -1,7 +1,5 @@
 'use client';
 import { useState, useEffect } from 'react';
-import SiteHeader from "@/components/site-header";
-import SiteFooter from "@/components/site-footer";
 import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,7 +19,6 @@ export default function RefundPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <SiteHeader />
       <main className="flex-grow container mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
         {isLoading && (
             <div className="prose prose-invert max-w-none">
@@ -43,7 +40,6 @@ export default function RefundPage() {
             </div>
         )}
       </main>
-      <SiteFooter />
     </div>
   );
 }

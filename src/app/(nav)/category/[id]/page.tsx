@@ -1,7 +1,5 @@
 'use client';
 import { use } from 'react';
-import SiteHeader from '@/components/site-header';
-import SiteFooter from '@/components/site-footer';
 import { Card } from '@/components/ui/card';
 import { useCollection, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, doc } from 'firebase/firestore';
@@ -20,7 +18,7 @@ const categoryIconMap: { [key: string]: React.ElementType } = {
 };
 
 export default function CategoryPage({ params }: { params: { id: string } }) {
-  const { id } = use(params);
+  const { id } = params;
   const firestore = useFirestore();
   
   const categoryRef = useMemoFirebase(
@@ -38,50 +36,46 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
   const CategoryIcon = category ? categoryIconMap[category.name] || categoryIconMap.default : null;
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <SiteHeader />
-      <main className="flex-grow container mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        {isLoadingCategory && <CategoryPageSkeleton />}
-        {!isLoadingCategory && category && (
-          <div className="text-center mb-12">
-            <div className="flex justify-center mb-4">
-                {CategoryIcon && <CategoryIcon className="h-12 w-12 text-primary animate-float" />}
-            </div>
-            <h1 className="font-headline text-4xl font-extrabold tracking-tighter sm:text-5xl">
-              {category.name}
-            </h1>
-            <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-              Browse subscriptions in the {category.name} category.
-            </p>
+    <main className="flex-grow container mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      {isLoadingCategory && <CategoryPageSkeleton />}
+      {!isLoadingCategory && category && (
+        <div className="text-center mb-12">
+          <div className="flex justify-center mb-4">
+              {CategoryIcon && <CategoryIcon className="h-12 w-12 text-primary animate-float" />}
           </div>
-        )}
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {isLoadingProducts &&
-            Array.from({ length: 4 }).map((_, i) => (
-              <Card key={i} className="flex flex-col h-full overflow-hidden rounded-2xl p-4">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-xl bg-muted animate-pulse" />
-                  <div className="h-6 w-3/4 rounded bg-muted animate-pulse" />
-                </div>
-                <div className="mt-4 h-8 w-1/2 rounded bg-muted animate-pulse" />
-                <div className="mt-2 h-4 w-full rounded bg-muted animate-pulse" />
-              </Card>
-            ))}
-          {!isLoadingProducts && products?.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+          <h1 className="font-headline text-4xl font-extrabold tracking-tighter sm:text-5xl">
+            {category.name}
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
+            Browse subscriptions in the {category.name} category.
+          </p>
         </div>
-        {!isLoadingProducts && products?.length === 0 && (
-            <div className="text-center col-span-full">
-                <p className="text-muted-foreground">No products found in this category.</p>
-                <Button asChild variant="link" className="mt-4">
-                    <Link href="/products">View all products</Link>
-                </Button>
-            </div>
-        )}
-      </main>
-      <SiteFooter />
-    </div>
+      )}
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {isLoadingProducts &&
+          Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} className="flex flex-col h-full overflow-hidden rounded-2xl p-4">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-xl bg-muted animate-pulse" />
+                <div className="h-6 w-3/4 rounded bg-muted animate-pulse" />
+              </div>
+              <div className="mt-4 h-8 w-1/2 rounded bg-muted animate-pulse" />
+              <div className="mt-2 h-4 w-full rounded bg-muted animate-pulse" />
+            </Card>
+          ))}
+        {!isLoadingProducts && products?.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
+      </div>
+      {!isLoadingProducts && products?.length === 0 && (
+          <div className="text-center col-span-full">
+              <p className="text-muted-foreground">No products found in this category.</p>
+              <Button asChild variant="link" className="mt-4">
+                  <Link href="/products">View all products</Link>
+              </Button>
+          </div>
+      )}
+    </main>
   );
 }
 
