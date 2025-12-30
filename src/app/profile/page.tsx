@@ -161,7 +161,7 @@ export default function ProfilePage() {
     }
   }, [user, isUserLoading, router]);
 
-  if (isUserLoading || isUserDataLoading || !userData) {
+  if (isUserLoading || isUserDataLoading || !user) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -187,7 +187,7 @@ export default function ProfilePage() {
     <div className="flex flex-col min-h-screen">
       <SiteHeader />
       <main className="flex-grow container mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8 flex items-center justify-center">
-        {isBanActive ? (
+        {isBanActive && userData ? (
             <BannedProfile user={user} banInfo={userData.ban} settings={settingsData} onSignOut={handleSignOut} />
         ) : (
           <div className="space-y-8 w-full">
@@ -252,5 +252,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    
