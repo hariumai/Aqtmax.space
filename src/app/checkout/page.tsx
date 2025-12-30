@@ -155,58 +155,22 @@ export default function CheckoutPage() {
         try {
             let screenshotUrl = '';
             if (screenshotFile && total > 0) {
-                // 1. Get pre-signed URL from our API route
-                const presignedUrlResponse = await fetch('/api/upload-url', {
+                // Upload file to our own API route, which then uploads to R2
+                const formData = new FormData();
+                formData.append('file', screenshotFile);
+
+                const uploadResponse = await fetch('/api/upload-url', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ fileName: screenshotFile.name, fileType: screenshotFile.type }),
+                    body: formData,
                 });
 
-                if (!presignedUrlResponse.ok) {
-                    throw new Error('Could not get an upload URL.');
+                if (!uploadResponse.ok) {
+                    const errorData = await uploadResponse.json();
+                    throw new Error(errorData.error || 'Failed to upload screenshot.');
                 }
-                const { uploadUrl, key } = await presignedUrlResponse.json();
 
-                try {
-                    // 2. Upload file to R2 using the pre-signed URL
-                    const uploadResponse = await fetch(uploadUrl, {
-                        method: 'PUT',
-                        body: screenshotFile,
-                        headers: { 'Content-Type': screenshotFile.type },
-                    });
-
-                    if (!uploadResponse.ok) {
-                        throw new Error('Failed to upload screenshot.');
-                    }
-                } catch (uploadError: any) {
-                    if (uploadError.name === 'TypeError' && uploadError.message === 'Failed to fetch') {
-                         toast({
-                            variant: "destructive",
-                            title: "Upload Failed: CORS Issue",
-                            description: (
-                                <span>
-                                    This is likely a CORS issue with your R2 bucket. Please
-                                    <a href="https://developers.cloudflare.com/r2/data-access/cors-configuration/" target="_blank" rel="noopener noreferrer" className="underline font-bold ml-1">
-                                        configure CORS on your R2 bucket
-                                    </a>
-                                    .
-                                </span>
-                            ),
-                            duration: 10000,
-                        });
-                        setIsSubmitting(false);
-                        return;
-                    }
-                    throw uploadError;
-                }
-                
-                // 3. Construct the public URL
-                const r2PublicUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL;
-                if (!r2PublicUrl) {
-                    console.error("R2 public URL is not configured.");
-                    throw new Error("Could not construct screenshot URL.");
-                }
-                screenshotUrl = `${r2PublicUrl}/${key}`;
+                const { publicUrl } = await uploadResponse.json();
+                screenshotUrl = publicUrl;
             }
 
             const newOrderRef = doc(collection(firestore, 'orders'));
@@ -244,7 +208,16 @@ export default function CheckoutPage() {
 
         } catch (error: any) {
             console.error('Order placement error:', error);
-            toast({ variant: 'destructive', title: 'Order Failed', description: error.message || 'Could not place your order.' });
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                 toast({
+                    variant: "destructive",
+                    title: "Upload Failed: Network Error",
+                    description: "Please check your internet connection and try again.",
+                    duration: 10000,
+                });
+            } else {
+                toast({ variant: 'destructive', title: 'Order Failed', description: error.message || 'Could not place your order.' });
+            }
         } finally {
             setIsSubmitting(false);
         }

@@ -1,6 +1,5 @@
 
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 
@@ -15,27 +14,35 @@ const s3Client = new S3Client({
 
 export async function POST(req: NextRequest) {
   try {
-    const { fileName, fileType } = await req.json();
+    const formData = await req.formData();
+    const file = formData.get('file') as File | null;
 
-    if (!fileName || !fileType) {
-        return NextResponse.json({ error: 'File name and type are required' }, { status: 400 });
+    if (!file) {
+      return NextResponse.json({ error: 'No file provided.' }, { status: 400 });
     }
     
     // Sanitize file name
-    const safeFileName = fileName.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+    const safeFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
     const key = `${randomUUID()}-${safeFileName}`;
+
+    // Read file into a buffer
+    const buffer = Buffer.from(await file.arrayBuffer());
 
     const command = new PutObjectCommand({
       Bucket: process.env.CLOUDFLARE_R2_BUCKET_NAME!,
       Key: key,
-      ContentType: fileType,
+      Body: buffer,
+      ContentType: file.type,
     });
 
-    const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 60 * 5 }); // URL expires in 5 minutes
+    await s3Client.send(command);
 
-    return NextResponse.json({ uploadUrl, key });
+    // Construct the public URL
+    const publicUrl = `${process.env.NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL}/${key}`;
+
+    return NextResponse.json({ publicUrl });
   } catch (error) {
-    console.error("Error creating pre-signed URL:", error);
-    return NextResponse.json({ error: 'Failed to create upload URL' }, { status: 500 });
+    console.error("Error uploading file:", error);
+    return NextResponse.json({ error: 'Failed to upload file.' }, { status: 500 });
   }
 }
