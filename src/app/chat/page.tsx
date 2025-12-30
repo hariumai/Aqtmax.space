@@ -1,20 +1,19 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Send, Bot, User, Loader2, Plus } from 'lucide-react';
+import { Send, Bot, User, Loader2, Plus, Home } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { askSupport } from '@/ai/flows/support-chat-flow';
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, collection, query, where } from 'firebase/firestore';
-import SiteHeader from '@/components/site-header';
-import SiteFooter from '@/components/site-footer';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import Link from 'next/link';
 
 const chatSchema = z.object({
   message: z.string().min(1, 'Message cannot be empty'),
@@ -36,19 +35,14 @@ function ChatBubble({ message }: { message: Message }) {
             )}
             <div
                 className={cn(
-                    'max-w-xs sm:max-w-lg rounded-2xl p-3 text-sm',
+                    'max-w-[70%] rounded-2xl p-3 text-sm shadow-md',
                     isUser
                         ? 'bg-primary text-primary-foreground rounded-br-none'
-                        : 'bg-muted rounded-bl-none'
+                        : 'bg-card rounded-bl-none'
                 )}
             >
                 <p className="whitespace-pre-wrap">{message.content}</p>
             </div>
-             {isUser && (
-                <Avatar className="h-8 w-8">
-                    <AvatarFallback><User className="h-5 w-5" /></AvatarFallback>
-                </Avatar>
-            )}
         </div>
     );
 }
@@ -113,76 +107,86 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <SiteHeader />
-      <main className="flex-grow flex items-center justify-center py-16">
-        <div className="w-full max-w-2xl h-[70vh] bg-card rounded-2xl shadow-2xl flex flex-col overflow-hidden border">
-          <header className="flex items-center p-4 border-b">
+    <div className="flex flex-col h-screen bg-background text-foreground">
+        <header className="flex items-center p-4 border-b bg-card shadow-sm z-10">
             <Avatar className="h-10 w-10">
                 <AvatarFallback><Bot className="h-5 w-5" /></AvatarFallback>
             </Avatar>
-            <div className="ml-3">
+            <div className="ml-3 flex-1">
                 <h3 className="font-semibold">AI Assistant</h3>
                 <div className="flex items-center gap-1">
-                    <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-                    <p className="text-xs text-muted-foreground">Online</p>
+                    {isLoading ? (
+                        <>
+                            <div className="h-2 w-2 rounded-full bg-primary/50 animate-pulse"></div>
+                            <p className="text-xs text-muted-foreground animate-pulse">typing...</p>
+                        </>
+                    ) : (
+                        <>
+                            <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                            <p className="text-xs text-muted-foreground">Online</p>
+                        </>
+                    )}
                 </div>
             </div>
-          </header>
-          <ScrollArea className="flex-1 p-6" ref={scrollAreaRef}>
+            <Button asChild variant="ghost" size="icon">
+                <Link href="/">
+                    <Home className="h-5 w-5" />
+                    <span className="sr-only">Go Home</span>
+                </Link>
+            </Button>
+        </header>
+
+        <ScrollArea className="flex-1 p-6" ref={scrollAreaRef}>
             <div className="space-y-6">
-              {messages.map((message, index) => (
-                <ChatBubble key={index} message={message} />
-              ))}
-              {isLoading && (
-                <div className="flex items-end gap-2 justify-start">
-                    <Avatar className="h-8 w-8">
-                        <AvatarFallback><Bot className="h-5 w-5" /></AvatarFallback>
-                    </Avatar>
-                    <div className="bg-muted rounded-2xl p-3 rounded-bl-none">
-                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                {messages.map((message, index) => (
+                    <ChatBubble key={index} message={message} />
+                ))}
+                {isLoading && (
+                    <div className="flex items-end gap-2 justify-start">
+                        <Avatar className="h-8 w-8">
+                            <AvatarFallback><Bot className="h-5 w-5" /></AvatarFallback>
+                        </Avatar>
+                        <div className="bg-card rounded-2xl p-3 rounded-bl-none shadow-md">
+                            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                        </div>
                     </div>
-                </div>
-              )}
+                )}
             </div>
-          </ScrollArea>
-          <div className="p-4 border-t bg-background/50">
+        </ScrollArea>
+
+        <div className="p-4 border-t bg-card">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="flex items-center gap-2">
-                <Button type="button" variant="ghost" size="icon" className="shrink-0 rounded-full">
-                    <Plus className="h-5 w-5" />
-                </Button>
-                <FormField
-                  control={form.control}
-                  name="message"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          placeholder="Type your message..."
-                          className="min-h-0 resize-none rounded-full border-0 shadow-none focus-visible:ring-0 px-4 py-2 bg-muted"
-                          rows={1}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault();
-                              form.handleSubmit(onSubmit)();
-                            }
-                          }}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" size="icon" disabled={isLoading} className="rounded-full">
-                  <Send className="h-5 w-5" />
-                </Button>
-              </form>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="flex items-center gap-2">
+                    <Button type="button" variant="default" size="icon" className="shrink-0 rounded-full h-10 w-10">
+                        <Plus className="h-5 w-5" />
+                    </Button>
+                    <FormField
+                        control={form.control}
+                        name="message"
+                        render={({ field }) => (
+                            <FormItem className="flex-1">
+                                <FormControl>
+                                    <Input
+                                        {...field}
+                                        placeholder="Message..."
+                                        className="rounded-full border-input bg-background focus-visible:ring-1 focus-visible:ring-ring"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault();
+                                            form.handleSubmit(onSubmit)();
+                                            }
+                                        }}
+                                    />
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
+                    <Button type="submit" size="icon" disabled={isLoading} className="rounded-full h-10 w-10">
+                        <Send className="h-5 w-5" />
+                    </Button>
+                </form>
             </Form>
-          </div>
         </div>
-      </main>
-      <SiteFooter />
     </div>
   );
 }
