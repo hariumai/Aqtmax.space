@@ -163,8 +163,15 @@ export default function CheckoutPage() {
                 });
 
                 if (!uploadResponse.ok) {
-                    const err = await uploadResponse.json();
-                    throw new Error(err.error || 'Upload failed');
+                    let errorMessage = 'Upload failed';
+                    try {
+                        const errJson = await uploadResponse.json();
+                        errorMessage = errJson.error || errorMessage;
+                    } catch (e) {
+                        // Response was not valid JSON
+                        errorMessage = uploadResponse.statusText || errorMessage;
+                    }
+                    throw new Error(errorMessage);
                 }
 
                 const { publicUrl } = await uploadResponse.json();
@@ -184,15 +191,16 @@ export default function CheckoutPage() {
                 subtotal: subtotal,
                 creditUsed: creditToUse,
                 totalAmount: total,
-                orderDate: serverTimestamp(),
+                orderDate: new Date(),
                 status: 'pending',
             };
-
+            
             if (screenshotUrl) {
                 newOrderData.paymentScreenshotUrl = screenshotUrl;
             }
 
-            batch.set(newOrderRef, newOrderData);
+            batch.set(newOrderRef, { ...newOrderData, orderDate: serverTimestamp() });
+
 
             if (creditToUse > 0) {
                 const newCredit = availableCredit - creditToUse;
@@ -206,12 +214,13 @@ export default function CheckoutPage() {
 
             await batch.commit();
 
-            // We cast newOrderData to Order for the success component, adding a client-side date
-            const finalOrderData: Order = {
-                ...newOrderData,
-                orderDate: new Date(), 
-            };
-            setOrderComplete(finalOrderData);
+            // We need to cast here because serverTimestamp() makes the type complex
+            const finalOrder: Order = {
+                 ...newOrderData,
+                 orderDate: new Date(), // Use client date for immediate UI
+                 paymentScreenshotUrl: newOrderData.paymentScreenshotUrl || '',
+            }
+            setOrderComplete(finalOrder);
 
         } catch (error: any) {
             console.error('Order placement error:', error);
@@ -370,3 +379,5 @@ export default function CheckoutPage() {
         </div>
     );
 }
+
+    
