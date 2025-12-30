@@ -8,14 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { collection, query, doc, where, updateDoc } from 'firebase/firestore';
 import { useDoc } from '@/firebase';
-import { Wallet, Info, AlertTriangle, MessageCircle, ShieldX, Bell } from 'lucide-react';
+import { Wallet, Info, AlertTriangle, MessageCircle, ShieldX, Bell, Phone } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
-function OrderItem({ order }: { order: any }) {
+function OrderItem({ order, settings }: { order: any; settings: any }) {
   const itemNames = order.items.map((item: any) => item.subscriptionName).join(', ');
 
   return (
@@ -56,6 +56,17 @@ function OrderItem({ order }: { order: any }) {
                     <li>Violation will result in a permanent ban and no refund.</li>
                   </ul>
                </div>
+               {settings?.whatsappNumber && (
+                <div className="border-l-4 border-primary pl-4 py-2 bg-primary/10 text-primary-foreground/90">
+                    <div className="flex items-center gap-2">
+                        <Phone className="h-5 w-5 text-primary" />
+                        <h5 className="font-semibold text-primary">OTP Verification Support</h5>
+                    </div>
+                    <p className="text-xs mt-2 text-primary/90">
+                        If OTP (One-Time Password) verification is needed for login, please contact our support team on WhatsApp at {settings.whatsappNumber}.
+                    </p>
+                </div>
+               )}
                {order.note && (
                 <div className="border-t pt-4 mt-4">
                     <h5 className="font-semibold mb-2 flex items-center gap-2"><Info className="h-4 w-4" /> Note from Admin</h5>
@@ -183,7 +194,7 @@ export default function ProfilePage() {
   const isBanActive = userData?.ban?.isBanned && 
     (
         userData.ban.type === 'permanent' || 
-        (userData.ban.type === 'temporary' && new Date(userData.ban.expiresAt) > new Date())
+        (userData.ban.type === 'temporary' && userData.ban.expiresAt && new Date(userData.ban.expiresAt) > new Date())
     );
 
   return (
@@ -235,7 +246,7 @@ export default function ProfilePage() {
                 {!isLoadingOrders && orders && orders.length > 0 ? (
                   <Accordion type="single" collapsible className="w-full">
                     {orders.map((order) => (
-                      <OrderItem key={order.id} order={order} />
+                      <OrderItem key={order.id} order={order} settings={settingsData} />
                     ))}
                   </Accordion>
                 ) : (
