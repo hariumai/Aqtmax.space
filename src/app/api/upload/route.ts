@@ -40,6 +40,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ publicUrl: `${PUBLIC_URL}/${key}` });
   } catch (err) {
     console.error('Upload API error:', err);
+    if (err instanceof Error) {
+        console.error('Error message:', err.message);
+        console.error('Error stack:', err.stack);
+    }
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
