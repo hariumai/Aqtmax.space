@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto';
 
 const s3Client = new S3Client({
   region: "auto",
-  endpoint: `https://sublime.statics.csio.aqtmax.space`, // Use the custom domain as the endpoint
+  endpoint: process.env.CLOUDFLARE_R2_CUSTOM_DOMAIN!,
   credentials: {
     accessKeyId: process.env.CLOUDFLARE_R2_ACCESS_KEY_ID!,
     secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY!,
@@ -44,7 +44,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ publicUrl });
   } catch (error) {
     console.error("Error uploading file:", error);
-    // Provide a more specific error message in the server log
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during file upload.";
     return NextResponse.json({ error: `Failed to upload file. Server error: ${errorMessage}` }, { status: 500 });
   }
