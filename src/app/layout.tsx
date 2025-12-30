@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { ThemeProvider } from '@/components/theme-provider';
 import BottomNav from '@/components/bottom-nav';
-import SupportChat from '@/components/support-chat';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -38,7 +37,6 @@ export default function RootLayout({
             {children}
             <Toaster />
             <BottomNav />
-            <SupportChat />
           </FirebaseClientProvider>
         </ThemeProvider>
       </body>

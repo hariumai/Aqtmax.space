@@ -26,6 +26,13 @@ const menuItemsSchema = z.object({
 
 type MenuItem = z.infer<typeof menuItemSchema>;
 
+const defaultMenuItems: Omit<MenuItem, 'order' | 'id'>[] = [
+    { label: 'Home', href: '/' },
+    { label: 'Products', href: '/products' },
+    { label: 'Categories', href: '/categories' },
+    { label: 'Support', href: '/chat' },
+];
+
 export default function AdminMenuItems() {
   const firestore = useFirestore();
   const { user } = useUser();
@@ -36,7 +43,7 @@ export default function AdminMenuItems() {
     defaultValues: { items: [] },
   });
 
-  const { fields: menuFields, append: appendMenuItem, remove: removeMenuItem } = useFieldArray({
+  const { fields: menuFields, append: appendMenuItem, remove: removeMenuItem, replace } = useFieldArray({
     control: menuItemsForm.control,
     name: "items"
   });
@@ -46,13 +53,19 @@ export default function AdminMenuItems() {
         if (!firestore || !user) return;
         const menuItemsQuery = query(collection(firestore, 'menuItems'), orderBy('order'));
         const menuItemsSnapshot = await getDocs(menuItemsQuery);
-        const items = menuItemsSnapshot.docs.map(d => ({ ...d.data(), id: d.id })) as MenuItem[];
-        menuItemsForm.reset({ items });
+        let items = menuItemsSnapshot.docs.map(d => ({ ...d.data(), id: d.id })) as MenuItem[];
+        
+        if (items.length === 0) {
+            // If firestore is empty, populate with defaults
+            items = defaultMenuItems.map((item, index) => ({...item, order: index}));
+        }
+
+        replace(items);
     }
     if (firestore && user) {
       fetchMenuItems();
     }
-  }, [firestore, user, menuItemsForm]);
+  }, [firestore, user, replace]);
 
 
   async function onMenuItemsSubmit(values: z.infer<typeof menuItemsSchema>) {
@@ -90,7 +103,7 @@ export default function AdminMenuItems() {
         const menuItemsQuery = query(collection(firestore, 'menuItems'), orderBy('order'));
         const menuItemsSnapshot = await getDocs(menuItemsQuery);
         const updatedItems = menuItemsSnapshot.docs.map(d => ({ ...d.data(), id: d.id })) as MenuItem[];
-        menuItemsForm.reset({ items: updatedItems });
+        replace(updatedItems);
 
 
     } catch (error: any) {

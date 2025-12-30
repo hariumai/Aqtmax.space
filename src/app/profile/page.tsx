@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { collection, query, doc, where, updateDoc } from 'firebase/firestore';
 import { useDoc } from '@/firebase';
-import { Wallet, Info, AlertTriangle, MessageCircle, ShieldX, Bell, Phone } from 'lucide-react';
+import { Wallet, Info, AlertTriangle, MessageCircle, ShieldX, Bell, Phone, Bot } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -228,9 +228,14 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex flex-wrap gap-2">
                 <Button onClick={handleSignOut} variant="destructive">
                   Sign Out
+                </Button>
+                 <Button asChild variant="outline">
+                    <Link href="/chat">
+                        <Bot className="mr-2 h-4 w-4" /> AI Support
+                    </Link>
                 </Button>
               </CardContent>
             </Card>

@@ -1,7 +1,7 @@
 'use client';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { cn } from '@/lib/utils';
-import { Gem, Home, LayoutGrid, Menu, Shapes, User, ArrowRight, Sun, Moon } from 'lucide-react';
+import { Gem, Home, LayoutGrid, Menu, Shapes, User, ArrowRight, Sun, Moon, Bot } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -32,10 +32,11 @@ export default function BottomNav() {
     { id: 'home', href: '/', label: 'Home', icon: Home, order: 1 },
     { id: 'products', href: '/products', label: 'Products', icon: LayoutGrid, order: 2 },
     { id: 'categories', href: '/categories', label: 'Categories', icon: Shapes, order: 3 },
+    { id: 'support', href: '/chat', label: 'Support', icon: Bot, order: 4 },
   ];
 
   // Use default items and merge/replace with fetched items if they exist
-  const navItems = menuItems ? [...defaultNavItems.filter(defaultItem => !menuItems.some(item => item.href === defaultItem.href)), ...menuItems] : defaultNavItems;
+  const navItems = menuItems ? menuItems.map(item => ({...item, icon: IconMap[item.label] || Home })) : defaultNavItems;
   navItems.sort((a,b) => (a.order ?? 99) - (b.order ?? 99));
 
   const mainNavItems = navItems.filter(item => ['/', '/products', '/categories'].includes(item.href));
@@ -52,6 +53,7 @@ export default function BottomNav() {
     'Home': Home,
     'Products': LayoutGrid,
     'Categories': Shapes,
+    'Support': Bot,
     'Account': User,
     'Menu': Menu
   };
@@ -60,7 +62,7 @@ export default function BottomNav() {
     <div className="md:hidden fixed bottom-0 left-0 z-50 w-full h-16 bg-background/80 border-t border-border backdrop-blur-lg">
       <div className="grid h-full max-w-lg grid-cols-5 mx-auto font-medium">
         {mainNavItems.map(item => {
-             const Icon = IconMap[item.label] || Home;
+             const Icon = item.icon || Home;
              return (
              <Link
              key={item.id}

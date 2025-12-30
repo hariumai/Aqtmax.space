@@ -52,16 +52,18 @@ export async function askSupport(input: SupportChatInput): Promise<z.infer<typeo
 // Define the Genkit prompt
 const supportPrompt = ai.definePrompt({
   name: 'supportChatPrompt',
-  input: { schema: SupportChatInputSchema },
+  input: { schema: z.object({
+    query: z.string(),
+    userContextString: z.string().optional(),
+  }) },
   output: { schema: SupportChatOutputSchema },
   system: `You are a friendly and helpful AI support agent for a digital marketplace called "SubLime Marketplace". Your goal is to assist users with their questions about the platform, their orders, subscriptions, and company policies.
 
 You MUST be concise and to the point. Answer the user's question directly based on the context provided. Do not invent information.
 
-{{#if userContext}}
+{{#if userContextString}}
 You are speaking to a logged-in user. Here is their information:
-- User Profile: {{{jsonStringify userContext.userProfile}}}
-- User Orders: {{{jsonStringify userContext.userOrders}}}
+{{{userContextString}}}
 
 Use this information to answer their questions specifically (e.g., "What was my last order?", "What's my store credit balance?").
 {{else}}
@@ -105,13 +107,20 @@ const supportChatFlow = ai.defineFlow(
     outputSchema: SupportChatOutputSchema,
   },
   async (input) => {
-    const { output } = await supportPrompt(input, {
+    let userContextString: string | undefined;
+    if (input.userContext) {
+      userContextString = `
+- User Profile: ${JSON.stringify(input.userContext.userProfile, null, 2)}
+- User Orders: ${JSON.stringify(input.userContext.userOrders, null, 2)}
+      `;
+    }
+
+    const { output } = await supportPrompt({ query: input.query, userContextString }, {
       dataStructure: JSON.stringify(backendConfig, null, 2),
       securityRules,
       terms: extractContent(termsContent),
       privacy: extractContent(privacyContent),
       refund: extractContent(refundContent),
-      jsonStringify: (obj: any) => JSON.stringify(obj, null, 2),
     });
     
     return output!;
