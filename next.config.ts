@@ -45,18 +45,6 @@ const nextConfig: NextConfig = {
       }
     ],
   },
-   webpack(config) {
-    config.module.rules.push({
-      resourceQuery: /raw-loader/,
-      type: 'asset/source',
-    });
-    config.module.rules.push({
-      resourceQuery: /public-loader/,
-      type: 'asset/source',
-      loader: 'raw-loader',
-    });
-    return config;
-  },
 };
 
 export default nextConfig;
