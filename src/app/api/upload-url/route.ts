@@ -1,12 +1,12 @@
 
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Correctly initialize the S3 client for Cloudflare R2
 const s3Client = new S3Client({
   region: "auto",
   endpoint: `https://f2185d026195d5e6e9cd9948b65bc40f.r2.cloudflarestorage.com`,
@@ -21,34 +21,31 @@ const R2_PUBLIC_URL = process.env.NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL!;
 
 export async function POST(req: NextRequest) {
   try {
-    const formData = await req.formData();
-    const file = formData.get('file') as File | null;
+    const { fileName, fileType } = await req.json();
 
-    if (!file) {
-      return NextResponse.json({ error: 'No file provided.' }, { status: 400 });
+    if (!fileName || !fileType) {
+      return NextResponse.json({ error: 'File name and type are required.' }, { status: 400 });
     }
-    
-    const safeFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
-    const key = `${randomUUID()}-${safeFileName}`;
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const safeFileName = fileName.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+    const key = `${randomUUID()}-${safeFileName}`;
 
     const command = new PutObjectCommand({
       Bucket: R2_BUCKET_NAME,
       Key: key,
-      Body: buffer,
-      ContentType: file.type,
+      ContentType: fileType,
     });
 
-    await s3Client.send(command);
+    // Generate a presigned URL for the PUT request
+    const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 60 }); // URL expires in 60 seconds
 
-    // Construct the public URL using the custom domain
+    // The public URL is what we will store in Firestore
     const publicUrl = `${R2_PUBLIC_URL}/${key}`;
 
-    return NextResponse.json({ publicUrl });
+    return NextResponse.json({ uploadUrl, publicUrl });
   } catch (error) {
-    console.error("Error uploading file:", error);
-    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during file upload.";
-    return NextResponse.json({ error: `Failed to upload file. Server error: ${errorMessage}` }, { status: 500 });
+    console.error("Error creating presigned URL:", error);
+    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during URL generation.";
+    return NextResponse.json({ error: `Failed to create upload URL. Server error: ${errorMessage}` }, { status: 500 });
   }
 }

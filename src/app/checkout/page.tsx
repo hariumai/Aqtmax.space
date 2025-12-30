@@ -155,21 +155,31 @@ export default function CheckoutPage() {
         try {
             let screenshotUrl = '';
             if (screenshotFile && total > 0) {
-                // Upload file to our own API route, which then uploads to R2
-                const formData = new FormData();
-                formData.append('file', screenshotFile);
-
-                const uploadResponse = await fetch('/api/upload-url', {
+                // 1. Get a presigned URL from our server
+                const presignedUrlResponse = await fetch('/api/upload-url', {
                     method: 'POST',
-                    body: formData,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fileName: screenshotFile.name, fileType: screenshotFile.type }),
+                });
+
+                if (!presignedUrlResponse.ok) {
+                    const errorData = await presignedUrlResponse.json();
+                    throw new Error(errorData.error || 'Failed to get upload URL.');
+                }
+                
+                const { uploadUrl, publicUrl } = await presignedUrlResponse.json();
+                
+                // 2. Upload the file directly to R2 using the presigned URL
+                const uploadResponse = await fetch(uploadUrl, {
+                    method: 'PUT',
+                    body: screenshotFile,
+                    headers: { 'Content-Type': screenshotFile.type },
                 });
 
                 if (!uploadResponse.ok) {
-                    const errorData = await uploadResponse.json();
-                    throw new Error(errorData.error || 'Failed to upload screenshot.');
+                    throw new Error('Failed to upload screenshot to cloud storage.');
                 }
 
-                const { publicUrl } = await uploadResponse.json();
                 screenshotUrl = publicUrl;
             }
 
@@ -208,16 +218,7 @@ export default function CheckoutPage() {
 
         } catch (error: any) {
             console.error('Order placement error:', error);
-            if (error.name === 'TypeError' && error.message.includes('fetch')) {
-                 toast({
-                    variant: "destructive",
-                    title: "Upload Failed: Network Error",
-                    description: "Please check your internet connection and try again.",
-                    duration: 10000,
-                });
-            } else {
-                toast({ variant: 'destructive', title: 'Order Failed', description: error.message || 'Could not place your order.' });
-            }
+            toast({ variant: 'destructive', title: 'Order Failed', description: error.message || 'Could not place your order.' });
         } finally {
             setIsSubmitting(false);
         }
@@ -372,5 +373,3 @@ export default function CheckoutPage() {
         </div>
     );
 }
-
-    
