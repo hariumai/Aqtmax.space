@@ -1,3 +1,4 @@
+
 'use client';
 import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
@@ -137,6 +138,27 @@ export default function CheckoutPage() {
             setScreenshotFile(file);
         }
     };
+    
+    async function handleFileUpload(file: File) {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+
+      if (!res.ok) {
+        let msg = 'Upload failed';
+        try {
+          const data = await res.json();
+          msg = data.error || msg;
+        } catch {
+          msg = await res.text() || msg;
+        }
+        throw new Error(msg);
+      }
+
+      const data = await res.json();
+      return data.publicUrl;
+    }
 
     async function onSubmit(values: z.infer<typeof checkoutSchema>) {
       if (!firestore || !user || !cartItems?.length) return;
@@ -146,28 +168,8 @@ export default function CheckoutPage() {
 
       try {
         if (screenshotFile && total > 0) {
-          const formData = new FormData();
-          formData.append('file', screenshotFile);
-
-          const uploadResponse = await fetch('/api/upload', {
-            method: 'POST',
-            body: formData,
-          });
-
-          if (!uploadResponse.ok) {
-            let errorMessage = 'Upload failed';
-            try {
-              const data = await uploadResponse.json();
-              errorMessage = data.error || errorMessage;
-            } catch {
-              errorMessage = await uploadResponse.text() || errorMessage;
-            }
-            console.error('Upload failed response:', errorMessage);
-            throw new Error(errorMessage);
-          }
-
-          const data = await uploadResponse.json();
-          screenshotUrl = data.publicUrl;
+          screenshotUrl = await handleFileUpload(screenshotFile);
+          console.log('Uploaded screenshot URL:', screenshotUrl);
         }
 
         const newOrderRef = doc(collection(firestore, 'orders'));
@@ -183,14 +185,14 @@ export default function CheckoutPage() {
           subtotal: subtotal,
           creditUsed: creditToUse,
           totalAmount: total,
-          paymentScreenshotUrl: screenshotUrl || null,
+          paymentScreenshotUrl: screenshotUrl,
           orderDate: new Date(),
           status: 'pending',
         };
 
         batch.set(newOrderRef, { ...newOrderData, orderDate: serverTimestamp() });
 
-        if (creditToUse > 0) {
+        if (useCredit && creditToUse > 0) {
           batch.update(doc(firestore, 'users', user.uid), { storeCredit: availableCredit - creditToUse });
         }
 
