@@ -6,37 +6,40 @@ import { randomUUID } from 'crypto';
 
 const s3 = new S3Client({
   region: 'auto',
-  endpoint: 'https://f2185d026195d5e6e9cd9948b65bc40f.r2.cloudflarestorage.com',
+  endpoint: process.env.R2_ENDPOINT!,
   credentials: {
     accessKeyId: process.env.CLOUDFLARE_R2_ACCESS_KEY_ID!,
     secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY!,
   },
 });
 
-const BUCKET = 'sublime';
-const PUBLIC_URL = 'https://sublime.statics.csio.aqtmax.space';
+const BUCKET = process.env.R2_BUCKET!;
+const PUBLIC_URL = process.env.R2_PUBLIC_URL!;
 
 export async function POST(req: Request) {
-  const formData = await req.formData();
-  const file = formData.get('file') as File;
+  try {
+    const formData = await req.formData();
+    const file = formData.get('file') as File;
 
-  if (!file) {
-    return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
+    if (!file) {
+      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const key = `${randomUUID()}-${file.name.replace(/\s+/g, '_')}`;
+
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: BUCKET,
+        Key: key,
+        Body: buffer,
+        ContentType: file.type,
+      })
+    );
+
+    return NextResponse.json({ publicUrl: `${PUBLIC_URL}/${key}` });
+  } catch (err) {
+    console.error('Upload API error:', err);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
-
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const key = `${randomUUID()}-${file.name.replace(/\s+/g, '_')}`;
-
-  await s3.send(
-    new PutObjectCommand({
-      Bucket: BUCKET,
-      Key: key,
-      Body: buffer,
-      ContentType: file.type,
-    })
-  );
-
-  return NextResponse.json({
-    publicUrl: `${PUBLIC_URL}/${key}`,
-  });
 }
