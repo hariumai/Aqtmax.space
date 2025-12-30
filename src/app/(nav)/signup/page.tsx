@@ -73,8 +73,7 @@ export default function SignupPage() {
         name: values.name,
         email: values.email,
         createdAt: new Date().toISOString(),
-        emailVerified: false, // Explicitly set to false on creation
-        storeCredit: 0, // Initialize store credit to 0
+        emailVerified: false,
       });
 
       toast({

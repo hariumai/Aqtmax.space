@@ -10,7 +10,6 @@
         "email": { "type": "string", "description": "User's email address.", "format": "email" },
         "name": { "type": "string", "description": "User's full name." },
         "createdAt": { "type": "string", "description": "Timestamp indicating when the user account was created.", "format": "date-time" },
-        "storeCredit": { "type": "number", "description": "The amount of store credit the user has in PKR." },
         "emailVerified": { "type": "boolean", "description": "Indicates if the user has verified their email address." },
         "ban": {
           "type": "object",
@@ -79,8 +78,7 @@
         "customerEmail": { "type": "string", "description": "The email of the customer.", "format": "email" },
         "customerPhone": { "type": "string", "description": "The phone number of the customer." },
         "subtotal": { "type": "number", "description": "The subtotal of the order before discounts and taxes." },
-        "creditUsed": { "type": "number", "description": "The amount of store credit used for the order." },
-        "totalAmount": { "type": "number", "description": "The final amount paid after applying credits." },
+        "totalAmount": { "type": "number", "description": "The final amount paid." },
         "paymentScreenshotUrl": { "type": "string", "description": "URL of the uploaded payment screenshot.", "format": "uri" },
         "orderDate": { "type": "string", "description": "Date when the order was placed.", "format": "date-time" },
         "status": { "type": "string", "description": "Status of the order (e.g., pending, completed, cancelled)." },
@@ -191,5 +189,3 @@
     ]
   }
 }
-
-    

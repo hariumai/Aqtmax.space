@@ -30,7 +30,6 @@ const defaultMenuItems: Omit<MenuItem, 'order' | 'id'>[] = [
     { label: 'Home', href: '/' },
     { label: 'Products', href: '/products' },
     { label: 'Categories', href: '/categories' },
-    { label: 'Support', href: '/chat' },
 ];
 
 export default function AdminMenuItems() {

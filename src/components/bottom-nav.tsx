@@ -1,7 +1,7 @@
 'use client';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { cn } from '@/lib/utils';
-import { Gem, Home, LayoutGrid, Menu, Shapes, User, ArrowRight, Sun, Moon, Bot } from 'lucide-react';
+import { Gem, Home, LayoutGrid, Menu, Shapes, User, ArrowRight, Sun, Moon, Phone } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -32,7 +32,7 @@ export default function BottomNav() {
     'Home': Home,
     'Products': LayoutGrid,
     'Categories': Shapes,
-    'Support': Bot,
+    'Support': Phone,
     'Account': User,
     'Menu': Menu
   };
@@ -41,7 +41,6 @@ export default function BottomNav() {
     { id: 'home', href: '/', label: 'Home', icon: Home, order: 1 },
     { id: 'products', href: '/products', label: 'Products', icon: LayoutGrid, order: 2 },
     { id: 'categories', href: '/categories', label: 'Categories', icon: Shapes, order: 3 },
-    { id: 'support', href: '/chat', label: 'Support', icon: Bot, order: 4 },
   ];
 
   const navItems = menuItems && menuItems.length > 0
@@ -60,6 +59,10 @@ export default function BottomNav() {
     }
     return href;
   };
+  
+  if (pathname.startsWith('/admin')) {
+    return null;
+  }
 
   return (
     <div className="md:hidden fixed bottom-0 left-0 z-50 w-full h-16 bg-background/80 border-t border-border backdrop-blur-lg">

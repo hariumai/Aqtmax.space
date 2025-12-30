@@ -137,9 +137,7 @@ export default function AdminUsers() {
   const auth = useAuth();
   const { user } = useUser();
   const { toast } = useToast();
-  const [creditAmount, setCreditAmount] = useState(0);
   const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [isCreditDialogOpen, setIsCreditDialogOpen] = useState(false);
   const [isBanDialogOpen, setIsBanDialogOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
@@ -188,12 +186,6 @@ export default function AdminUsers() {
     }
   };
 
-  const openCreditDialog = (user: any) => {
-    setSelectedUser(user);
-    setCreditAmount(user.storeCredit || 0);
-    setIsCreditDialogOpen(true);
-  };
-
   const openBanDialog = (user: any) => {
     setSelectedUser(user);
     setIsBanDialogOpen(true);
@@ -213,27 +205,6 @@ export default function AdminUsers() {
     }
   };
 
-  const handleUpdateCredit = async () => {
-    if (!firestore || !selectedUser || !user) {
-        toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to perform this action.' });
-        return;
-    }
-    try {
-      const userRef = doc(firestore, 'users', selectedUser.id);
-      await updateDoc(userRef, {
-        storeCredit: Number(creditAmount)
-      });
-      toast({
-        title: 'Store Credit Updated',
-        description: `${selectedUser.name}'s credit has been updated to ${creditAmount} PKR.`
-      });
-      setIsCreditDialogOpen(false);
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Error Updating Credit', description: error.message });
-    }
-  };
-
-
   return (
     <>
     <Card>
@@ -249,7 +220,6 @@ export default function AdminUsers() {
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Store Credit</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -257,7 +227,7 @@ export default function AdminUsers() {
           <TableBody>
             {isLoadingUsers ? (
               <TableRow>
-                <TableCell colSpan={5}>Loading users...</TableCell>
+                <TableCell colSpan={4}>Loading users...</TableCell>
               </TableRow>
             ) : (
               users?.map((user) => (
@@ -269,14 +239,6 @@ export default function AdminUsers() {
                     </div>
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                        <span>{user.storeCredit?.toFixed(2) || '0.00'} PKR</span>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openCreditDialog(user)}>
-                            <Edit className="h-3 w-3" />
-                        </Button>
-                    </div>
-                  </TableCell>
                   <TableCell>
                     {user.ban?.isBanned ? (
                       <Badge variant="destructive" className="capitalize">{user.ban.type}</Badge>
@@ -327,35 +289,11 @@ export default function AdminUsers() {
             )}
             {!isLoadingUsers && users?.length === 0 && (
                 <TableRow>
-                    <TableCell colSpan={5} className="text-center">No users found.</TableCell>
+                    <TableCell colSpan={4} className="text-center">No users found.</TableCell>
                 </TableRow>
             )}
           </TableBody>
         </Table>
-
-        <Dialog open={isCreditDialogOpen} onOpenChange={setIsCreditDialogOpen}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Edit Store Credit for {selectedUser?.name}</DialogTitle>
-                </DialogHeader>
-                <div className="py-4">
-                    <Label htmlFor="credit-amount">Credit Amount (PKR)</Label>
-                    <Input 
-                        id="credit-amount"
-                        type="number"
-                        value={creditAmount}
-                        onChange={(e) => setCreditAmount(Number(e.target.value))}
-                        placeholder="e.g., 500"
-                    />
-                </div>
-                <DialogFooter>
-                    <DialogClose asChild>
-                        <Button variant="ghost">Cancel</Button>
-                    </DialogClose>
-                    <Button onClick={handleUpdateCredit}>Save Changes</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
         
         <Dialog open={isBanDialogOpen} onOpenChange={setIsBanDialogOpen}>
             <DialogContent>
@@ -372,5 +310,3 @@ export default function AdminUsers() {
     </>
   );
 }
-
-    

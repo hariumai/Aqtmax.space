@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { collection, query, doc, where, updateDoc } from 'firebase/firestore';
 import { useDoc } from '@/firebase';
-import { Wallet, Info, AlertTriangle, MessageCircle, ShieldX, Bell, Phone, Bot } from 'lucide-react';
+import { Info, AlertTriangle, MessageCircle, ShieldX, Bell, Phone } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -215,23 +215,11 @@ export default function ProfilePage() {
                     <CardDescription>{user.email}</CardDescription>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 rounded-lg bg-muted p-3">
-                  <Wallet className="h-6 w-6 text-primary" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Store Credit</p>
-                    <p className="text-lg font-bold">{userData?.storeCredit?.toFixed(2) || '0.00'} PKR</p>
-                  </div>
-                </div>
               </div>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-2">
               <Button onClick={handleSignOut} variant="destructive">
                 Sign Out
-              </Button>
-               <Button asChild variant="outline">
-                  <Link href={`/profile/${user.uid}/chat`}>
-                      <Bot className="mr-2 h-4 w-4" /> AI Support
-                  </Link>
               </Button>
             </CardContent>
           </Card>

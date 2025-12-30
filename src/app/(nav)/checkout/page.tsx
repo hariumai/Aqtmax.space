@@ -74,10 +74,6 @@ export default function CheckoutPage() {
     const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [orderComplete, setOrderComplete] = useState<Order | null>(null);
-    const [useCredit, setUseCredit] = useState(false);
-
-    const userRef = useMemoFirebase(() => (firestore && user ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
-    const { data: userData } = useDoc(userRef);
 
     const settingsRef = useMemoFirebase(() => (firestore ? doc(firestore, 'settings', 'payment') : null), [firestore]);
     const { data: paymentSettings } = useDoc(settingsRef);
@@ -94,12 +90,8 @@ export default function CheckoutPage() {
         }
     }, [isLoading, cartItems, router, orderComplete]);
 
-
-    const subtotal = useMemo(() => cartItems?.reduce((acc, item) => acc + item.price * item.quantity, 0) ?? 0, [cartItems]);
-    const availableCredit = userData?.storeCredit ?? 0;
-    const creditToUse = useCredit ? Math.min(subtotal, availableCredit) : 0;
-    const total = subtotal - creditToUse;
-
+    const total = useMemo(() => cartItems?.reduce((acc, item) => acc + item.price * item.quantity, 0) ?? 0, [cartItems]);
+    
     const form = useForm<z.infer<typeof checkoutSchema>>({
         resolver: zodResolver(checkoutSchema),
         defaultValues: {
@@ -180,8 +172,7 @@ export default function CheckoutPage() {
           customerName: values.name,
           customerEmail: values.email,
           customerPhone: values.phone,
-          subtotal: subtotal,
-          creditUsed: creditToUse,
+          subtotal: total,
           totalAmount: total,
           paymentScreenshotUrl: paymentProofId, // Saving the document ID
           orderDate: new Date(),
@@ -189,10 +180,6 @@ export default function CheckoutPage() {
         };
 
         batch.set(newOrderRef, { ...newOrderData, orderDate: serverTimestamp() });
-
-        if (useCredit && creditToUse > 0) {
-          batch.update(doc(firestore, 'users', user.uid), { storeCredit: availableCredit - creditToUse });
-        }
 
         cartItems.forEach(item => {
           const cartItemRef = doc(firestore, 'users', user.uid, 'cart', item.id);
@@ -275,32 +262,11 @@ export default function CheckoutPage() {
                                     <CardTitle>3. Payment</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                     {availableCredit > 0 && (
-                                        <div className="flex items-center justify-between rounded-lg border p-4">
-                                            <div className="space-y-0.5">
-                                                <Label htmlFor="use-credit" className="text-base">Use Store Credit</Label>
-                                                <p className="text-sm text-muted-foreground">
-                                                    You have {availableCredit.toFixed(2)} PKR available.
-                                                </p>
-                                            </div>
-                                            <Switch
-                                                id="use-credit"
-                                                checked={useCredit}
-                                                onCheckedChange={setUseCredit}
-                                            />
-                                        </div>
-                                    )}
                                     <div className="space-y-2 text-sm">
                                         <div className="flex justify-between">
                                             <span>Subtotal</span>
-                                            <span>{subtotal.toFixed(2)} PKR</span>
+                                            <span>{total.toFixed(2)} PKR</span>
                                         </div>
-                                        {creditToUse > 0 && (
-                                            <div className="flex justify-between text-primary">
-                                                <span>Credit Used</span>
-                                                <span>-{creditToUse.toFixed(2)} PKR</span>
-                                            </div>
-                                        )}
                                         <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
                                             <span>Total to Pay</span>
                                             <span>{total.toFixed(2)} PKR</span>
@@ -334,7 +300,7 @@ export default function CheckoutPage() {
                                         </div>
                                     )}
 
-                                    <Button size="lg" type="submit" className="w-full" disabled={isSubmitting}>
+                                    <Button size="lg" type="submit" className="w-full" disabled={isSubmitting || (total > 0 && !screenshotFile)}>
                                         {isSubmitting ? (
                                             <>
                                                 <CreditCard className="mr-2 h-5 w-5 animate-pulse" />

@@ -17,7 +17,6 @@ export type Order = {
     customerEmail: string;
     customerPhone: string;
     subtotal: number;
-    creditUsed: number;
     totalAmount: number;
     paymentScreenshotUrl: string | null;
     orderDate: any; // Can be Date or FieldValue
