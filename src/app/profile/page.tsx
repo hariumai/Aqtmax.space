@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { collection, query, doc, where } from 'firebase/firestore';
 import { useDoc } from '@/firebase';
-import { Wallet, Info } from 'lucide-react';
+import { Wallet, Info, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -43,8 +43,19 @@ function OrderItem({ order }: { order: any }) {
                  <p><strong>Username/Email:</strong> {order.credentials.username}</p>
                  <p><strong>Password:</strong> {order.credentials.password}</p>
                </div>
+               <div className="border-l-4 border-destructive pl-4 py-2 bg-destructive/10 text-destructive-foreground">
+                  <div className="flex items-center gap-2">
+                     <AlertTriangle className="h-5 w-5" />
+                     <h5 className="font-semibold">Important Account Rules</h5>
+                  </div>
+                  <ul className="text-xs list-disc pl-5 mt-2">
+                    <li>Do not pin a profile.</li>
+                    <li>Do not change any account details (password, email, etc.).</li>
+                    <li>Violation will result in a permanent ban and no refund.</li>
+                  </ul>
+               </div>
                {order.note && (
-                <div className="border-t pt-4">
+                <div className="border-t pt-4 mt-4">
                     <h5 className="font-semibold mb-2 flex items-center gap-2"><Info className="h-4 w-4" /> Note from Admin</h5>
                     <p className="text-sm text-muted-foreground italic">"{order.note}"</p>
                 </div>
