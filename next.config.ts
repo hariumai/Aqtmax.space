@@ -55,10 +55,6 @@ const nextConfig: NextConfig = {
       type: 'asset/source',
       loader: 'raw-loader',
     });
-    config.module.rules.push({
-      test: /\.rules$/,
-      type: 'asset/source',
-    });
     return config;
   },
 };

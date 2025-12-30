@@ -8,10 +8,15 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import backendConfig from '@/../docs/backend.json';
-import securityRules from '@/../firestore.rules?raw-loader';
-import termsContent from '!!raw-loader!@/app/(legal)/terms/page.tsx';
-import privacyContent from '!!raw-loader!@/app/(legal)/privacy/page.tsx';
-import refundContent from '!!raw-public-loader!@/app/(legal)/refund/page.tsx';
+import fs from 'fs';
+import path from 'path';
+
+// Read the contents of the legal pages and security rules directly from the filesystem.
+const termsContent = fs.readFileSync(path.join(process.cwd(), 'src', 'app', '(legal)', 'terms', 'page.tsx'), 'utf8');
+const privacyContent = fs.readFileSync(path.join(process.cwd(), 'src', 'app', '(legal)', 'privacy', 'page.tsx'), 'utf8');
+const refundContent = fs.readFileSync(path.join(process.cwd(), 'src', 'app', '(legal)', 'refund', 'page.tsx'), 'utf8');
+const securityRules = fs.readFileSync(path.join(process.cwd(), 'firestore.rules'),'utf8');
+
 
 // A simple regex to strip out the component parts of the legal pages
 const pageContentRegex = /<div[^>]*>([\s\S]*?)<\/div>/;
