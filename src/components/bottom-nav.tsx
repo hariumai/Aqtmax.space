@@ -1,7 +1,7 @@
 'use client';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { cn } from '@/lib/utils';
-import { Gem, Home, LayoutGrid, Menu, Shapes, User, ArrowRight, Sun, Moon, Phone } from 'lucide-react';
+import { Gem, Home, LayoutGrid, Menu, Shapes, User, ArrowRight, Sun, Moon, Phone, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -120,8 +120,8 @@ export default function BottomNav() {
                     type="button"
                     className="inline-flex flex-col items-center justify-center px-5 hover:bg-muted/50 group"
                 >
-                    <Menu className="w-5 h-5 mb-1 text-muted-foreground transition-colors group-hover:text-primary" />
-                    <span className="text-xs text-muted-foreground transition-colors group-hover:text-primary">Menu</span>
+                    <MoreHorizontal className="w-5 h-5 mb-1 text-muted-foreground transition-colors group-hover:text-primary" />
+                    <span className="text-xs text-muted-foreground transition-colors group-hover:text-primary">More</span>
                 </button>
             </SheetTrigger>
             <SheetContent side="bottom" className="w-full h-auto rounded-t-2xl p-0 bg-background/95 backdrop-blur-xl">
