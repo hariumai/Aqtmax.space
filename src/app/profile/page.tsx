@@ -180,8 +180,11 @@ export default function ProfilePage() {
     }
   };
   
-  const now = new Date();
-  const isBanActive = userData?.ban?.isBanned && (userData.ban.type === 'permanent' || (userData.ban.expiresAt && new Date(userData.ban.expiresAt) > now));
+  const isBanActive = userData?.ban?.isBanned && 
+    (
+        userData.ban.type === 'permanent' || 
+        (userData.ban.type === 'temporary' && new Date(userData.ban.expiresAt) > new Date())
+    );
 
   return (
     <div className="flex flex-col min-h-screen">
