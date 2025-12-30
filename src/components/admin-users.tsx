@@ -1,7 +1,8 @@
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useCollection, useFirestore, useAuth, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useAuth, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from './ui/button';
@@ -17,14 +18,15 @@ import { Label } from './ui/label';
 export default function AdminUsers() {
   const firestore = useFirestore();
   const auth = useAuth();
+  const { user } = useUser();
   const { toast } = useToast();
   const [creditAmount, setCreditAmount] = useState(0);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isCreditDialogOpen, setIsCreditDialogOpen] = useState(false);
 
   const usersQuery = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, 'users')) : null),
-    [firestore]
+    () => (firestore && user ? query(collection(firestore, 'users')) : null),
+    [firestore, user]
   );
   const { data: users, isLoading: isLoadingUsers } = useCollection(usersQuery);
 
@@ -74,7 +76,10 @@ export default function AdminUsers() {
   };
 
   const handleUpdateCredit = async () => {
-    if (!firestore || !selectedUser) return;
+    if (!firestore || !selectedUser || !user) {
+        toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to perform this action.' });
+        return;
+    }
     try {
       const userRef = doc(firestore, 'users', selectedUser.id);
       await updateDoc(userRef, {
