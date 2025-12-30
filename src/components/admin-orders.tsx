@@ -5,7 +5,7 @@ import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebas
 import { collection, query, doc, updateDoc, orderBy, runTransaction, deleteDoc } from 'firebase/firestore';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from './ui/button';
-import { CheckCircle, Clock, ExternalLink, Pencil, Trash } from 'lucide-react';
+import { CheckCircle, Clock, ExternalLink, Pencil, Trash, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from './ui/badge';
 import Link from 'next/link';
@@ -234,6 +234,12 @@ export default function AdminOrders() {
       setSelectedOrder(order);
       setIsEditDialogOpen(true);
   };
+  
+  const openWhatsApp = (phone: string) => {
+    if (!phone) return;
+    const internationalPhone = phone.startsWith('+') ? phone.replace(/\s/g, '') : `+${phone.replace(/\s/g, '')}`;
+    window.open(`https://wa.me/${internationalPhone}`, '_blank');
+  };
 
   return (
     <>
@@ -267,6 +273,15 @@ export default function AdminOrders() {
                   <TableCell>
                     <div>{order.customerName}</div>
                     <div className="text-xs text-muted-foreground">{order.customerEmail}</div>
+                    <div className="text-xs text-muted-foreground flex items-center gap-1">
+                      {order.customerPhone}
+                      {order.customerPhone && (
+                        <MessageSquare
+                          className="h-3 w-3 text-green-500 cursor-pointer"
+                          onClick={() => openWhatsApp(order.customerPhone)}
+                        />
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>{new Date(order.orderDate?.toDate()).toLocaleString()}</TableCell>
                   <TableCell>{order.totalAmount.toFixed(2)} PKR</TableCell>

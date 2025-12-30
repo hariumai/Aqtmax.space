@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -7,7 +5,7 @@ import { useCollection, useFirestore, useAuth, useMemoFirebase, useUser } from '
 import { collection, query, doc, deleteDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from './ui/button';
-import { Mail, Trash, Edit, Ban, Bell } from 'lucide-react';
+import { Mail, Trash, Edit, Ban, Bell, Search } from 'lucide-react';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
@@ -140,13 +138,21 @@ export default function AdminUsers() {
   const { toast } = useToast();
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isBanDialogOpen, setIsBanDialogOpen] = useState(false);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const usersQuery = useMemoFirebase(
     () => (firestore && user ? query(collection(firestore, 'users')) : null),
     [firestore, user]
   );
   const { data: users, isLoading: isLoadingUsers } = useCollection(usersQuery);
+
+  const filteredUsers = useMemo(() => {
+    if (!users) return [];
+    return users.filter(user =>
+      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [users, searchTerm]);
 
   const handlePasswordReset = async (email: string) => {
     if (!auth) return;
@@ -216,6 +222,17 @@ export default function AdminUsers() {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <div className="mb-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name or email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
         <Table>
           <TableHeader>
             <TableRow>
@@ -231,7 +248,7 @@ export default function AdminUsers() {
                 <TableCell colSpan={4}>Loading users...</TableCell>
               </TableRow>
             ) : (
-              users?.map((user) => (
+              filteredUsers.map((user) => (
                 <TableRow key={user.id} className={user.ban?.isBanned ? 'bg-destructive/10' : ''}>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -288,7 +305,7 @@ export default function AdminUsers() {
                 </TableRow>
               ))
             )}
-            {!isLoadingUsers && users?.length === 0 && (
+            {!isLoadingUsers && filteredUsers.length === 0 && (
                 <TableRow>
                     <TableCell colSpan={4} className="text-center">No users found.</TableCell>
                 </TableRow>
