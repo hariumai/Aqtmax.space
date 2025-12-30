@@ -153,6 +153,7 @@ export default function CheckoutPage() {
 
         try {
             let screenshotUrl: string | null = null;
+            
             if (screenshotFile && total > 0) {
                 const formData = new FormData();
                 formData.append('file', screenshotFile);
@@ -162,7 +163,10 @@ export default function CheckoutPage() {
                     body: formData,
                 });
 
-                if (!uploadResponse.ok) {
+                if (uploadResponse.ok) {
+                    const data = await uploadResponse.json();
+                    screenshotUrl = data.publicUrl;
+                } else {
                     let errorMessage = 'Upload failed';
                     try {
                         const data = await uploadResponse.json();
@@ -173,9 +177,6 @@ export default function CheckoutPage() {
                     console.error('Upload failed response:', errorMessage);
                     throw new Error(errorMessage);
                 }
-                
-                const { publicUrl } = await uploadResponse.json();
-                screenshotUrl = publicUrl;
             }
 
             const newOrderRef = doc(collection(firestore, 'orders'));
@@ -194,13 +195,12 @@ export default function CheckoutPage() {
                 orderDate: new Date(),
                 status: 'pending',
             };
-
+            
             if (screenshotUrl) {
                 newOrderData.paymentScreenshotUrl = screenshotUrl;
             }
-            
-            batch.set(newOrderRef, { ...newOrderData, orderDate: serverTimestamp() });
 
+            batch.set(newOrderRef, { ...newOrderData, orderDate: serverTimestamp() });
 
             if (creditToUse > 0) {
                 const newCredit = availableCredit - creditToUse;
@@ -213,7 +213,6 @@ export default function CheckoutPage() {
             });
 
             await batch.commit();
-
             setOrderComplete(newOrderData);
 
         } catch (error: any) {
