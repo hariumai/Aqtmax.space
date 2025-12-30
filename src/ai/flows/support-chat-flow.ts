@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview A support chat AI agent for the SubLime Marketplace.
@@ -22,7 +21,7 @@ const safeReadFile = (filePath: string): string => {
     }
 };
 
-// Read the contents of the legal pages and security rules directly from the filesystem.
+// Correctly read the contents of the legal pages and security rules from the filesystem.
 const termsContent = safeReadFile(path.join(process.cwd(), 'src', 'app', '(legal)', 'terms', 'page.tsx'));
 const privacyContent = safeReadFile(path.join(process.cwd(), 'src', 'app', '(legal)', 'privacy', 'page.tsx'));
 const refundContent = safeReadFile(path.join(process.cwd(), 'src', 'app', '(legal)', 'refund', 'page.tsx'));
@@ -61,10 +60,10 @@ export async function askSupport(input: SupportChatInput): Promise<z.infer<typeo
   return result;
 }
 
-// Define the Genkit prompt for guest users
-const supportPrompt = ai.definePrompt({
-  name: 'supportChatPrompt',
-  system: `You are a friendly and helpful AI support agent for a digital marketplace called "SubLime Marketplace". Your goal is to assist users with their questions about the platform, their orders, subscriptions, and company policies.
+// Define the Genkit prompt for GUEST users
+const guestSupportPrompt = ai.definePrompt({
+  name: 'guestSupportPrompt',
+  system: `You are a friendly and helpful AI support agent for a digital marketplace called "SubLime Marketplace". Your goal is to assist users with their questions about the platform, subscriptions, and company policies.
 
 You MUST be concise and to the point. Answer the user's question directly based on the context provided. Do not invent information.
 
@@ -87,7 +86,7 @@ You have been provided with the following context about the application:
    - Privacy Policy: {{{privacy}}}
    - Refund Policy: {{{refund}}}
 
-4. General Knowledge: The marketplace sells digital subscriptions like Netflix, Spotify, etc. 
+4. General Knowledge: The marketplace sells digital subscriptions like Netflix, Spotify, etc.
    - To buy something, a user adds a product to their cart. They can then go to the checkout page.
    - At checkout, they can apply any available store credit.
    - For any remaining balance, they must perform a bank transfer to the details provided and upload a screenshot of the payment.
@@ -99,6 +98,7 @@ You have been provided with the following context about the application:
 Based on this information, please answer the user's query.`,
 });
 
+
 // Define the Genkit flow
 const supportChatFlow = ai.defineFlow(
   {
@@ -107,10 +107,11 @@ const supportChatFlow = ai.defineFlow(
     outputSchema: SupportChatOutputSchema,
   },
   async (input) => {
-    // Rule-based logic for logged-in users. This section does NOT call the Gemini API.
+    // Rule-based logic for LOGGED-IN users. This section does NOT call the Gemini API.
     if (input.userContext && input.userContext.userProfile) {
       const lowerQuery = input.query.toLowerCase();
       const userProfile = input.userContext.userProfile;
+      const userOrders = input.userContext.userOrders || [];
 
       // Rule for store credit
       if (lowerQuery.includes('credit') || lowerQuery.includes('balance')) {
@@ -120,35 +121,34 @@ const supportChatFlow = ai.defineFlow(
 
       // Rule for tracking orders
       if (lowerQuery.includes('order') || lowerQuery.includes('track') || lowerQuery.includes('status')) {
-        const orders = input.userContext.userOrders;
-        if (!orders || orders.length === 0) {
+        if (!userOrders || userOrders.length === 0) {
           return "You haven't placed any orders yet. Feel free to browse our products!";
         }
-        
-        const recentOrders = orders.slice(0, 3); // Show the 3 most recent orders
+
+        const recentOrders = userOrders.slice(0, 3); // Show the 3 most recent orders
         let response = `Here are your most recent orders:\n`;
         recentOrders.forEach((order: any, index: number) => {
           const itemNames = order.items.map((item: any) => item.subscriptionName).join(', ');
           response += `\n${index + 1}. Order for **${itemNames}** is currently **${order.status}**.`;
         });
-        
+
         response += `\n\nFor more details, please visit your profile page. Once an order is 'completed', you will find the subscription credentials there.`;
         return response;
       }
-      
+
       // Default response for logged-in user if no rules match
-      return "I can help with questions about your store credit and order status. For anything else, please contact our human support team.";
+      return "I can help with questions about your store credit and order status. For anything else, please contact our human support team via WhatsApp.";
     }
 
-    // Fallback to Gemini for guest users
-    const { output } = await supportPrompt({ query: input.query }, {
+    // Fallback to Gemini for GUEST users
+    const { output } = await guestSupportPrompt({ query: input.query }, {
       dataStructure: JSON.stringify(backendConfig, null, 2),
       securityRules,
       terms: extractContent(termsContent),
       privacy: extractContent(privacyContent),
       refund: extractContent(refundContent),
     });
-    
+
     return output!;
   }
 );
