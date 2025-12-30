@@ -184,8 +184,8 @@ export default function ProductCard({ product }: { product: any }) {
 
         {hasVariants && (
           <div className="space-y-2 flex-grow">
-              {product.variants.map((group: any) => (
-                  <div key={group.groupName}>
+              {product.variants.map((group: any, index: number) => (
+                  <div key={`${group.groupName}-${index}`}>
                       <Label className="text-xs text-muted-foreground">{group.groupName}</Label>
                        <Select
                           onValueChange={(value) => handleVariantChange(group.groupName, value)}
