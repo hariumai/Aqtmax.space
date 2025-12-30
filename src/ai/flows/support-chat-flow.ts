@@ -12,11 +12,21 @@ import backendConfig from '@/../docs/backend.json';
 import fs from 'fs';
 import path from 'path';
 
+// Helper function to safely read files
+const safeReadFile = (filePath: string): string => {
+    try {
+        return fs.readFileSync(filePath, 'utf8');
+    } catch (error) {
+        console.error(`Error reading file at ${filePath}:`, error);
+        return ''; // Return empty string on error
+    }
+};
+
 // Read the contents of the legal pages and security rules directly from the filesystem.
-const termsContent = fs.readFileSync(path.join(process.cwd(), 'src', 'app', '(legal)', 'terms', 'page.tsx'), 'utf8');
-const privacyContent = fs.readFileSync(path.join(process.cwd(), 'src', 'app', '(legal)', 'privacy', 'page.tsx'), 'utf8');
-const refundContent = fs.readFileSync(path.join(process.cwd(), 'src', 'app', '(legal)', 'refund', 'page.tsx'), 'utf8');
-const securityRules = fs.readFileSync(path.join(process.cwd(), 'firestore.rules'),'utf8');
+const termsContent = safeReadFile(path.join(process.cwd(), 'src', 'app', '(legal)', 'terms', 'page.tsx'));
+const privacyContent = safeReadFile(path.join(process.cwd(), 'src', 'app', '(legal)', 'privacy', 'page.tsx'));
+const refundContent = safeReadFile(path.join(process.cwd(), 'src', 'app', '(legal)', 'refund', 'page.tsx'));
+const securityRules = safeReadFile(path.join(process.cwd(), 'firestore.rules'));
 
 
 // A simple regex to strip out the component parts of the legal pages
@@ -142,4 +152,3 @@ const supportChatFlow = ai.defineFlow(
     return output!;
   }
 );
-
