@@ -139,7 +139,7 @@ export default function CheckoutPage() {
         }
     };
     
-    async function handleFileUpload(file: File) {
+    async function handleFileUpload(file: File): Promise<string> {
       const formData = new FormData();
       formData.append('file', file);
 
@@ -157,19 +157,19 @@ export default function CheckoutPage() {
       }
 
       const data = await res.json();
-      return data.publicUrl;
+      return data.proofId; // Returns the MongoDB document ID
     }
 
     async function onSubmit(values: z.infer<typeof checkoutSchema>) {
       if (!firestore || !user || !cartItems?.length) return;
 
       setIsSubmitting(true);
-      let screenshotUrl: string | null = null;
+      let paymentProofId: string | null = null;
 
       try {
         if (screenshotFile && total > 0) {
-          screenshotUrl = await handleFileUpload(screenshotFile);
-          console.log('Uploaded screenshot URL:', screenshotUrl);
+          paymentProofId = await handleFileUpload(screenshotFile);
+          console.log('Uploaded payment proof ID:', paymentProofId);
         }
 
         const newOrderRef = doc(collection(firestore, 'orders'));
@@ -185,7 +185,7 @@ export default function CheckoutPage() {
           subtotal: subtotal,
           creditUsed: creditToUse,
           totalAmount: total,
-          paymentScreenshotUrl: screenshotUrl,
+          paymentScreenshotUrl: paymentProofId, // Saving the document ID
           orderDate: new Date(),
           status: 'pending',
         };
