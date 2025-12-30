@@ -1,16 +1,16 @@
 
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
 import { useUser, useFirestore } from '@/firebase';
 import { collection, addDoc, serverTimestamp, query, where, limit, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { Clapperboard, Music, Palette, Tv, ShoppingCart, CreditCard } from 'lucide-react';
+import { Clapperboard, Music, Palette, Tv, ShoppingCart, CreditCard, Radio, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Label } from './ui/label';
 
 const iconMap: { [key: string]: React.ElementType } = {
   'Netflix Premium': Clapperboard,
@@ -20,6 +20,8 @@ const iconMap: { [key: string]: React.ElementType } = {
   default: Clapperboard,
 };
 
+type SelectedVariants = { [key: string]: string };
+
 export default function ProductCard({ product }: { product: any }) {
   const ProductIcon = iconMap[product.name] || iconMap.default;
   const { user } = useUser();
@@ -27,14 +29,47 @@ export default function ProductCard({ product }: { product: any }) {
   const { toast } = useToast();
   const router = useRouter();
 
-  const [selectedVariant, setSelectedVariant] = useState<any>(
-    product.variants?.length > 0 ? product.variants[0] : null
-  );
+  const [selectedVariants, setSelectedVariants] = useState<SelectedVariants>({});
   const [isAdding, setIsAdding] = useState(false);
+  const [currentPrice, setCurrentPrice] = useState<number | null>(null);
 
-  const displayPrice = selectedVariant?.variantPrice ?? (product.discountedPrice ?? product.price);
-  const hasDiscount = product.discountedPrice && product.discountedPrice < product.price && !selectedVariant;
-  const pricePrefix = product.variants?.length > 0 && !selectedVariant ? 'From' : '';
+  const hasVariants = product.variants && product.variants.length > 0;
+
+  useMemo(() => {
+    if (!hasVariants) {
+        setCurrentPrice(product.discountedPrice ?? product.price);
+        return;
+    }
+    
+    let allOptionsSelected = true;
+    let price = 0;
+    product.variants.forEach((group: any) => {
+        const selectedOptionName = selectedVariants[group.groupName];
+        if (selectedOptionName) {
+            const selectedOption = group.options.find((opt: any) => opt.optionName === selectedOptionName);
+            if (selectedOption) {
+                price += selectedOption.price;
+            }
+        } else {
+            allOptionsSelected = false;
+        }
+    });
+
+    if (allOptionsSelected) {
+        setCurrentPrice(price);
+    } else {
+        const minPrice = product.variants.reduce((total: number, group: any) => {
+            const minOptionPrice = Math.min(...group.options.map((opt: any) => opt.price));
+            return total + minOptionPrice;
+        }, 0);
+        setCurrentPrice(minPrice);
+    }
+
+  }, [product, hasVariants, selectedVariants]);
+
+  const handleVariantChange = (groupName: string, optionName: string) => {
+    setSelectedVariants(prev => ({ ...prev, [groupName]: optionName }));
+  };
   
   const handleAddToCart = async (redirect: boolean = false) => {
     if (!user) {
@@ -42,21 +77,29 @@ export default function ProductCard({ product }: { product: any }) {
       router.push('/login');
       return;
     }
-    if (!selectedVariant && product?.variants?.length > 0) {
-      toast({ variant: "destructive", title: "No variant selected", description: "Please select a plan to continue."});
-      return;
+
+    if (hasVariants) {
+        const allSelected = product.variants.every((group:any) => selectedVariants[group.groupName]);
+        if(!allSelected) {
+             toast({ variant: "destructive", title: "Options Required", description: "Please select all product options."});
+             return;
+        }
     }
-    if (!firestore || !product) return;
+
+    if (!firestore || !product || currentPrice === null) return;
     setIsAdding(true);
 
     try {
         const cartRef = collection(firestore, 'users', user.uid, 'cart');
+        const variantName = hasVariants 
+            ? product.variants.map((group: any) => selectedVariants[group.groupName]).join(' / ')
+            : 'Default';
         
         const itemToAdd = {
             subscriptionId: product.id,
             subscriptionName: product.name,
-            variantName: selectedVariant?.variantName || 'Default',
-            price: selectedVariant?.variantPrice || product.discountedPrice || product.price,
+            variantName: variantName,
+            price: currentPrice,
             quantity: 1,
             imageUrl: product.imageUrl,
         };
@@ -76,7 +119,7 @@ export default function ProductCard({ product }: { product: any }) {
                 createdAt: serverTimestamp(),
             });
         } else {
-            toast({ title: "Item already in cart", description: `${product.name} is already in your cart.`});
+            toast({ title: "Item already in cart", description: `${product.name} (${variantName}) is already in your cart.`});
         }
 
         if (!redirect) {
@@ -93,6 +136,9 @@ export default function ProductCard({ product }: { product: any }) {
   };
 
   const handleBuyNow = () => handleAddToCart(true);
+
+  const pricePrefix = hasVariants && !product.variants.every((g:any) => selectedVariants[g.groupName]) ? 'From' : '';
+  const hasDiscount = product.discountedPrice && product.discountedPrice < product.price && !hasVariants;
 
   return (
     <Card
@@ -114,29 +160,36 @@ export default function ProductCard({ product }: { product: any }) {
             {hasDiscount && (
                 <span className="text-2xl font-normal text-muted-foreground line-through mr-2">{product.price}</span>
             )}
-            {displayPrice}
+            {currentPrice?.toFixed(2)}
             <span className="text-base font-normal text-muted-foreground"> PKR</span>
         </div>
         <CardDescription className="mt-2 text-sm min-h-[40px] flex-grow">
           {product.description}
         </CardDescription>
 
-        {product.variants && product.variants.length > 0 && (
-          <RadioGroup 
-            value={selectedVariant?.variantName}
-            onValueChange={(value) => setSelectedVariant(product.variants.find((v:any) => v.variantName === value))}
-            className="flex-grow"
-          >
-              <div className="space-y-2">
-                  {product.variants.map((variant: any) => (
-                      <Label key={variant.variantName} htmlFor={`${product.id}-${variant.variantName}`} className="flex items-center justify-between rounded-md border-2 border-muted bg-popover p-3 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary">
-                          <span>{variant.variantName}</span>
-                          <span className="font-bold">{variant.variantPrice} PKR</span>
-                          <RadioGroupItem value={variant.variantName} id={`${product.id}-${variant.variantName}`} className="sr-only" />
-                      </Label>
-                  ))}
-              </div>
-          </RadioGroup>
+        {hasVariants && (
+          <div className="space-y-2 flex-grow">
+              {product.variants.map((group: any) => (
+                  <div key={group.groupName}>
+                      <Label className="text-xs text-muted-foreground">{group.groupName}</Label>
+                       <Select
+                          onValueChange={(value) => handleVariantChange(group.groupName, value)}
+                          defaultValue={group.options[0]?.optionName}
+                        >
+                          <SelectTrigger className="h-9">
+                              <SelectValue placeholder={`Select ${group.groupName}`} />
+                          </SelectTrigger>
+                          <SelectContent>
+                              {group.options.map((option: any) => (
+                                  <SelectItem key={option.optionName} value={option.optionName}>
+                                      {option.optionName}
+                                  </SelectItem>
+                              ))}
+                          </SelectContent>
+                      </Select>
+                  </div>
+              ))}
+          </div>
         )}
       </CardContent>
       <CardFooter className="flex flex-col gap-2 pt-4">
@@ -152,3 +205,5 @@ export default function ProductCard({ product }: { product: any }) {
     </Card>
   );
 }
+
+    

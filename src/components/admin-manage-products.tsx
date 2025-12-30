@@ -56,9 +56,14 @@ import { Textarea } from './ui/textarea';
 import { ScrollArea } from './ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
-const variantSchema = z.object({
-  variantName: z.string().min(1, 'Variant name is required'),
-  variantPrice: z.coerce.number().min(0, 'Price must be a positive number'),
+const variantOptionSchema = z.object({
+  optionName: z.string().min(1, 'Option name is required'),
+  price: z.coerce.number().min(0, 'Price must be a positive number'),
+});
+
+const variantGroupSchema = z.object({
+  groupName: z.string().min(1, 'Group name is required'),
+  options: z.array(variantOptionSchema).min(1, 'At least one option is required'),
 });
 
 const productSchema = z.object({
@@ -69,10 +74,54 @@ const productSchema = z.object({
   discountedPrice: z.coerce.number().nullable().optional().transform(val => val || null),
   imageUrl: z.string().url('Must be a valid URL'),
   categoryId: z.string().min(1, 'Category ID is required'),
-  variants: z.array(variantSchema).optional(),
+  variants: z.array(variantGroupSchema).optional(),
 });
 
 type Product = z.infer<typeof productSchema>;
+
+function VariantOptionsArray({ groupIndex, control }: { groupIndex: number, control: any }) {
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: `variants.${groupIndex}.options`,
+  });
+
+  return (
+    <div className="space-y-2 pl-4 border-l-2">
+      {fields.map((option, optionIndex) => (
+        <div key={option.id} className="flex items-end gap-2">
+          <FormField
+            control={control}
+            name={`variants.${groupIndex}.options.${optionIndex}.optionName`}
+            render={({ field }) => (
+              <FormItem className="flex-grow">
+                <FormLabel className="text-xs">Option Name</FormLabel>
+                <FormControl><Input placeholder="e.g., Large" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name={`variants.${groupIndex}.options.${optionIndex}.price`}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs">Price (PKR)</FormLabel>
+                <FormControl><Input type="number" step="1" placeholder="3000" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button type="button" variant="ghost" size="icon" onClick={() => remove(optionIndex)}>
+            <Trash className="h-4 w-4 text-destructive" />
+          </Button>
+        </div>
+      ))}
+      <Button type="button" variant="ghost" size="sm" onClick={() => append({ optionName: '', price: 0 })}>
+        <PlusCircle className="mr-2 h-4 w-4" /> Add Option
+      </Button>
+    </div>
+  );
+}
 
 function EditProductForm({
   product,
@@ -95,7 +144,7 @@ function EditProductForm({
     defaultValues: product,
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields: variantGroups, append: appendVariantGroup, remove: removeVariantGroup } = useFieldArray({
     control: form.control,
     name: 'variants',
   });
@@ -158,41 +207,39 @@ function EditProductForm({
             
             <div>
                 <h3 className="text-lg font-medium mb-2">Product Variants</h3>
-                <div className="space-y-4">
-                {fields.map((field, index) => (
-                    <div key={field.id} className="flex items-end gap-4 p-4 border rounded-lg bg-muted/50">
-                    <FormField
+                 <div className="space-y-4">
+                {variantGroups.map((group, groupIndex) => (
+                  <div key={group.id} className="p-4 border rounded-lg space-y-4 bg-muted/50">
+                    <div className="flex items-end gap-4">
+                      <FormField
                         control={form.control}
-                        name={`variants.${index}.variantName`}
+                        name={`variants.${groupIndex}.groupName`}
                         render={({ field }) => (
-                        <FormItem className="flex-grow">
-                            <FormLabel>Variant Name</FormLabel>
-                            <FormControl><Input placeholder="e.g., 1 Month" {...field} /></FormControl>
+                          <FormItem className="flex-grow">
+                            <FormLabel>Group Name</FormLabel>
+                            <FormControl><Input placeholder="e.g., Size" {...field} /></FormControl>
                             <FormMessage />
-                        </FormItem>
+                          </FormItem>
                         )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name={`variants.${index}.variantPrice`}
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Variant Price</FormLabel>
-                            <FormControl><Input type="number" step="1" placeholder="3000" {...field} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)}>
+                      />
+                      <Button type="button" variant="destructive" size="icon" onClick={() => removeVariantGroup(groupIndex)}>
                         <Trash className="h-4 w-4" />
-                    </Button>
+                      </Button>
                     </div>
+                    <VariantOptionsArray groupIndex={groupIndex} control={form.control} />
+                  </div>
                 ))}
-                </div>
-                <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => append({ variantName: '', variantPrice: 0 })}>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-4"
+                onClick={() => appendVariantGroup({ groupName: '', options: [{ optionName: '', price: 0 }] })}
+              >
                 <PlusCircle className="mr-2 h-4 w-4" />
-                Add Variant
-                </Button>
+                Add Variant Group
+              </Button>
             </div>
           </div>
         </ScrollArea>
@@ -340,3 +387,5 @@ export default function AdminManageProducts() {
     </Card>
   );
 }
+
+    

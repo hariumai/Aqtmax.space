@@ -1,5 +1,5 @@
 'use client';
-import { useState, use } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Clapperboard, CreditCard, Lock, Music, Palette, ShoppingCart, Tv } from "lucide-react";
@@ -7,10 +7,10 @@ import Link from "next/link";
 import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc, collection, addDoc, serverTimestamp, writeBatch, getDocs, where, query, limit } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const iconMap: { [key: string]: React.ElementType } = {
   'Netflix Premium': Clapperboard,
@@ -19,6 +19,8 @@ const iconMap: { [key: string]: React.ElementType } = {
   'Prime Video': Tv,
   default: Clapperboard,
 };
+
+type SelectedVariants = { [key: string]: string };
 
 export default function ProductPage({ params }: { params: { id: string } }) {
   const { id } = params;
@@ -33,10 +35,57 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   );
   const { data: product, isLoading } = useDoc(productRef);
 
-  const [selectedVariant, setSelectedVariant] = useState<any>(null);
+  const [selectedVariants, setSelectedVariants] = useState<SelectedVariants>({});
   const [isAdding, setIsAdding] = useState(false);
-  
+  const [currentPrice, setCurrentPrice] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (product?.variants && product.variants.length > 0) {
+      const initialSelections: SelectedVariants = {};
+      product.variants.forEach((group: any) => {
+        initialSelections[group.groupName] = group.options[0].optionName;
+      });
+      setSelectedVariants(initialSelections);
+    } else {
+        setCurrentPrice(product?.discountedPrice ?? product?.price ?? null);
+    }
+  }, [product]);
+
+  useEffect(() => {
+      if (product?.variants && product.variants.length > 0) {
+          let price = 0;
+          let allOptionsSelected = true;
+          product.variants.forEach((group: any) => {
+              const selectedOptionName = selectedVariants[group.groupName];
+              if (selectedOptionName) {
+                  const selectedOption = group.options.find((opt: any) => opt.optionName === selectedOptionName);
+                  if (selectedOption) {
+                      price += selectedOption.price;
+                  }
+              } else {
+                  allOptionsSelected = false;
+              }
+          });
+
+          if (allOptionsSelected) {
+              setCurrentPrice(price);
+          } else {
+              // Find the minimum possible price
+              const minPrice = product.variants.reduce((total: number, group: any) => {
+                  const minOptionPrice = Math.min(...group.options.map((opt: any) => opt.price));
+                  return total + minOptionPrice;
+              }, 0);
+              setCurrentPrice(minPrice);
+          }
+      }
+  }, [selectedVariants, product]);
+
+
   const ProductIcon = product ? iconMap[product.name] || iconMap.default : null;
+
+  const handleVariantChange = (groupName: string, optionName: string) => {
+    setSelectedVariants(prev => ({ ...prev, [groupName]: optionName }));
+  };
 
   const handleAddToCart = async (redirect: boolean = false) => {
     if (!user) {
@@ -44,22 +93,28 @@ export default function ProductPage({ params }: { params: { id: string } }) {
       router.push('/login');
       return;
     }
-    if (!selectedVariant && product?.variants?.length > 0) {
-      toast({ variant: "destructive", title: "No variant selected", description: "Please select a plan to continue."});
+    if (!product || currentPrice === null) return;
+    
+    const allVariantsSelected = product.variants?.every((group: any) => selectedVariants[group.groupName]) ?? true;
+
+    if (!allVariantsSelected) {
+      toast({ variant: "destructive", title: "Options required", description: "Please select an option from each group."});
       return;
     }
-    if (!firestore || !product) return;
+
     setIsAdding(true);
 
     try {
         const cartRef = collection(firestore, 'users', user.uid, 'cart');
+        const variantName = product.variants
+            ?.map((group: any) => selectedVariants[group.groupName])
+            .join(' / ') || 'Default';
         
-        // Check if item already exists
         const itemToAdd = {
             subscriptionId: product.id,
             subscriptionName: product.name,
-            variantName: selectedVariant?.variantName || 'Default',
-            price: selectedVariant?.variantPrice || product.discountedPrice || product.price,
+            variantName: variantName,
+            price: currentPrice,
             quantity: 1,
             imageUrl: product.imageUrl,
         };
@@ -79,9 +134,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                 createdAt: serverTimestamp(),
             });
         } else {
-            // In a real app, you might want to update the quantity.
-            // For now, we'll just inform the user.
-            toast({ title: "Item already in cart", description: `${product.name} is already in your cart.`});
+            toast({ title: "Item already in cart", description: `${product.name} (${variantName}) is already in your cart.`});
         }
 
         if (!redirect) {
@@ -126,35 +179,44 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                 <CardHeader>
                   <CardTitle>
                       {product.variants && product.variants.length > 0 
-                          ? 'Select a Plan' 
+                          ? 'Select Options' 
                           : 'Complete Your Order'}
                   </CardTitle>
                   <CardDescription>
-                    {product.variants?.length > 0 ? "Choose your desired subscription duration." : "Final step to unlock premium access."}
+                    {product.variants?.length > 0 ? "Choose your desired options." : "Final step to unlock premium access."}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     {product.variants && product.variants.length > 0 ? (
-                      <RadioGroup onValueChange={(value) => setSelectedVariant(product.variants.find((v:any) => v.variantName === value))}>
-                          <div className="space-y-2">
-                              {product.variants.map((variant: any) => (
-                                  <Label key={variant.variantName} htmlFor={variant.variantName} className="flex items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary">
-                                      <span>{variant.variantName}</span>
-                                      <span className="font-bold">{variant.variantPrice} PKR</span>
-                                      <RadioGroupItem value={variant.variantName} id={variant.variantName} className="sr-only" />
-                                  </Label>
-                              ))}
-                          </div>
-                      </RadioGroup>
-                    ) : (
-                      <div className="rounded-xl bg-muted/50 p-4">
-                          <div className="flex justify-between items-center">
-                          <span className="font-medium">{product.name}</span>
-                          <span className="font-bold">{product.discountedPrice || product.price} PKR</span>
-                          </div>
+                      <div className="space-y-4">
+                        {product.variants.map((group: any) => (
+                           <div key={group.groupName}>
+                               <Label className="font-semibold">{group.groupName}</Label>
+                               <Select 
+                                 value={selectedVariants[group.groupName]}
+                                 onValueChange={(value) => handleVariantChange(group.groupName, value)}
+                               >
+                                 <SelectTrigger>
+                                     <SelectValue placeholder={`Select ${group.groupName}`} />
+                                 </SelectTrigger>
+                                 <SelectContent>
+                                     {group.options.map((option: any) => (
+                                         <SelectItem key={option.optionName} value={option.optionName}>
+                                             {option.optionName} (+{option.price} PKR)
+                                         </SelectItem>
+                                     ))}
+                                 </SelectContent>
+                               </Select>
+                           </div>
+                        ))}
                       </div>
-                    )}
+                    ) : null}
+
+                    <div className="text-4xl font-bold pt-4">
+                      {currentPrice !== null ? `${currentPrice.toFixed(2)} PKR` : <Skeleton className="h-10 w-48" />}
+                    </div>
+
                   </div>
                 </CardContent>
                 <CardFooter className="flex-col items-stretch gap-4">
@@ -233,3 +295,5 @@ function ProductPageSkeleton() {
     </div>
   )
 }
+
+    

@@ -39,16 +39,27 @@
         "imageUrl": { "type": "string", "description": "URL of the image representing the subscription.", "format": "uri" },
         "categoryId": { "type": "string", "description": "Reference to Category. (Relationship: Category 1:N Subscription)" },
         "variants": {
-          "type": "array",
-          "description": "Different versions or plans for the subscription (e.g., 1 month, 6 months).",
-          "items": {
-            "type": "object",
-            "properties": {
-              "variantName": { "type": "string", "description": "Name of the variant (e.g., '1 Month')." },
-              "variantPrice": { "type": "number", "description": "Price of this specific variant in PKR." }
-            },
-            "required": ["variantName", "variantPrice"]
-          }
+            "type": "array",
+            "description": "Groups of different versions or plans for the subscription (e.g., Size, Color).",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "groupName": { "type": "string", "description": "Name of the variant group (e.g., 'Size')." },
+                    "options": {
+                        "type": "array",
+                        "description": "Available options within this group.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "optionName": { "type": "string", "description": "Name of the option (e.g., 'Large')." },
+                                "price": { "type": "number", "description": "Price for this specific option in PKR." }
+                            },
+                            "required": ["optionName", "price"]
+                        }
+                    }
+                },
+                "required": ["groupName", "options"]
+            }
         }
       },
       "required": ["id", "name", "description", "price", "imageUrl", "categoryId"]
@@ -128,8 +139,8 @@
         "id": { "type": "string", "description": "Unique identifier for the cart item." },
         "subscriptionId": { "type": "string", "description": "Reference to the Subscription." },
         "subscriptionName": { "type": "string", "description": "Name of the subscription." },
-        "variantName": { "type": "string", "description": "Name of the selected variant." },
-        "price": { "type": "number", "description": "Price of the variant at the time of adding to cart." },
+        "variantName": { "type": "string", "description": "A concatenated string of selected variant options (e.g., 'Large / Red')." },
+        "price": { "type": "number", "description": "Price of the selected variant combination." },
         "quantity": { "type": "number", "description": "Quantity of the item." },
         "imageUrl": { "type": "string", "description": "Image URL of the subscription." }
       },
@@ -189,3 +200,5 @@
     ]
   }
 }
+
+    
