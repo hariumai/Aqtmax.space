@@ -1,7 +1,42 @@
 export const runtime = 'nodejs';
 
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { NextResponse } from 'next/server';
+import { randomUUID } from 'crypto';
 
-export async function POST() {
-  return NextResponse.json({ ok: true });
+const s3 = new S3Client({
+  region: 'auto',
+  endpoint: 'https://f2185d026195d5e6e9cd9948b65bc40f.r2.cloudflarestorage.com',
+  credentials: {
+    accessKeyId: process.env.CLOUDFLARE_R2_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY!,
+  },
+});
+
+const BUCKET = 'sublime';
+const PUBLIC_URL = 'https://sublime.statics.csio.aqtmax.space';
+
+export async function POST(req: Request) {
+  const formData = await req.formData();
+  const file = formData.get('file') as File;
+
+  if (!file) {
+    return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const key = `${randomUUID()}-${file.name.replace(/\s+/g, '_')}`;
+
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: key,
+      Body: buffer,
+      ContentType: file.type,
+    })
+  );
+
+  return NextResponse.json({
+    publicUrl: `${PUBLIC_URL}/${key}`,
+  });
 }

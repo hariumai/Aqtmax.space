@@ -174,7 +174,7 @@ export default function CheckoutPage() {
             const newOrderRef = doc(collection(firestore, 'orders'));
             const batch = writeBatch(firestore);
 
-            const newOrderData: Order = {
+            const newOrderData: any = {
                 id: newOrderRef.id,
                 userId: user.uid,
                 items: cartItems,
@@ -184,12 +184,15 @@ export default function CheckoutPage() {
                 subtotal: subtotal,
                 creditUsed: creditToUse,
                 totalAmount: total,
-                paymentScreenshotUrl: screenshotUrl,
-                orderDate: new Date(),
+                orderDate: serverTimestamp(),
                 status: 'pending',
             };
 
-            batch.set(newOrderRef, { ...newOrderData, orderDate: serverTimestamp() });
+            if (screenshotUrl) {
+                newOrderData.paymentScreenshotUrl = screenshotUrl;
+            }
+
+            batch.set(newOrderRef, newOrderData);
 
             if (creditToUse > 0) {
                 const newCredit = availableCredit - creditToUse;
@@ -202,7 +205,13 @@ export default function CheckoutPage() {
             });
 
             await batch.commit();
-            setOrderComplete(newOrderData);
+
+            // We cast newOrderData to Order for the success component, adding a client-side date
+            const finalOrderData: Order = {
+                ...newOrderData,
+                orderDate: new Date(), 
+            };
+            setOrderComplete(finalOrderData);
 
         } catch (error: any) {
             console.error('Order placement error:', error);
