@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto';
 
 const s3Client = new S3Client({
   region: "auto",
-  endpoint: process.env.CLOUDFLARE_R2_CUSTOM_DOMAIN!,
+  endpoint: `https://f2185d026195d5e6e9cd9948b65bc40f.r2.cloudflarestorage.com`,
   credentials: {
     accessKeyId: process.env.CLOUDFLARE_R2_ACCESS_KEY_ID!,
     secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY!,
