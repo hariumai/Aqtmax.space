@@ -29,7 +29,6 @@ type MenuItem = z.infer<typeof menuItemSchema>;
 export default function AdminMenuItems() {
   const firestore = useFirestore();
   const { toast } = useToast();
-  const [itemsToDelete, setItemsToDelete] = useState<string[]>([]);
 
   const menuItemsForm = useForm<z.infer<typeof menuItemsSchema>>({
     resolver: zodResolver(menuItemsSchema),
@@ -54,23 +53,22 @@ export default function AdminMenuItems() {
     }
   }, [firestore, menuItemsForm]);
 
-  const handleRemoveItem = (index: number) => {
-    const itemToRemove = menuFields[index];
-    if (itemToRemove.id) {
-        setItemsToDelete(prev => [...prev, itemToRemove.id!]);
-    }
-    removeMenuItem(index);
-  }
 
   async function onMenuItemsSubmit(values: z.infer<typeof menuItemsSchema>) {
     if (!firestore) return;
     try {
         const batch = writeBatch(firestore);
 
-        // Delete items that were marked for deletion
-        itemsToDelete.forEach(id => {
-            const docRef = doc(firestore, 'menuItems', id);
-            batch.delete(docRef);
+        const currentItemsQuery = query(collection(firestore, 'menuItems'));
+        const snapshot = await getDocs(currentItemsQuery);
+        const existingIds = snapshot.docs.map(d => d.id);
+        const formIds = new Set(values.items.map(item => item.id).filter(Boolean));
+
+        // Delete items that are in Firestore but not in the form
+        existingIds.forEach(id => {
+            if (!formIds.has(id)) {
+                batch.delete(doc(firestore, 'menuItems', id));
+            }
         });
 
         // Set (create or update) current items
@@ -81,15 +79,15 @@ export default function AdminMenuItems() {
         });
 
         await batch.commit();
+        
+        toast({ title: 'Menu Items Updated', description: 'Your navigation menu has been saved.' });
 
-        // Refetch the items to update the state
+        // Refetch after saving
         const menuItemsQuery = query(collection(firestore, 'menuItems'), orderBy('order'));
         const menuItemsSnapshot = await getDocs(menuItemsQuery);
         const updatedItems = menuItemsSnapshot.docs.map(d => ({ ...d.data(), id: d.id })) as MenuItem[];
         menuItemsForm.reset({ items: updatedItems });
-        setItemsToDelete([]); // Clear deletion queue
-        
-        toast({ title: 'Menu Items Updated', description: 'Your navigation menu has been saved.' });
+
 
     } catch (error: any) {
         toast({ variant: 'destructive', title: 'Error Updating Menu', description: error.message || 'An unexpected error occurred.' });
@@ -124,7 +122,7 @@ export default function AdminMenuItems() {
                       )}
                     />
                   </div>
-                  <Button type="button" variant="destructive" size="icon" onClick={() => handleRemoveItem(index)}>
+                  <Button type="button" variant="destructive" size="icon" onClick={() => removeMenuItem(index)}>
                     <Trash className="h-4 w-4" />
                     <span className="sr-only">Remove Item</span>
                   </Button>
