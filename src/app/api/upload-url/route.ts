@@ -2,6 +2,9 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // Correctly initialize the S3 client for Cloudflare R2
 const s3Client = new S3Client({
