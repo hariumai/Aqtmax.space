@@ -1,9 +1,10 @@
 
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useCollection, useFirestore, useAuth, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { collection, query, doc, deleteDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from './ui/button';
 import { Mail, Trash, Edit, Ban, Bell } from 'lucide-react';
@@ -57,7 +58,7 @@ function BanUserForm({ user, onFinished }: { user: any; onFinished: () => void }
     if (!firestore) return;
     try {
       const userRef = doc(firestore, 'users', user.id);
-      await updateDoc(userRef, {
+      await setDoc(userRef, {
         ban: {
           isBanned: true,
           type: values.type,
@@ -65,7 +66,7 @@ function BanUserForm({ user, onFinished }: { user: any; onFinished: () => void }
           expiresAt: values.type === 'temporary' ? values.expiresAt?.toISOString() : null,
           appealRequested: false, // Reset appeal status on new ban
         }
-      });
+      }, { merge: true });
       toast({ title: 'User Banned', description: `${user.name} has been banned.` });
       onFinished();
     } catch (e: any) {

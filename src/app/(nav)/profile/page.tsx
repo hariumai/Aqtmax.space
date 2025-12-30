@@ -1,11 +1,12 @@
 
+
 'use client';
 import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { collection, query, doc, where, updateDoc } from 'firebase/firestore';
+import { collection, query, doc, where, setDoc } from 'firebase/firestore';
 import { useDoc } from '@/firebase';
 import { Info, AlertTriangle, MessageCircle, ShieldX, Bell, Phone, User as UserIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -107,7 +108,7 @@ function BannedProfile({ user, banInfo, settings, onSignOut }: { user: any, banI
         if (!firestore || !user) return;
         const userRef = doc(firestore, 'users', user.uid);
         try {
-            await updateDoc(userRef, { 'ban.appealRequested': true });
+            await setDoc(userRef, { ban: { appealRequested: true } }, { merge: true });
             toast({
                 title: 'Appeal Requested',
                 description: 'Our support team will review your case shortly.',
@@ -206,10 +207,16 @@ export default function ProfilePage() {
     if (!user || !firestore || !userRef) return;
     try {
       await updateProfile(user, { displayName: values.name });
-      await updateDoc(userRef, {
+      
+      const userDataToSave = {
         name: values.name,
         phone: values.phone,
-      });
+        email: user.email,
+        id: user.uid,
+      };
+
+      await setDoc(userRef, userDataToSave, { merge: true });
+
       toast({
         title: 'Profile Updated',
         description: 'Your profile has been successfully updated.',
