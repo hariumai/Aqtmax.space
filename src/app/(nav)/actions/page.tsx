@@ -18,7 +18,7 @@ import Link from 'next/link';
 import { useAuth, useUser } from '@/firebase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { confirmPasswordReset, applyActionCode, User } from 'firebase/auth';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { doc, getFirestore, updateDoc } from 'firebase/firestore';
 import { Loader2, ShieldCheck, ShieldX } from 'lucide-react';
 
@@ -28,7 +28,7 @@ const formSchema = z.object({
   }),
 });
 
-export default function ActionsPage() {
+function ActionsPageComponent() {
   const searchParams = useSearchParams();
   const mode = searchParams.get('mode');
   const oobCode = searchParams.get('oobCode');
@@ -59,6 +59,18 @@ export default function ActionsPage() {
       </Card>
     </main>
   );
+}
+
+export default function ActionsPage() {
+  return (
+    <Suspense fallback={
+        <main className="flex-grow flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </main>
+      }>
+      <ActionsPageComponent />
+    </Suspense>
+  )
 }
 
 function ResetPasswordComponent({ oobCode }: { oobCode: string | null }) {
