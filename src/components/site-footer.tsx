@@ -8,7 +8,7 @@ export default function SiteFooter() {
         <div className="flex items-center gap-2">
           <Gem className="h-5 w-5 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} SubLime. All rights reserved.
+            &copy; {new Date().getFullYear()} AQT Max. All rights reserved.
           </p>
         </div>
         <nav className="flex gap-4 sm:gap-6">

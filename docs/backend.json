@@ -5,7 +5,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
       "type": "object",
-      "description": "Represents a user of the SubLime Marketplace.",
+      "description": "Represents a user of AQT Max.",
       "properties": {
         "id": { "type": "string", "description": "Unique identifier for the user entity." },
         "email": { "type": "string", "description": "User's email address.", "format": "email" },

@@ -29,7 +29,7 @@ const emailWrapper = (content: string, preheader: string) => `
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SubLime Marketplace</title>
+    <title>AQT Max</title>
     <style>
         body {
             background-color: #0c0a09; color: #f2f2f2; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
@@ -64,13 +64,13 @@ const emailWrapper = (content: string, preheader: string) => `
     <div style="display: none; max-height: 0; overflow: hidden;">${preheader}</div>
     <div class="container">
         <div class="header">
-            <h1>SubLime Marketplace</h1>
+            <h1>AQT Max</h1>
         </div>
         <div class="main-content">
             ${content}
         </div>
         <div class="footer">
-            <p>&copy; ${new Date().getFullYear()} SubLime. All rights reserved.</p>
+            <p>&copy; ${new Date().getFullYear()} AQT Max. All rights reserved.</p>
         </div>
     </div>
 </body>
@@ -79,7 +79,7 @@ const emailWrapper = (content: string, preheader: string) => `
 
 
 export async function sendOrderConfirmationEmail(order: Order) {
-    const subject = `Your SubLime Order #${order.id} has been placed!`;
+    const subject = `Your AQT Max Order #${order.id} has been placed!`;
     const itemsHtml = order.items.map(item => `
         <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #27272a;">
             <span>${item.subscriptionName} (${item.variantName})</span>
@@ -110,7 +110,7 @@ export async function sendOrderConfirmationEmail(order: Order) {
 }
 
 export async function sendOrderFulfilledEmail(order: Order) {
-    const subject = `🚀 Your SubLime Order #${order.id} is Complete!`;
+    const subject = `🚀 Your AQT Max Order #${order.id} is Complete!`;
 
     const content = `
         <h2 style="color: #f2f2f2; font-size: 20px; font-weight: 600;">Your order is ready, ${order.customerName}!</h2>

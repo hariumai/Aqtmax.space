@@ -9,7 +9,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'SubLime Marketplace',
+  title: 'AQT Max',
   description: 'Your one-stop shop for premium digital subscriptions.',
 };
 

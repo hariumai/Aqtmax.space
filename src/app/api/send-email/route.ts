@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     });
 
     const mailOptions = {
-      from: `"SubLime Marketplace" <${process.env.EMAIL_SERVER_USER}>`,
+      from: `"AQT Max" <${process.env.EMAIL_SERVER_USER}>`,
       to: to,
       subject: subject,
       html: html,

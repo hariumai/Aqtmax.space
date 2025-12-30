@@ -118,7 +118,7 @@ export default function BottomNav() {
                         <div className="flex justify-between items-center">
                           <Link href="/" className="flex items-center gap-2">
                               <Gem className="h-6 w-6 text-primary" />
-                              <span className="text-xl font-bold tracking-tighter">SubLime</span>
+                              <span className="text-xl font-bold tracking-tighter">AQT Max</span>
                           </Link>
                         </div>
                         <nav className="flex flex-col gap-4">

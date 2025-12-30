@@ -231,7 +231,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                       </Button>
                   </div>
                   <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-2">
-                    <Lock className="h-3 w-3" /> Secure payments with SubLime Payment Gateway
+                    <Lock className="h-3 w-3" /> Secure payments with AQT Max Payment Gateway
                   </p>
                 </CardFooter>
               </Card>
