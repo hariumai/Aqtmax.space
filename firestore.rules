@@ -1,3 +1,4 @@
+
 /**
  * # Firestore Security Rules
  *
@@ -67,7 +68,7 @@ service cloud.firestore {
       allow list: if isSignedIn(); // Admin-level access for now
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow update: if isOwner(userId) || isSignedIn(); // Allow owner to update, or any signed-in user (admin)
-      allow delete: if isExistingOwner(userId);
+      allow delete: if isSignedIn(); // Allow any signed-in user (admin) to delete
       
       /**
        * @description Controls access to a user's shopping cart.
