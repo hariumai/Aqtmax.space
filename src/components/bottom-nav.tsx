@@ -28,27 +28,6 @@ export default function BottomNav() {
   );
   const { data: menuItems } = useCollection(menuItemsQuery);
 
-  const defaultNavItems = [
-    { id: 'home', href: '/', label: 'Home', icon: Home, order: 1 },
-    { id: 'products', href: '/products', label: 'Products', icon: LayoutGrid, order: 2 },
-    { id: 'categories', href: '/categories', label: 'Categories', icon: Shapes, order: 3 },
-    { id: 'support', href: '/chat', label: 'Support', icon: Bot, order: 4 },
-  ];
-
-  // Use default items and merge/replace with fetched items if they exist
-  const navItems = menuItems ? menuItems.map(item => ({...item, icon: IconMap[item.label] || Home })) : defaultNavItems;
-  navItems.sort((a,b) => (a.order ?? 99) - (b.order ?? 99));
-
-  const mainNavItems = navItems.filter(item => ['/', '/products', '/categories'].includes(item.href));
-
-
-  const getHref = (href: string) => {
-    if (href === '/profile') {
-      return user ? '/profile' : '/login';
-    }
-    return href;
-  };
-
   const IconMap: { [key: string]: React.ElementType } = {
     'Home': Home,
     'Products': LayoutGrid,
@@ -56,6 +35,30 @@ export default function BottomNav() {
     'Support': Bot,
     'Account': User,
     'Menu': Menu
+  };
+
+  const defaultNavItems = [
+    { id: 'home', href: '/', label: 'Home', icon: Home, order: 1 },
+    { id: 'products', href: '/products', label: 'Products', icon: LayoutGrid, order: 2 },
+    { id: 'categories', href: '/categories', label: 'Categories', icon: Shapes, order: 3 },
+    { id: 'support', href: '/chat', label: 'Support', icon: Bot, order: 4 },
+  ];
+
+  const navItems = menuItems && menuItems.length > 0
+    ? menuItems.map(item => ({...item, icon: IconMap[item.label] || Home }))
+    : defaultNavItems;
+  navItems.sort((a,b) => (a.order ?? 99) - (b.order ?? 99));
+
+  // Show first 4 items in the nav bar. The rest are in the menu.
+  const mainNavItems = navItems.slice(0, 4);
+  const overflowNavItems = navItems.slice(4);
+
+
+  const getHref = (href: string) => {
+    if (href === '/profile') {
+      return user ? '/profile' : '/login';
+    }
+    return href;
   };
 
   return (
@@ -85,25 +88,6 @@ export default function BottomNav() {
              </span>
            </Link>
         )})}
-        <Link
-            href={getHref('/profile')}
-            className="inline-flex flex-col items-center justify-center px-5 hover:bg-muted/50 group"
-        >
-            <User
-            className={cn(
-                'w-5 h-5 mb-1 text-muted-foreground transition-colors group-hover:text-primary',
-                (pathname === '/profile' || pathname === '/login') && 'text-primary'
-            )}
-            />
-            <span
-            className={cn(
-                'text-xs text-muted-foreground transition-colors group-hover:text-primary',
-                (pathname === '/profile' || pathname === '/login') && 'text-primary'
-            )}
-            >
-            Account
-            </span>
-        </Link>
         <Sheet>
             <SheetTrigger asChild>
                 <button
@@ -127,11 +111,14 @@ export default function BottomNav() {
                           </Link>
                         </div>
                         <nav className="flex flex-col gap-4">
-                        {navItems?.map(link => (
+                        {overflowNavItems.map(link => (
                             <Link key={link.id} href={link.href} className="text-lg font-medium text-foreground hover:text-primary transition-colors">
                                 {link.label}
                             </Link>
                         ))}
+                         <Link href={getHref('/profile')} className="text-lg font-medium text-foreground hover:text-primary transition-colors">
+                                Account
+                            </Link>
                         </nav>
                         
                         <Button
