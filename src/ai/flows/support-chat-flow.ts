@@ -22,6 +22,7 @@ const securityRules = fs.readFileSync(path.join(process.cwd(), 'firestore.rules'
 const pageContentRegex = /<div[^>]*>([\s\S]*?)<\/div>/;
 
 const extractContent = (rawContent: string): string => {
+    if (!rawContent) return '';
     const match = rawContent.match(pageContentRegex);
     // Remove HTML tags and extra whitespace
     return match ? match[1].replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : '';
