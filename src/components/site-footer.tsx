@@ -21,6 +21,9 @@ export default function SiteFooter() {
           <Link href="/refund" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
             Refund Policy
           </Link>
+           <Link href="/legal" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+            Legal
+          </Link>
         </nav>
       </div>
     </footer>

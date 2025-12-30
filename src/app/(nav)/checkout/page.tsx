@@ -74,6 +74,7 @@ export default function CheckoutPage() {
     const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [orderComplete, setOrderComplete] = useState<Order | null>(null);
+    const [agreedToPolicies, setAgreedToPolicies] = useState(false);
 
     const settingsRef = useMemoFirebase(() => (firestore ? doc(firestore, 'settings', 'payment') : null), [firestore]);
     const { data: paymentSettings } = useDoc(settingsRef);
@@ -300,7 +301,17 @@ export default function CheckoutPage() {
                                         </div>
                                     )}
 
-                                    <Button size="lg" type="submit" className="w-full" disabled={isSubmitting || (total > 0 && !screenshotFile)}>
+                                     <div className="flex items-center space-x-2 pt-4">
+                                        <Switch id="terms-agreement" checked={agreedToPolicies} onCheckedChange={setAgreedToPolicies} />
+                                        <Label htmlFor="terms-agreement" className="text-xs text-muted-foreground">
+                                            I have read and agree to the 
+                                            <Link href="/terms" className="underline hover:text-primary"> Terms of Service</Link>, 
+                                            <Link href="/privacy" className="underline hover:text-primary"> Privacy Policy</Link>, and 
+                                            <Link href="/refund" className="underline hover:text-primary"> Refund Policy</Link>.
+                                        </Label>
+                                    </div>
+
+                                    <Button size="lg" type="submit" className="w-full" disabled={isSubmitting || (total > 0 && !screenshotFile) || !agreedToPolicies}>
                                         {isSubmitting ? (
                                             <>
                                                 <CreditCard className="mr-2 h-5 w-5 animate-pulse" />
