@@ -27,3 +27,9 @@ export type Order = {
     };
     note?: string | null;
 }
+
+export type EmailPayload = {
+    to: string;
+    subject: string;
+    html: string;
+};

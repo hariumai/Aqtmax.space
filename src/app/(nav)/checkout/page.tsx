@@ -1,6 +1,3 @@
-
-
-
 'use client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +26,7 @@ import { type Order } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { sendOrderConfirmationEmail } from '@/lib/emails';
 
 const checkoutSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -250,6 +248,9 @@ export default function CheckoutPage() {
 
         await batch.commit();
         setOrderComplete(newOrderData);
+        
+        await sendOrderConfirmationEmail(newOrderData);
+
 
       } catch (err: any) {
         console.error('Order placement error:', err);

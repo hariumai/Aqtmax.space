@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -22,6 +21,7 @@ import { useState } from 'react';
 import { type Order } from '@/lib/types';
 import { ScrollArea } from './ui/scroll-area';
 import { Textarea } from './ui/textarea';
+import { sendOrderFulfilledEmail } from '@/lib/emails';
 
 
 const completeOrderSchema = z.object({
@@ -138,16 +138,16 @@ function EditOrderForm({ order, onFinished }: { order: Order; onFinished: () => 
                         <div className="space-y-2 pt-4 border-t">
                             <h4 className="font-medium">Subscription Credentials</h4>
                              <FormField control={form.control} name="credentials.username" render={({ field }) => (
-                                <FormItem><FormLabel>Username/Email</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                <FormItem><FormLabel>Username/Email</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>
                             )} />
                              <FormField control={form.control} name="credentials.password" render={({ field }) => (
-                                <FormItem><FormLabel>Password</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                <FormItem><FormLabel>Password</FormLabel><FormControl><Input {...field} value={field.value ?? ''}/></FormControl><FormMessage /></FormItem>
                             )} />
                         </div>
                          <div className="space-y-2 pt-4 border-t">
                             <h4 className="font-medium">Note to Customer</h4>
                              <FormField control={form.control} name="note" render={({ field }) => (
-                                <FormItem><FormLabel>Note</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
+                                <FormItem><FormLabel>Note</FormLabel><FormControl><Textarea {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>
                             )} />
                         </div>
                     </div>
@@ -180,18 +180,30 @@ export default function AdminOrders() {
     if (!firestore) return;
     try {
         const orderRef = doc(firestore, 'orders', order.id);
+        const credentials = {
+            username: completionData.username,
+            password: completionData.password
+        };
+        const note = completionData.note || null;
+        
         await updateDoc(orderRef, {
             status: 'completed',
-            credentials: {
-                username: completionData.username,
-                password: completionData.password
-            },
-            note: completionData.note || null,
+            credentials,
+            note: note,
         });
+
+        const updatedOrderData = {
+          ...order,
+          status: 'completed' as const,
+          credentials,
+          note,
+        }
+
+        await sendOrderFulfilledEmail(updatedOrderData);
 
         toast({
             title: 'Order Completed',
-            description: `The order has been marked as complete.`,
+            description: `The order has been marked as complete and the user notified.`,
         });
         setIsCompleteDialogOpen(false);
     } catch (error: any) {
