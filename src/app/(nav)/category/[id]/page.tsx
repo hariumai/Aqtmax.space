@@ -1,5 +1,4 @@
 'use client';
-import { use } from 'react';
 import { Card } from '@/components/ui/card';
 import { useCollection, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, doc } from 'firebase/firestore';
@@ -18,8 +17,7 @@ const categoryIconMap: { [key: string]: React.ElementType } = {
 };
 
 export default function CategoryPage({ params }: { params: { id: string } }) {
-  const resolvedParams = use(Promise.resolve(params));
-  const { id } = resolvedParams;
+  const { id } = params;
   const firestore = useFirestore();
   
   const categoryRef = useMemoFirebase(

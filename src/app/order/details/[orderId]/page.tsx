@@ -1,5 +1,5 @@
 'use client';
-import { useRef, use } from 'react';
+import { useRef } from 'react';
 import { useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
@@ -38,7 +38,7 @@ function OrderDetailsSkeleton() {
 }
 
 export default function OrderDetailsPage({ params }: { params: { orderId: string } }) {
-    const { orderId } = use(Promise.resolve(params));
+    const { orderId } = params;
     const firestore = useFirestore();
     const { user, isUserLoading } = useUser();
     const router = useRouter();
