@@ -1,6 +1,6 @@
 
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useUser, useFirestore } from '@/firebase';
@@ -35,6 +35,18 @@ export default function ProductCard({ product }: { product: any }) {
 
   const hasVariants = product.variants && product.variants.length > 0;
 
+  useEffect(() => {
+    if (hasVariants) {
+      const initialSelections: SelectedVariants = {};
+      product.variants.forEach((group: any) => {
+        if (group.options && group.options.length > 0) {
+          initialSelections[group.groupName] = group.options[0].optionName;
+        }
+      });
+      setSelectedVariants(initialSelections);
+    }
+  }, [product, hasVariants]);
+
   useMemo(() => {
     if (!hasVariants) {
         setCurrentPrice(product.discountedPrice ?? product.price);
@@ -46,7 +58,7 @@ export default function ProductCard({ product }: { product: any }) {
     product.variants.forEach((group: any) => {
         const selectedOptionName = selectedVariants[group.groupName];
         if (selectedOptionName) {
-            const selectedOption = group.options.find((opt: any) => opt.optionName === selectedOptionName);
+            const selectedOption = group.options?.find((opt: any) => opt.optionName === selectedOptionName);
             if (selectedOption) {
                 price += selectedOption.price;
             }
@@ -59,8 +71,11 @@ export default function ProductCard({ product }: { product: any }) {
         setCurrentPrice(price);
     } else {
         const minPrice = product.variants.reduce((total: number, group: any) => {
-            const minOptionPrice = Math.min(...group.options.map((opt: any) => opt.price));
-            return total + minOptionPrice;
+            if (group.options && group.options.length > 0) {
+                const minOptionPrice = Math.min(...group.options.map((opt: any) => opt.price));
+                return total + minOptionPrice;
+            }
+            return total;
         }, 0);
         setCurrentPrice(minPrice);
     }
@@ -174,13 +189,13 @@ export default function ProductCard({ product }: { product: any }) {
                       <Label className="text-xs text-muted-foreground">{group.groupName}</Label>
                        <Select
                           onValueChange={(value) => handleVariantChange(group.groupName, value)}
-                          defaultValue={group.options[0]?.optionName}
+                          value={selectedVariants[group.groupName]}
                         >
                           <SelectTrigger className="h-9">
                               <SelectValue placeholder={`Select ${group.groupName}`} />
                           </SelectTrigger>
                           <SelectContent>
-                              {group.options.map((option: any) => (
+                              {group.options?.map((option: any) => (
                                   <SelectItem key={option.optionName} value={option.optionName}>
                                       {option.optionName}
                                   </SelectItem>
@@ -205,5 +220,3 @@ export default function ProductCard({ product }: { product: any }) {
     </Card>
   );
 }
-
-    
