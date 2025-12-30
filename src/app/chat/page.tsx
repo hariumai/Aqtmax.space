@@ -11,7 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { askSupport } from '@/ai/flows/support-chat-flow';
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, collection, query, where } from 'firebase/firestore';
+import { doc, collection, query, where, Timestamp } from 'firebase/firestore';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import Link from 'next/link';
 
@@ -46,6 +46,25 @@ function ChatBubble({ message }: { message: Message }) {
         </div>
     );
 }
+
+// Helper function to convert Firestore Timestamps to strings
+const convertTimestamps = (obj: any): any => {
+    if (!obj) return obj;
+    if (obj instanceof Timestamp) {
+        return obj.toDate().toISOString();
+    }
+    if (Array.isArray(obj)) {
+        return obj.map(convertTimestamps);
+    }
+    if (typeof obj === 'object') {
+        const newObj: { [key: string]: any } = {};
+        for (const key in obj) {
+            newObj[key] = convertTimestamps(obj[key]);
+        }
+        return newObj;
+    }
+    return obj;
+};
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([
@@ -87,10 +106,15 @@ export default function ChatPage() {
     form.reset();
 
     try {
+      // Sanitize data before sending to server action
+      const sanitizedUserData = convertTimestamps(userData);
+      const sanitizedOrders = convertTimestamps(userOrders);
+
       const input = {
         query: values.message,
-        userContext: user ? { userProfile: userData, userOrders: userOrders } : undefined,
+        userContext: user ? { userProfile: sanitizedUserData, userOrders: sanitizedOrders } : undefined,
       };
+
       const response = await askSupport(input);
       const assistantMessage: Message = { role: 'assistant', content: response };
       setMessages((prev) => [...prev, assistantMessage]);
