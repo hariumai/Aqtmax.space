@@ -43,6 +43,8 @@ const banSchema = z.object({
 function BanUserForm({ user, onFinished }: { user: any; onFinished: () => void }) {
   const firestore = useFirestore();
   const { toast } = useToast();
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
   const form = useForm<z.infer<typeof banSchema>>({
     resolver: zodResolver(banSchema),
     defaultValues: {
@@ -99,7 +101,7 @@ function BanUserForm({ user, onFinished }: { user: any; onFinished: () => void }
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>Expires At</FormLabel>
-                <Popover>
+                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
@@ -115,7 +117,14 @@ function BanUserForm({ user, onFinished }: { user: any; onFinished: () => void }
                     <Calendar
                       mode="single"
                       selected={field.value}
-                      onSelect={field.onChange}
+                      onSelect={(date) => {
+                          const newDate = date || (field.value || new Date());
+                          if (field.value) {
+                             newDate.setHours(field.value.getHours());
+                             newDate.setMinutes(field.value.getMinutes());
+                          }
+                          field.onChange(newDate);
+                      }}
                       disabled={(date) => date < new Date()}
                       initialFocus
                     />
