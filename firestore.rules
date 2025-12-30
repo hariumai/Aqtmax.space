@@ -89,8 +89,10 @@ service cloud.firestore {
      * @deny (get) A user attempting to read another user's order.
      */
     match /orders/{orderId} {
-      allow get, list, update: if isSignedIn(); // Admin-level access for now
+      allow get: if isOwner(resource.data.userId) || isSignedIn(); // User can get own order, admin can get any
+      allow list: if isSignedIn(); // Admin-level access for now
       allow create: if isOwner(request.resource.data.userId);
+      allow update: if isSignedIn(); // Admin can update to add credentials/note
       allow delete: if isSignedIn(); // Admin only for now
     }
 

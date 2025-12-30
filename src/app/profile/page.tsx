@@ -8,25 +8,56 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { collection, query, doc, where } from 'firebase/firestore';
 import { useDoc } from '@/firebase';
-import { Wallet } from 'lucide-react';
+import { Wallet, Info } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 function OrderItem({ order }: { order: any }) {
   const itemNames = order.items.map((item: any) => item.subscriptionName).join(', ');
 
   return (
-    <li className="py-4 flex justify-between items-center">
-      <div>
-        <p className="font-semibold">{itemNames}</p>
-        <p className="text-sm text-muted-foreground">Order Date: {new Date(order.orderDate.toDate()).toLocaleDateString()}</p>
-        <Badge variant={order.status === 'completed' ? 'default' : 'secondary'} className="capitalize mt-1">{order.status}</Badge>
-      </div>
-      <div className="text-right">
-        <p className="font-semibold">{order.totalAmount.toFixed(2)} PKR</p>
-        {order.creditUsed > 0 && <p className="text-xs text-primary">-{order.creditUsed.toFixed(2)} credits</p>}
-      </div>
-    </li>
+    <AccordionItem value={order.id}>
+      <AccordionTrigger className="py-4 w-full">
+        <div className="flex justify-between items-center w-full">
+          <div>
+            <p className="font-semibold text-left">{itemNames}</p>
+            <p className="text-sm text-muted-foreground text-left">
+              Order Date: {new Date(order.orderDate.toDate()).toLocaleDateString()}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="font-semibold">{order.totalAmount.toFixed(2)} PKR</p>
+            <Badge variant={order.status === 'completed' ? 'default' : 'secondary'} className="capitalize mt-1">
+              {order.status}
+            </Badge>
+          </div>
+        </div>
+      </AccordionTrigger>
+      <AccordionContent>
+        <div className="bg-muted/50 p-4 rounded-md space-y-4">
+          {order.status === 'completed' && order.credentials ? (
+            <div className='space-y-4'>
+               <h4 className="font-semibold">Subscription Details</h4>
+               <div className="text-sm space-y-2">
+                 <p><strong>Username/Email:</strong> {order.credentials.username}</p>
+                 <p><strong>Password:</strong> {order.credentials.password}</p>
+               </div>
+               {order.note && (
+                <div className="border-t pt-4">
+                    <h5 className="font-semibold mb-2 flex items-center gap-2"><Info className="h-4 w-4" /> Note from Admin</h5>
+                    <p className="text-sm text-muted-foreground italic">"{order.note}"</p>
+                </div>
+               )}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Your order is currently {order.status}. You will find your subscription details here once the order is completed.
+            </p>
+          )}
+        </div>
+      </AccordionContent>
+    </AccordionItem>
   );
 }
 
@@ -108,17 +139,17 @@ export default function ProfilePage() {
             <CardHeader>
               <CardTitle>My Orders</CardTitle>
               <CardDescription>
-                Here is a list of your recent subscription orders.
+                Here is a list of your recent subscription orders. Click an order to see details.
               </CardDescription>
             </CardHeader>
             <CardContent>
               {isLoadingOrders && <p>Loading orders...</p>}
               {!isLoadingOrders && orders && orders.length > 0 ? (
-                <ul className="divide-y divide-border">
+                <Accordion type="single" collapsible className="w-full">
                   {orders.map((order) => (
                     <OrderItem key={order.id} order={order} />
                   ))}
-                </ul>
+                </Accordion>
               ) : (
                 <div className="text-center py-8">
                     <p className="text-muted-foreground">You have not placed any orders yet.</p>

@@ -22,4 +22,9 @@ export type Order = {
     paymentScreenshotUrl: string | null;
     orderDate: any; // Can be Date or FieldValue
     status: 'pending' | 'completed' | 'cancelled';
+    credentials?: {
+        username: string;
+        password?: string;
+    };
+    note?: string | null;
 }

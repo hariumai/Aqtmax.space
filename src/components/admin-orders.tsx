@@ -20,7 +20,46 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useState } from 'react';
 import { type Order } from '@/lib/types';
 import { ScrollArea } from './ui/scroll-area';
+import { Textarea } from './ui/textarea';
 
+
+const completeOrderSchema = z.object({
+    username: z.string().min(1, "Username/Email is required."),
+    password: z.string().min(1, "Password is required."),
+    note: z.string().optional(),
+});
+
+function CompleteOrderForm({ order, onFinished }: { order: Order; onFinished: (data: z.infer<typeof completeOrderSchema>) => void; }) {
+    const { toast } = useToast();
+    const form = useForm<z.infer<typeof completeOrderSchema>>({
+        resolver: zodResolver(completeOrderSchema),
+        defaultValues: {
+            username: '',
+            password: '',
+            note: '',
+        },
+    });
+
+    return (
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onFinished)} className="space-y-4">
+                 <FormField control={form.control} name="username" render={({ field }) => (
+                    <FormItem><FormLabel>Subscription Username/Email</FormLabel><FormControl><Input placeholder="user@service.com" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                 <FormField control={form.control} name="password" render={({ field }) => (
+                    <FormItem><FormLabel>Subscription Password</FormLabel><FormControl><Input placeholder="••••••••" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                 <FormField control={form.control} name="note" render={({ field }) => (
+                    <FormItem><FormLabel>Note for Customer (Optional)</FormLabel><FormControl><Textarea placeholder="e.g., Your subscription is valid for 30 days." {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <DialogFooter className="pt-4">
+                    <DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose>
+                    <Button type="submit">Complete Order</Button>
+                </DialogFooter>
+            </form>
+        </Form>
+    );
+}
 
 const orderSchema = z.object({
   id: z.string(),
@@ -100,6 +139,7 @@ export default function AdminOrders() {
   const { user } = useUser();
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const ordersQuery = useMemoFirebase(
@@ -108,7 +148,7 @@ export default function AdminOrders() {
   );
   const { data: orders, isLoading: isLoadingOrders } = useCollection<Order>(ordersQuery);
 
-  const handleCompleteOrder = async (order: any) => {
+  const handleCompleteOrder = async (order: Order, completionData: z.infer<typeof completeOrderSchema>) => {
     if (!firestore) return;
     try {
         await runTransaction(firestore, async (transaction) => {
@@ -124,13 +164,21 @@ export default function AdminOrders() {
             const newCredit = currentCredit + order.totalAmount;
 
             transaction.update(userRef, { storeCredit: newCredit });
-            transaction.update(orderRef, { status: 'completed' });
+            transaction.update(orderRef, { 
+                status: 'completed',
+                credentials: {
+                    username: completionData.username,
+                    password: completionData.password
+                },
+                note: completionData.note || null,
+            });
         });
 
         toast({
             title: 'Order Completed',
             description: `The order has been marked as complete and ${order.totalAmount.toFixed(2)} PKR credit has been added to the user's account.`,
         });
+        setIsCompleteDialogOpen(false);
     } catch (error: any) {
         toast({
             variant: 'destructive',
@@ -149,6 +197,11 @@ export default function AdminOrders() {
           toast({ variant: 'destructive', title: 'Error deleting order', description: e.message });
       }
   };
+
+  const openCompleteDialog = (order: Order) => {
+    setSelectedOrder(order);
+    setIsCompleteDialogOpen(true);
+  }
 
   const handleEditClick = (order: Order) => {
       setSelectedOrder(order);
@@ -207,7 +260,7 @@ export default function AdminOrders() {
                   </TableCell>
                   <TableCell className="text-right">
                     {order.status === 'pending' && (
-                        <Button size="sm" onClick={() => handleCompleteOrder(order)}>
+                        <Button size="sm" onClick={() => openCompleteDialog(order)}>
                             Complete Order
                         </Button>
                     )}
@@ -244,6 +297,23 @@ export default function AdminOrders() {
         </Table>
       </CardContent>
     </Card>
+
+    <Dialog open={isCompleteDialogOpen} onOpenChange={setIsCompleteDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+                <DialogTitle>Complete Order</DialogTitle>
+                <DialogDescription>
+                    Enter the subscription credentials and an optional note for the customer.
+                </DialogDescription>
+            </DialogHeader>
+            {selectedOrder && (
+                <CompleteOrderForm
+                    order={selectedOrder}
+                    onFinished={(data) => handleCompleteOrder(selectedOrder, data)}
+                />
+            )}
+        </DialogContent>
+    </Dialog>
 
     <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">

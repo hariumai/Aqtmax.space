@@ -72,7 +72,16 @@
         "totalAmount": { "type": "number", "description": "The final amount paid after applying credits." },
         "paymentScreenshotUrl": { "type": "string", "description": "URL of the uploaded payment screenshot.", "format": "uri" },
         "orderDate": { "type": "string", "description": "Date when the order was placed.", "format": "date-time" },
-        "status": { "type": "string", "description": "Status of the order (e.g., pending, completed, cancelled)." }
+        "status": { "type": "string", "description": "Status of the order (e.g., pending, completed, cancelled)." },
+        "credentials": {
+            "type": "object",
+            "description": "Credentials for the delivered subscription account.",
+            "properties": {
+                "username": { "type": "string", "description": "Username or email for the account." },
+                "password": { "type": "string", "description": "Password for the account." }
+            }
+        },
+        "note": { "type": "string", "description": "A note from the admin to the customer regarding the order." }
       },
       "required": ["id", "userId", "items", "customerName", "customerEmail", "subtotal", "totalAmount", "orderDate", "status"]
     },
