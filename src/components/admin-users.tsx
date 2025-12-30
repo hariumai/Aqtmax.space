@@ -60,8 +60,7 @@ export default function AdminUsers() {
             title: 'User Document Deleted',
             description: 'The user\'s document has been removed from Firestore.',
         });
-    } catch (error: any) {
-        toast({
+    } catch (error: any)        toast({
             variant: 'destructive',
             title: 'Error Deleting User',
             description: error.message || 'An unexpected error occurred.',
