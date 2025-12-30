@@ -12,9 +12,9 @@ import fs from 'fs';
 import path from 'path';
 
 // Read the contents of the legal pages and security rules directly from the filesystem.
-const termsContent = fs.readFileSync(path.join(process.cwd(), 'src', 'app', '(legal)', 'terms', 'page.tsx'), 'utf8');
-const privacyContent = fs.readFileSync(path.join(process.cwd(), 'src', 'app', '(legal)', 'privacy', 'page.tsx'), 'utf8');
-const refundContent = fs.readFileSync(path.join(process.cwd(), 'src', 'app', '(legal)', 'refund', 'page.tsx'), 'utf8');
+const termsContent = fs.readFileSync(path.join(process.cwd(), 'src', 'app', '(nav)', 'terms', 'page.tsx'), 'utf8');
+const privacyContent = fs.readFileSync(path.join(process.cwd(), 'src', 'app', '(nav)', 'privacy', 'page.tsx'), 'utf8');
+const refundContent = fs.readFileSync(path.join(process.cwd(), 'src', 'app', '(nav)', 'refund', 'page.tsx'), 'utf8');
 const securityRules = fs.readFileSync(path.join(process.cwd(), 'firestore.rules'),'utf8');
 
 
@@ -108,6 +108,36 @@ const supportChatFlow = ai.defineFlow(
     outputSchema: SupportChatOutputSchema,
   },
   async (input) => {
+    // Rule-based logic for logged-in users
+    if (input.userContext?.userProfile) {
+      const lowerQuery = input.query.toLowerCase();
+
+      // Rule for store credit
+      if (lowerQuery.includes('store credit')) {
+        const credit = input.userContext.userProfile.storeCredit?.toFixed(2) || '0.00';
+        return `Your current store credit balance is ${credit} PKR.`;
+      }
+
+      // Rule for tracking orders
+      if (lowerQuery.includes('order') || lowerQuery.includes('track')) {
+        const orders = input.userContext.userOrders;
+        if (!orders || orders.length === 0) {
+          return "You haven't placed any orders yet. Feel free to browse our products!";
+        }
+        
+        const recentOrders = orders.slice(0, 3);
+        let response = `Here are your most recent orders:\n`;
+        recentOrders.forEach((order: any, index: number) => {
+          const itemNames = order.items.map((item: any) => item.subscriptionName).join(', ');
+          response += `\n${index + 1}. ${itemNames} - Status: ${order.status}`;
+        });
+        
+        response += `\n\nFor more details, please visit your profile page.`;
+        return response;
+      }
+    }
+
+    // Fallback to Gemini for general queries
     let userContextString: string | undefined;
     if (input.userContext) {
       userContextString = `
