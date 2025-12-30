@@ -23,14 +23,24 @@ const extractContent = (rawContent: string): string => {
 };
 
 // Define the input schema for the support flow
-const SupportChatInputSchema = z.string();
+const SupportChatInputSchema = z.object({
+  query: z.string(),
+  userContext: z
+    .object({
+      userProfile: z.any().optional(),
+      userOrders: z.any().array().optional(),
+    })
+    .optional(),
+});
+export type SupportChatInput = z.infer<typeof SupportChatInputSchema>;
+
 
 // Define the output schema for the support flow
 const SupportChatOutputSchema = z.string();
 
 // Define the main function that will be called from the UI
-export async function askSupport(query: z.infer<typeof SupportChatInputSchema>): Promise<z.infer<typeof SupportChatOutputSchema>> {
-  const result = await supportChatFlow(query);
+export async function askSupport(input: SupportChatInput): Promise<z.infer<typeof SupportChatOutputSchema>> {
+  const result = await supportChatFlow(input);
   return result;
 }
 
@@ -42,6 +52,16 @@ const supportPrompt = ai.definePrompt({
   system: `You are a friendly and helpful AI support agent for a digital marketplace called "SubLime Marketplace". Your goal is to assist users with their questions about the platform, their orders, subscriptions, and company policies.
 
 You MUST be concise and to the point. Answer the user's question directly based on the context provided. Do not invent information.
+
+{{#if userContext}}
+You are speaking to a logged-in user. Here is their information:
+- User Profile: {{{jsonStringify userContext.userProfile}}}
+- User Orders: {{{jsonStringify userContext.userOrders}}}
+
+Use this information to answer their questions specifically (e.g., "What was my last order?", "What's my store credit balance?").
+{{else}}
+You are speaking to a guest who is not logged in.
+{{/if}}
 
 You have been provided with the following context about the application:
 
@@ -60,7 +80,14 @@ You have been provided with the following context about the application:
    - Privacy Policy: {{{privacy}}}
    - Refund Policy: {{{refund}}}
 
-4. General Knowledge: The marketplace sells digital subscriptions like Netflix, Spotify, etc. Orders are processed by an admin, and credentials are provided to the user once an order is marked as 'completed'. Users can have store credit which they can use at checkout. Admins can ban users for violating terms of service.
+4. General Knowledge: The marketplace sells digital subscriptions like Netflix, Spotify, etc. 
+   - To buy something, a user adds a product to their cart. They can then go to the checkout page.
+   - At checkout, they can apply any available store credit.
+   - For any remaining balance, they must perform a bank transfer to the details provided and upload a screenshot of the payment.
+   - An admin then verifies the payment and completes the order.
+   - When an order is 'completed', the user receives the subscription credentials on their profile page.
+   - Admins can ban users for violating terms of service.
+   - Users can appeal a ban.
 
 Based on this information, please answer the user's query.`,
 });
@@ -72,13 +99,14 @@ const supportChatFlow = ai.defineFlow(
     inputSchema: SupportChatInputSchema,
     outputSchema: SupportChatOutputSchema,
   },
-  async (userQuery) => {
-    const { output } = await supportPrompt(userQuery, {
+  async (input) => {
+    const { output } = await supportPrompt(input, {
       dataStructure: JSON.stringify(backendConfig, null, 2),
       securityRules,
       terms: extractContent(termsContent),
       privacy: extractContent(privacyContent),
       refund: extractContent(refundContent),
+      jsonStringify: (obj: any) => JSON.stringify(obj, null, 2),
     });
     
     return output!;

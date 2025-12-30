@@ -11,6 +11,8 @@ import { Textarea } from './ui/textarea';
 import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { askSupport } from '@/ai/flows/support-chat-flow';
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
+import { doc, collection, query, where } from 'firebase/firestore';
 
 const chatSchema = z.object({
   message: z.string().min(1, 'Message cannot be empty'),
@@ -28,6 +30,18 @@ export default function SupportChat() {
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const userRef = useMemoFirebase(() => (firestore && user ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
+  const { data: userData } = useDoc(userRef);
+
+  const ordersQuery = useMemoFirebase(
+    () => (firestore && user ? query(collection(firestore, 'orders'), where('userId', '==', user.uid)) : null),
+    [firestore, user]
+  );
+  const { data: userOrders } = useCollection(ordersQuery);
 
   const form = useForm<z.infer<typeof chatSchema>>({
     resolver: zodResolver(chatSchema),
@@ -53,7 +67,11 @@ export default function SupportChat() {
     form.reset();
 
     try {
-      const response = await askSupport(values.message);
+      const input = {
+        query: values.message,
+        userContext: user ? { userProfile: userData, userOrders: userOrders } : undefined,
+      };
+      const response = await askSupport(input);
       const assistantMessage: Message = { role: 'assistant', content: response };
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
