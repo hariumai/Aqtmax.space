@@ -1,4 +1,3 @@
-
 'use client';
 import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
@@ -155,31 +154,20 @@ export default function CheckoutPage() {
         try {
             let screenshotUrl = '';
             if (screenshotFile && total > 0) {
-                // 1. Get a presigned URL from our server
-                const presignedUrlResponse = await fetch('/api/upload-url', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ fileName: screenshotFile.name, fileType: screenshotFile.type }),
-                });
+                const formData = new FormData();
+                formData.append('file', screenshotFile);
 
-                if (!presignedUrlResponse.ok) {
-                    const errorData = await presignedUrlResponse.json();
-                    throw new Error(errorData.error || 'Failed to get upload URL.');
-                }
-                
-                const { uploadUrl, publicUrl } = await presignedUrlResponse.json();
-                
-                // 2. Upload the file directly to R2 using the presigned URL
-                const uploadResponse = await fetch(uploadUrl, {
-                    method: 'PUT',
-                    body: screenshotFile,
+                const uploadResponse = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData,
                 });
 
                 if (!uploadResponse.ok) {
-                     const errorText = await uploadResponse.text();
-                     throw new Error(`Failed to upload file. Server responded with: ${errorText}`);
+                    const err = await uploadResponse.json();
+                    throw new Error(err.error || 'Upload failed');
                 }
 
+                const { publicUrl } = await uploadResponse.json();
                 screenshotUrl = publicUrl;
             }
 
