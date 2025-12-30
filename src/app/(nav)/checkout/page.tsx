@@ -1,11 +1,12 @@
 
 
+
 'use client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCollection, useFirestore, useUser, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, doc, addDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
-import { CreditCard, Lock, Upload, Wallet, X, CheckCircle } from 'lucide-react';
+import { CreditCard, Lock, Upload, Wallet, X, CheckCircle, Download, Image as ImageIcon, FileDown, ShoppingCart } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -21,11 +22,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useState, useMemo, ChangeEvent, useEffect } from 'react';
+import { useState, useMemo, ChangeEvent, useEffect, useRef } from 'react';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { type Order } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 const checkoutSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -34,32 +37,86 @@ const checkoutSchema = z.object({
 });
 
 function OrderSuccess({ order }: { order: Order }) {
+    const orderCardRef = useRef<HTMLDivElement>(null);
+    const { toast } = useToast();
+
+    const handleDownload = async (format: 'png' | 'pdf') => {
+        if (!orderCardRef.current) return;
+
+        try {
+            const canvas = await html2canvas(orderCardRef.current, {
+                useCORS: true,
+                backgroundColor: null, 
+            });
+            const imgData = canvas.toDataURL('image/png');
+
+            if (format === 'png') {
+                const link = document.createElement('a');
+                link.download = `order-receipt-${order.id}.png`;
+                link.href = imgData;
+                link.click();
+            } else {
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'px',
+                    format: [canvas.width, canvas.height]
+                });
+                pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+                pdf.save(`order-receipt-${order.id}.pdf`);
+            }
+        } catch (error) {
+            console.error('Failed to generate receipt:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Download Failed',
+                description: 'Could not generate your order receipt. Please try again.'
+            });
+        }
+    };
+
     return (
         <Card className="w-full max-w-md mx-auto">
-            <CardHeader className="text-center">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50">
-                   <CheckCircle className="h-6 w-6 text-green-500" />
+            <div ref={orderCardRef} className="bg-card rounded-t-lg">
+                <CardHeader className="text-center">
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50">
+                       <CheckCircle className="h-6 w-6 text-green-500" />
+                    </div>
+                    <CardTitle className="text-2xl mt-4">Order Placed Successfully!</CardTitle>
+                    <CardDescription>Your order is pending verification. We will process it shortly.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-2 rounded-lg border p-4">
+                        <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Order ID</span>
+                            <span className="font-mono text-xs">{order.id}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Status</span>
+                            <span className="font-medium capitalize">{order.status}</span>
+                        </div>
+                         <div className="flex justify-between text-sm font-bold pt-2 border-t">
+                            <span>Total Paid</span>
+                            <span>{order.totalAmount.toFixed(2)} PKR</span>
+                        </div>
+                    </div>
+                </CardContent>
+            </div>
+            <CardContent className="pt-6 space-y-4">
+                 <div className="grid grid-cols-2 gap-2">
+                    <Button onClick={() => handleDownload('png')} variant="outline">
+                        <ImageIcon className="mr-2 h-4 w-4" /> Save as Image
+                    </Button>
+                    <Button onClick={() => handleDownload('pdf')} variant="outline">
+                        <FileDown className="mr-2 h-4 w-4" /> Download PDF
+                    </Button>
                 </div>
-                <CardTitle className="text-2xl mt-4">Order Placed Successfully!</CardTitle>
-                <CardDescription>Your order is pending verification. We will process it shortly.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="space-y-2 rounded-lg border p-4">
-                    <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Order ID</span>
-                        <span className="font-mono text-xs">{order.id}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Status</span>
-                        <span className="font-medium capitalize">{order.status}</span>
-                    </div>
-                     <div className="flex justify-between text-sm font-bold pt-2 border-t">
-                        <span>Total Paid</span>
-                        <span>{order.totalAmount.toFixed(2)} PKR</span>
-                    </div>
-                </div>
-                <Button asChild className="w-full" size="lg">
+                 <Button asChild className="w-full" size="lg">
                     <Link href="/profile">View My Orders</Link>
+                </Button>
+                 <Button asChild className="w-full" size="lg" variant="secondary">
+                    <Link href="/products">
+                        <ShoppingCart className="mr-2 h-4 w-4" /> Continue Shopping
+                    </Link>
                 </Button>
             </CardContent>
         </Card>
