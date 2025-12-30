@@ -3,6 +3,7 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 
+// Correctly initialize the S3 client for Cloudflare R2
 const s3Client = new S3Client({
   region: "auto",
   endpoint: `https://f2185d026195d5e6e9cd9948b65bc40f.r2.cloudflarestorage.com`,
