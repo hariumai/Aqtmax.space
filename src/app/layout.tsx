@@ -11,6 +11,9 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 export const metadata: Metadata = {
   title: 'AQT Max',
   description: 'Your one-stop shop for premium digital subscriptions.',
+  openGraph: {
+    images: ['https://pub-084453786b28495bac2d56e573071005.r2.dev/file_00000000135472079d159aeaa589b909.png'],
+  },
 };
 
 export default function RootLayout({
