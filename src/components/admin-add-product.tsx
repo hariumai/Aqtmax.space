@@ -25,7 +25,7 @@ const variantGroupSchema = z.object({
 
 const productSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  description: z.string().min(1, 'Description is required'),
+  description: z.string().optional(),
   price: z.coerce.number().min(0, 'Base price must be a positive number'),
   discountedPrice: z.coerce.number().nullable().optional(),
   imageUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
@@ -65,7 +65,8 @@ export default function AdminAddProduct() {
     if (!firestore) return;
     try {
       const newId = doc(collection(firestore, 'subscriptions')).id;
-      await setDoc(doc(firestore, 'subscriptions', newId), { ...values, id: newId });
+      const productData = { ...values, id: newId, description: values.description || '' };
+      await setDoc(doc(firestore, 'subscriptions', newId), productData);
       toast({ title: 'Product Added', description: `${values.name} has been successfully added.` });
       productForm.reset();
     } catch (error: any) {
@@ -110,7 +111,7 @@ export default function AdminAddProduct() {
               />
             </div>
             
-            <FormField control={productForm.control} name="description" render={({ field }) => (<FormItem><FormLabel>Description</FormLabel><FormControl><Textarea placeholder="A short description of the product." {...field} className="min-h-[100px]" /></FormControl><FormMessage /></FormItem>)} />
+            <FormField control={productForm.control} name="description" render={({ field }) => (<FormItem><FormLabel>Description (Optional)</FormLabel><FormControl><Textarea placeholder="A short description of the product." {...field} className="min-h-[100px]" /></FormControl><FormMessage /></FormItem>)} />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {!hasVariants && (

@@ -191,9 +191,12 @@ export default function ProductCard({ product }: { product: any }) {
             {currentPrice?.toFixed(2)}
             <span className="text-base font-normal text-muted-foreground"> PKR</span>
         </div>
-        <CardDescription className="mt-2 text-sm min-h-[40px] flex-grow">
-          {product.description.split('\n')[0]}
-        </CardDescription>
+        {product.description && (
+            <CardDescription className="mt-2 text-sm min-h-[40px] flex-grow">
+            {product.description.split('\n')[0]}
+            </CardDescription>
+        )}
+
 
         {hasVariants && (
           <div className="space-y-2 flex-grow">

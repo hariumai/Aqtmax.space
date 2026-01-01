@@ -68,7 +68,7 @@ const variantGroupSchema = z.object({
 const productSchema = z.object({
   id: z.string(),
   name: z.string().min(1, 'Name is required'),
-  description: z.string().min(1, 'Description is required'),
+  description: z.string().optional(),
   price: z.coerce.number().min(0, 'Base price must be a positive number'),
   discountedPrice: z.coerce.number().nullable().optional(),
   imageUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
@@ -152,7 +152,8 @@ function EditProductForm({
     if (!firestore) return;
     try {
       const docRef = doc(firestore, 'subscriptions', values.id);
-      await setDoc(docRef, values);
+      const productData = { ...values, description: values.description || '' };
+      await setDoc(docRef, productData);
       toast({
         title: 'Product Updated',
         description: 'The product has been successfully updated.',
@@ -197,7 +198,7 @@ function EditProductForm({
                 )}
               />
             </div>
-            <FormField control={form.control} name="description" render={({ field }) => (<FormItem><FormLabel>Description</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>)} />
+            <FormField control={form.control} name="description" render={({ field }) => (<FormItem><FormLabel>Description (Optional)</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>)} />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField control={form.control} name="price" render={({ field }) => (<FormItem><FormLabel>Base Price (PKR)</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>)} />
                 <FormField control={form.control} name="discountedPrice" render={({ field }) => (<FormItem><FormLabel>Discounted Price (PKR)</FormLabel><FormControl><Input type="number" step="0.01" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? null : Number(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />

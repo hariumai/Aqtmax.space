@@ -68,7 +68,7 @@
             }
         }
       },
-      "required": ["id", "name", "description", "price", "categoryId"]
+      "required": ["id", "name", "price", "categoryId"]
     },
     "Category": {
       "$schema": "http://json-schema.org/draft-07/schema#",
