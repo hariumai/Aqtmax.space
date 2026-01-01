@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { ThemeProvider } from '@/components/theme-provider';
 import NextTopLoader from 'nextjs-toploader';
+import AppIcons from '@/components/app-icons';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -33,10 +34,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-        <link rel="icon" href="https://pub-084453786b28495bac2d56e573071005.r2.dev/file_00000000135472079d159aeaa589b909.png" type="image/png" />
-        <link rel="shortcut icon" href="https://pub-084453786b28495bac2d56e573071005.r2.dev/file_00000000135472079d159aeaa589b909.png" />
-        <link rel="apple-touch-icon" href="https://pub-084453786b28495bac2d56e573071005.r2.dev/file_00000000135472079d159aeaa589b909.png" />
-
+        <AppIcons />
       </head>
       <body className={cn('font-body antialiased', inter.variable)}>
         <NextTopLoader
@@ -47,7 +45,7 @@ export default function RootLayout({
           crawl={true}
           showSpinner={false}
           easing="ease"
-          speed={200}
+          speed={2000}
           shadow="0 0 10px #DC2626,0 0 5px #DC2626"
         />
         <ThemeProvider
