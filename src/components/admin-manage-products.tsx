@@ -130,19 +130,21 @@ function EditProductForm({
       return;
     }
 
-    const optionGroups = watchedVariantGroups.map(g => g.options?.map(o => ({ group: g.name, option: o.name })) || []);
-    const validOptionGroups = optionGroups.filter(g => g.length > 0 && g.every(o => o.group && o.option));
+    const optionGroups = watchedVariantGroups
+        .map(g => g.options?.map(o => ({ group: g.name, option: o.name })) || [])
+        .filter(g => g.length > 0 && g.every(o => o.group && o.option));
 
-    if (validOptionGroups.length < watchedVariantGroups.length) {
-      replaceVariantMatrix([]);
-      return;
+    if (optionGroups.length < watchedVariantGroups.length) {
+        replaceVariantMatrix([]);
+        return;
     }
-    
-    const combinations = cartesian(...validOptionGroups);
+
+    const combinations = cartesian(...optionGroups);
     const existingMatrix = form.getValues('variantMatrix') || [];
 
     const newMatrix = combinations.map(combo => {
-      const optionsRecord = combo.reduce((acc, curr) => {
+      const comboArray = Array.isArray(combo) ? combo : [combo];
+      const optionsRecord = comboArray.reduce((acc, curr) => {
         acc[curr.group] = curr.option;
         return acc;
       }, {} as Record<string, string>);
@@ -240,9 +242,9 @@ function EditProductForm({
              {hasVariants && variantMatrix.length > 0 && (
                  <div className="p-4 border rounded-lg space-y-4 bg-muted/50">
                     <h3 className="text-lg font-medium">Variant Matrix</h3>
-                     <CardDescription>
+                    <p className="text-sm text-muted-foreground">
                         Set the price and availability for each specific variant combination.
-                    </CardDescription>
+                    </p>
                     <div className="space-y-2">
                         {variantMatrix.map((matrixItem, index) => (
                              <div key={matrixItem.id} className="grid grid-cols-3 gap-4 items-center p-2 bg-background rounded-md">

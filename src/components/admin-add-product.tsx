@@ -88,18 +88,20 @@ export default function AdminAddProduct() {
       return;
     }
 
-    const optionGroups = watchedVariantGroups.map(g => g.options?.map(o => ({ group: g.name, option: o.name })) || []);
-    const validOptionGroups = optionGroups.filter(g => g.length > 0 && g.every(o => o.group && o.option));
+    const optionGroups = watchedVariantGroups
+      .map(g => g.options?.map(o => ({ group: g.name, option: o.name })) || [])
+      .filter(g => g.length > 0 && g.every(o => o.group && o.option));
 
-    if (validOptionGroups.length < watchedVariantGroups.length) {
-      replaceVariantMatrix([]);
-      return;
+    if (optionGroups.length < watchedVariantGroups.length) {
+        replaceVariantMatrix([]);
+        return;
     }
-    
-    const combinations = cartesian(...validOptionGroups);
 
+    const combinations = cartesian(...optionGroups);
+    
     const newMatrix = combinations.map(combo => {
-      const optionsRecord = combo.reduce((acc, curr) => {
+      const comboArray = Array.isArray(combo) ? combo : [combo];
+      const optionsRecord = comboArray.reduce((acc, curr) => {
         acc[curr.group] = curr.option;
         return acc;
       }, {} as Record<string, string>);
