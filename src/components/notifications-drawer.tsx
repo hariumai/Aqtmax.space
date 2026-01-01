@@ -11,7 +11,7 @@ import {
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { collection, writeBatch, query, orderBy, doc, where } from 'firebase/firestore';
+import { collection, writeBatch, query, orderBy, doc, where, Timestamp } from 'firebase/firestore';
 import { Bell, BellOff, Trash, Smartphone, Monitor } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -47,16 +47,19 @@ export function NotificationsDrawer() {
   const firestore = useFirestore();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const thirtyDaysAgoTimestamp = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    return Timestamp.fromDate(d);
+  }, []);
 
   const notificationsQuery = useMemoFirebase(
     () => (firestore && user ? query(
         collection(firestore, 'users', user.uid, 'notifications'), 
-        where('createdAt', '>=', thirtyDaysAgo),
+        where('createdAt', '>=', thirtyDaysAgoTimestamp),
         orderBy('createdAt', 'desc')
     ) : null),
-    [firestore, user]
+    [firestore, user, thirtyDaysAgoTimestamp]
   );
   
   const { data: notifications, isLoading } = useCollection(notificationsQuery);
