@@ -58,7 +58,7 @@ service cloud.firestore {
        */
       match /notifications/{notificationId} {
         allow read, delete: if isOwner(userId);
-        allow write: if isOwner(userId) || isSignedIn();
+        allow write: if isSignedIn();
       }
     }
 

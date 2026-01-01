@@ -305,6 +305,10 @@ export default function ProfilePage() {
 
   const handleSignOut = async () => {
     if (auth && user) {
+      toast({
+        title: 'Logged Out',
+        description: "You have been successfully signed out.",
+      });
       const browserInfo = navigator.userAgent;
       await signOutAndNotify(user.uid, browserInfo);
       await auth.signOut();
