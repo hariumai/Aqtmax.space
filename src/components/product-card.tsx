@@ -3,14 +3,15 @@ import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useUser, useFirestore } from '@/firebase';
-import { collection, addDoc, serverTimestamp, query, where, limit, getDocs } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, limit, getDocs, writeBatch, doc, updateDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { Clapperboard, Music, Palette, Tv, ShoppingCart, CreditCard, Radio, ChevronDown } from 'lucide-react';
+import { Clapperboard, Music, Palette, Tv, ShoppingCart, CreditCard, Minus, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
 import { createNotification } from '@/lib/notifications';
+import { Input } from './ui/input';
 
 const iconMap: { [key: string]: React.ElementType } = {
   'Netflix Premium': Clapperboard,
@@ -31,6 +32,7 @@ export default function ProductCard({ product }: { product: any }) {
 
   const [selectedVariants, setSelectedVariants] = useState<SelectedVariants>({});
   const [isAdding, setIsAdding] = useState(false);
+  const [quantity, setQuantity] = useState(1);
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
 
   const hasVariants = product.variants && product.variants.length > 0;
@@ -101,7 +103,7 @@ export default function ProductCard({ product }: { product: any }) {
         }
     }
 
-    if (!firestore || !product || currentPrice === null) return;
+    if (!firestore || !product || currentPrice === null || quantity < 1) return;
     setIsAdding(true);
 
     try {
@@ -110,19 +112,10 @@ export default function ProductCard({ product }: { product: any }) {
             ? product.variants.map((group: any) => selectedVariants[group.groupName]).join(' / ')
             : 'Default';
         
-        const itemToAdd = {
-            subscriptionId: product.id,
-            subscriptionName: product.name,
-            variantName: variantName,
-            price: currentPrice,
-            quantity: 1,
-            imageUrl: product.imageUrl || `https://ui-avatars.com/api/?name=${product.name.replace(/\s/g, "+")}&background=random`,
-        };
-        
         const q = query(
             cartRef, 
-            where('subscriptionId', '==', itemToAdd.subscriptionId), 
-            where('variantName', '==', itemToAdd.variantName),
+            where('subscriptionId', '==', product.id), 
+            where('variantName', '==', variantName),
             limit(1)
         );
 
@@ -130,22 +123,30 @@ export default function ProductCard({ product }: { product: any }) {
 
         if (querySnapshot.empty) {
             await addDoc(cartRef, {
-                ...itemToAdd,
+                subscriptionId: product.id,
+                subscriptionName: product.name,
+                variantName: variantName,
+                price: currentPrice,
+                quantity: quantity,
+                imageUrl: product.imageUrl || `https://ui-avatars.com/api/?name=${product.name.replace(/\s/g, "+")}&background=random`,
                 createdAt: serverTimestamp(),
             });
+            toast({ title: "Added to Cart", description: `${quantity} x "${product.name}" has been added.`});
         } else {
-            toast({ title: "Item already in cart", description: `${product.name} (${variantName}) is already in your cart.`});
+            const existingDoc = querySnapshot.docs[0];
+            const newQuantity = existingDoc.data().quantity + quantity;
+            await updateDoc(existingDoc.ref, { quantity: newQuantity });
+            toast({ title: "Cart Updated", description: `Quantity for "${product.name}" is now ${newQuantity}.`});
         }
 
-        if (!redirect) {
-            toast({ title: "Added to Cart", description: `${product.name} has been added to your cart.`});
-            createNotification({
+        if (redirect) {
+            router.push('/checkout');
+        } else {
+             createNotification({
                 userId: user.uid,
-                message: `"${product.name}" has been added to your cart.`,
+                message: `"${product.name}" was added to your cart.`,
                 href: '/checkout'
             });
-        } else {
-            router.push('/checkout');
         }
 
     } catch(error: any) {
@@ -156,6 +157,9 @@ export default function ProductCard({ product }: { product: any }) {
   };
 
   const handleBuyNow = () => handleAddToCart(true);
+  const handleQuantityChange = (amount: number) => {
+    setQuantity(prev => Math.max(1, prev + amount));
+  }
 
   const pricePrefix = hasVariants && !product.variants.every((g:any) => selectedVariants[g.groupName]) ? 'From' : '';
   const hasDiscount = product.discountedPrice && product.discountedPrice < product.price && !hasVariants;
@@ -166,7 +170,11 @@ export default function ProductCard({ product }: { product: any }) {
     >
       <CardHeader className="flex-row items-center gap-4">
         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
-          <ProductIcon className="h-6 w-6 text-foreground" />
+          {product.imageUrl ? (
+            <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover rounded-xl" />
+          ) : (
+            <ProductIcon className="h-6 w-6 text-foreground" />
+          )}
         </div>
         <div>
           <Link href={`/products/${product.id}`}>
@@ -213,6 +221,11 @@ export default function ProductCard({ product }: { product: any }) {
         )}
       </CardContent>
       <CardFooter className="flex flex-col gap-2 pt-4">
+          <div className="flex items-center gap-2 w-full">
+            <Button variant="outline" size="icon" onClick={() => handleQuantityChange(-1)}><Minus className="h-4 w-4" /></Button>
+            <Input type="number" value={quantity} onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))} className="w-full text-center" />
+            <Button variant="outline" size="icon" onClick={() => handleQuantityChange(1)}><Plus className="h-4 w-4" /></Button>
+          </div>
           <Button size="sm" className="w-full" onClick={() => handleAddToCart(false)} disabled={isAdding}>
               <ShoppingCart className="mr-2 h-4 w-4" />
               Add to Cart

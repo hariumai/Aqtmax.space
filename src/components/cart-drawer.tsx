@@ -4,15 +4,14 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
   SheetFooter,
   SheetClose,
 } from '@/components/ui/sheet';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { collection, deleteDoc, doc, query } from 'firebase/firestore';
-import { ShoppingCart, Trash2 } from 'lucide-react';
+import { collection, deleteDoc, doc, query, updateDoc } from 'firebase/firestore';
+import { ShoppingCart, Trash2, Plus, Minus } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -34,6 +33,12 @@ export function CartDrawer() {
     await deleteDoc(itemRef);
   };
 
+  const handleQuantityChange = async (itemId: string, newQuantity: number) => {
+    if (!firestore || !user || newQuantity < 1) return;
+    const itemRef = doc(firestore, 'users', user.uid, 'cart', itemId);
+    await updateDoc(itemRef, { quantity: newQuantity });
+  };
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -41,7 +46,7 @@ export function CartDrawer() {
           <ShoppingCart className="h-5 w-5" />
           {cartItems && cartItems.length > 0 && (
             <span className="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
-              {cartItems.length}
+              {cartItems.reduce((acc, item) => acc + item.quantity, 0)}
             </span>
           )}
           <span className="sr-only">Open Cart</span>
@@ -49,7 +54,7 @@ export function CartDrawer() {
       </SheetTrigger>
       <SheetContent className="flex w-full flex-col pr-0 sm:max-w-lg">
         <SheetHeader className="px-6">
-          <SheetTitle>Shopping Cart ({cartItems?.length || 0})</SheetTitle>
+          <SheetTitle>Shopping Cart ({cartItems?.reduce((acc, item) => acc + item.quantity, 0) || 0})</SheetTitle>
         </SheetHeader>
         <Separator />
         {isLoading && <div className="flex-1 flex items-center justify-center">Loading cart...</div>}
@@ -76,7 +81,12 @@ export function CartDrawer() {
                             <div className="flex-1">
                                 <h4 className="font-semibold">{item.subscriptionName}</h4>
                                 <p className="text-sm text-muted-foreground">{item.variantName}</p>
-                                <p className="text-sm font-medium">{item.price.toFixed(2)} PKR</p>
+                                <p className="text-sm font-medium">{(item.price * item.quantity).toFixed(2)} PKR</p>
+                                <div className="flex items-center gap-2 mt-2">
+                                  <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => handleQuantityChange(item.id, item.quantity - 1)}><Minus className="h-3 w-3" /></Button>
+                                  <span>{item.quantity}</span>
+                                  <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => handleQuantityChange(item.id, item.quantity + 1)}><Plus className="h-3 w-3" /></Button>
+                                </div>
                             </div>
                             <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.id)}>
                                 <Trash2 className="h-4 w-4 text-destructive" />

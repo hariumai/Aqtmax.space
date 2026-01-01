@@ -235,10 +235,10 @@ export default function CheckoutPage() {
                                                      <Image src={item.imageUrl || `https://ui-avatars.com/api/?name=${item.subscriptionName.replace(/\s/g, "+")}&background=random`} alt={item.subscriptionName} fill className="object-cover" />
                                                 </div>
                                                 <div className="flex-1">
-                                                    <p className="font-semibold">{item.subscriptionName}</p>
+                                                    <p className="font-semibold">{item.subscriptionName} (x{item.quantity})</p>
                                                     <p className="text-sm text-muted-foreground">{item.variantName}</p>
                                                 </div>
-                                                <p className="font-semibold">{item.price.toFixed(2)} PKR</p>
+                                                <p className="font-semibold">{(item.price * item.quantity).toFixed(2)} PKR</p>
                                             </div>
                                         ))}
                                     </div>

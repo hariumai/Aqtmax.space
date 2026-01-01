@@ -2,16 +2,17 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Clapperboard, CreditCard, Lock, Music, Palette, ShoppingCart, Tv } from "lucide-react";
+import { CheckCircle, Clapperboard, CreditCard, Lock, Music, Palette, ShoppingCart, Tv, Plus, Minus } from "lucide-react";
 import Link from "next/link";
 import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
-import { doc, collection, addDoc, serverTimestamp, writeBatch, getDocs, where, query, limit } from "firebase/firestore";
+import { doc, collection, addDoc, serverTimestamp, writeBatch, getDocs, where, query, limit, updateDoc } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createNotification } from '@/lib/notifications';
+import { Input } from '@/components/ui/input';
 
 const iconMap: { [key: string]: React.ElementType } = {
   'Netflix Premium': Clapperboard,
@@ -38,6 +39,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
 
   const [selectedVariants, setSelectedVariants] = useState<SelectedVariants>({});
   const [isAdding, setIsAdding] = useState(false);
+  const [quantity, setQuantity] = useState(1);
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
 
   useEffect(() => {
@@ -82,7 +84,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   }, [selectedVariants, product]);
 
 
-  const ProductIcon = product ? iconMap[product.name] || iconMap.default : null;
+  const ProductIcon = product ? (product.imageUrl ? null : iconMap[product.name] || iconMap.default) : null;
 
   const handleVariantChange = (groupName: string, optionName: string) => {
     setSelectedVariants(prev => ({ ...prev, [groupName]: optionName }));
@@ -94,7 +96,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
       router.push('/login');
       return;
     }
-    if (!product || currentPrice === null) return;
+    if (!product || currentPrice === null || quantity < 1) return;
     
     const allVariantsSelected = product.variants?.every((group: any) => selectedVariants[group.groupName]) ?? true;
 
@@ -111,45 +113,41 @@ export default function ProductPage({ params }: { params: { id: string } }) {
             ?.map((group: any) => selectedVariants[group.groupName])
             .join(' / ') || 'Default';
         
-        const itemToAdd = {
-            subscriptionId: product.id,
-            subscriptionName: product.name,
-            variantName: variantName,
-            price: currentPrice,
-            quantity: 1,
-            imageUrl: product.imageUrl || `https://ui-avatars.com/api/?name=${product.name.replace(/\s/g, "+")}&background=random`,
-        };
-        
         const q = query(
             cartRef, 
-            where('subscriptionId', '==', itemToAdd.subscriptionId), 
-            where('variantName', '==', itemToAdd.variantName),
+            where('subscriptionId', '==', product.id), 
+            where('variantName', '==', variantName),
             limit(1)
         );
 
         const querySnapshot = await getDocs(q);
-
+        
         if (querySnapshot.empty) {
             await addDoc(cartRef, {
-                ...itemToAdd,
+                subscriptionId: product.id,
+                subscriptionName: product.name,
+                variantName: variantName,
+                price: currentPrice,
+                quantity: quantity,
+                imageUrl: product.imageUrl || `https://ui-avatars.com/api/?name=${product.name.replace(/\s/g, "+")}&background=random`,
                 createdAt: serverTimestamp(),
             });
-             toast({
-                title: "Added to Cart",
-                description: `"${product.name}" has been added to your cart.`,
-            });
+            toast({ title: "Added to Cart", description: `${quantity} x "${product.name}" has been added.`});
         } else {
-            toast({ title: "Item already in cart", description: `${product.name} (${variantName}) is already in your cart.`});
+            const existingDoc = querySnapshot.docs[0];
+            const newQuantity = existingDoc.data().quantity + quantity;
+            await updateDoc(existingDoc.ref, { quantity: newQuantity });
+            toast({ title: "Cart Updated", description: `Quantity for "${product.name}" is now ${newQuantity}.`});
         }
 
-        if (!redirect) {
-            await createNotification({
+        if (redirect) {
+            router.push('/checkout');
+        } else {
+             createNotification({
                 userId: user.uid,
-                message: `"${product.name}" has been added to your cart.`,
+                message: `"${product.name}" was added to your cart.`,
                 href: '/checkout'
             });
-        } else {
-            router.push('/checkout');
         }
 
     } catch(error: any) {
@@ -162,6 +160,10 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   const handleBuyNow = async () => {
     await handleAddToCart(true);
   };
+
+  const handleQuantityChange = (amount: number) => {
+    setQuantity(prev => Math.max(1, prev + amount));
+  };
   
   const formattedDescription = product?.description?.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-primary hover:underline">$1</a>').replace(/\n/g, '<br />');
 
@@ -169,11 +171,15 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   return (
     <main className="flex-grow container mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
       {isLoading && <ProductPageSkeleton />}
-      {!isLoading && product && ProductIcon && (
+      {!isLoading && product && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div className="flex flex-col justify-center">
-              <ProductIcon className="h-16 w-16 text-primary mb-4 animate-float" />
+              {product.imageUrl ? (
+                 <img src={product.imageUrl} alt={product.name} className="w-full h-auto object-cover rounded-2xl mb-4" />
+              ) : ProductIcon ? (
+                <ProductIcon className="h-16 w-16 text-primary mb-4 animate-float" />
+              ) : null}
               <h1 className="font-headline text-4xl font-extrabold tracking-tighter sm:text-5xl">
                 {product.name}
               </h1>
@@ -224,7 +230,16 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                     ) : null}
 
                     <div className="text-4xl font-bold pt-4">
-                      {currentPrice !== null ? `${currentPrice.toFixed(2)} PKR` : <Skeleton className="h-10 w-48" />}
+                      {currentPrice !== null ? `${(currentPrice * quantity).toFixed(2)} PKR` : <Skeleton className="h-10 w-48" />}
+                    </div>
+                    
+                    <div className="space-y-2">
+                        <Label>Quantity</Label>
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" size="icon" onClick={() => handleQuantityChange(-1)}><Minus className="h-4 w-4" /></Button>
+                            <Input type="number" value={quantity} onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))} className="w-20 text-center" />
+                            <Button variant="outline" size="icon" onClick={() => handleQuantityChange(1)}><Plus className="h-4 w-4" /></Button>
+                        </div>
                     </div>
 
                   </div>
@@ -270,9 +285,8 @@ function ProductPageSkeleton() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
       <div className="flex flex-col justify-center">
-        <Skeleton className="h-16 w-16 rounded-lg mb-4" />
+        <Skeleton className="h-64 w-full rounded-lg mb-4" />
         <Skeleton className="h-12 w-3/4" />
-        <Skeleton className="h-8 w-1/4 mt-4" />
         <Skeleton className="h-5 w-full mt-4" />
         <Skeleton className="h-5 w-5/6 mt-2" />
         <div className="mt-6 space-y-2">
