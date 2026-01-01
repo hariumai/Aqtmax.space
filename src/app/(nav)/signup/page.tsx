@@ -101,7 +101,15 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="flex-grow flex items-center justify-center p-4">
+    <main className="flex flex-col items-center justify-center min-h-screen p-4">
+      <div className="flex flex-col items-center text-center mb-8">
+        <Link href="/" className="flex items-center gap-2 mb-4">
+            <Gem className="h-8 w-8 text-primary" />
+            <span className="text-3xl font-bold tracking-tighter text-foreground">
+                AQT Max
+            </span>
+        </Link>
+      </div>
       <Card className="mx-auto max-w-sm w-full">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Sign Up</CardTitle>
