@@ -104,9 +104,11 @@ export default function SignupPage() {
     <main className="flex-grow flex items-center justify-center">
       <Card className="mx-auto max-w-sm w-full">
         <CardHeader className="text-center">
-          <div className="flex items-center justify-center gap-2">
-            <CardTitle className="text-2xl">Sign Up</CardTitle>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Gem className="h-6 w-6 text-primary" />
+            <span className="text-xl font-bold tracking-tighter">AQT Max</span>
           </div>
+          <CardTitle className="text-2xl">Sign Up</CardTitle>
           <CardDescription>
             Enter your information to create an account
           </CardDescription>
