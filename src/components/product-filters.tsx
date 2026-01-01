@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -52,11 +53,11 @@ export function ProductFilters({ onFilterChange, onViewChange, initialPriceRange
   }
 
   return (
-    <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4 rounded-xl border border-border/10 bg-card/50 backdrop-blur-xl mb-8">
-      <div className="flex items-center gap-2">
+    <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4 rounded-xl border border-border/10 bg-card/50 backdrop-blur-xl mb-8 animate-fade-in">
+      <div className="flex items-center gap-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline"><SlidersHorizontal className="mr-2 h-4 w-4" /> Filter</Button>
+            <Button variant="ghost"><SlidersHorizontal className="mr-2 h-4 w-4" /> Filter</Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56">
             <DropdownMenuLabel>Category</DropdownMenuLabel>
@@ -84,12 +85,12 @@ export function ProductFilters({ onFilterChange, onViewChange, initialPriceRange
             />
         </div>
       </div>
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" onClick={() => onViewChange('list')}>
-          <List />
+      <div className="flex items-center gap-2 rounded-lg bg-muted p-1">
+        <Button variant="ghost" size="icon" className="h-8 w-8 data-[active=true]:bg-background data-[active=true]:shadow" data-active="true" onClick={() => onViewChange('grid')}>
+          <Grid className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={() => onViewChange('grid')}>
-          <Grid />
+        <Button variant="ghost" size="icon" className="h-8 w-8 data-[active=true]:bg-background data-[active=true]:shadow" onClick={() => onViewChange('list')}>
+          <List className="h-4 w-4" />
         </Button>
       </div>
     </div>

@@ -261,7 +261,9 @@ export default function ProductCard({ product, viewMode = 'grid' }: { product: a
               {description && (
                   <div className='flex-grow'>
                     <CardDescription className="mt-2 text-sm min-h-[40px]">
-                      {displayedDescription.split('\n').map((line, i) => <p key={i}>{line}</p>)}
+                      <div>
+                        {displayedDescription.split('\n').map((line, i) => <span key={i} className="block">{line}</span>)}
+                      </div>
                     </CardDescription>
                     {viewMode === 'grid' && !hasVariants && isLongDescription && (
                       <Button variant="link" size="sm" className="p-0 h-auto" onClick={toggleExpand}>
