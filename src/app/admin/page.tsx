@@ -9,10 +9,10 @@ import { Gem, Loader2, LogOut, Menu } from 'lucide-react';
 import AdminDashboard, { AdminDashboardProvider } from '@/components/admin-dashboard';
 import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 import SiteFooter from '@/components/site-footer';
-import { useUser } from '@/firebase';
+import { useUser, useAuth } from '@/firebase';
 import AdminBottomNav from '@/components/admin-bottom-nav';
-
-const ADMIN_KEY = '36572515';
+import { useToast } from '@/hooks/use-toast';
+import { signInAnonymously, signOut } from 'firebase/auth';
 
 function AdminHeader({ onLogout }: { onLogout: () => void }) {
     const { isMobile, toggleSidebar } = useSidebar();
@@ -34,42 +34,81 @@ function AdminHeader({ onLogout }: { onLogout: () => void }) {
     );
 }
 
-
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [key, setKey] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const { isUserLoading } = useUser();
-
+  const { toast } = useToast();
+  const auth = useAuth();
 
   useEffect(() => {
-    const storedKey = localStorage.getItem('admin-key');
-    if (storedKey === ADMIN_KEY) {
-      setIsAuthenticated(true);
-    }
-    setIsLoading(false);
-  }, []);
+    const checkAuth = async () => {
+      const storedKey = sessionStorage.getItem('admin-key');
+      if (storedKey) {
+        try {
+            const response = await fetch('/api/admin-auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: storedKey }),
+            });
+            if (response.ok) {
+                setIsAuthenticated(true);
+                if (auth && !auth.currentUser) {
+                  await signInAnonymously(auth);
+                }
+            } else {
+                sessionStorage.removeItem('admin-key');
+            }
+        } catch (e) {
+            // network error
+        }
+      }
+      setIsLoading(false);
+    };
+    checkAuth();
+  }, [auth]);
 
-  const handleLogin = () => {
-    if (key === ADMIN_KEY) {
-      setIsAuthenticated(true);
-      setError('');
-      localStorage.setItem('admin-key', key);
-    } else {
-      setError('Invalid admin key.');
+  const handleLogin = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/admin-auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key }),
+      });
+
+      if (response.ok) {
+        if (auth) {
+          await signInAnonymously(auth);
+          setIsAuthenticated(true);
+          setError('');
+          sessionStorage.setItem('admin-key', key);
+          toast({ title: 'Admin access granted.' });
+        } else {
+          setError('Firebase auth not available.');
+        }
+      } else {
+        const data = await response.json();
+        setError(data.error || 'Invalid admin key.');
+      }
+    } catch (e) {
+      setError('An error occurred during login.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsAuthenticated(false);
     setKey('');
-    localStorage.removeItem('admin-key');
-  }
+    sessionStorage.removeItem('admin-key');
+    if (auth?.currentUser?.isAnonymous) {
+      await signOut(auth);
+    }
+  };
   
-  const pageIsLoading = isLoading;
-  
-  if (pageIsLoading) {
+  if (isLoading) {
     return (
         <div className="flex flex-col min-h-screen">
           <main className="flex-grow flex items-center justify-center">
@@ -110,8 +149,8 @@ export default function AdminPage() {
                       onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
                   />
                   {error && <p className="text-sm font-medium text-destructive">{error}</p>}
-                  <Button onClick={handleLogin} className="w-full" disabled={pageIsLoading}>
-                    {pageIsLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  <Button onClick={handleLogin} className="w-full" disabled={isLoading}>
+                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     Enter
                   </Button>
                   </div>
