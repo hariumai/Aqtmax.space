@@ -76,11 +76,11 @@ export default function ProductPage() {
 
   // Auto-select first variant on product load
   useEffect(() => {
-    if (product && product.variantGroups && product.variantGroups.length > 0) {
+    if (product && product.variants && product.variants.length > 0) {
       const initialSelections: SelectedVariants = {};
-      product.variantGroups.forEach((group: any) => {
+      product.variants.forEach((group: any) => {
         if (group.options && group.options.length > 0) {
-          initialSelections[group.name] = group.options[0];
+          initialSelections[group.groupName] = group.options[0].optionName;
         }
       });
       setSelectedVariants(initialSelections);
@@ -222,11 +222,11 @@ export default function ProductPage() {
               <Card className="rounded-2xl border-border/10 bg-card/50 backdrop-blur-xl">
                 <CardHeader>
                   <CardTitle>
-                      {product.variantGroups && product.variantGroups.length > 0 
+                      {product.variants && product.variants.length > 0 
                           ? 'Select Options' 
                           : 'Complete Your Order'}
                   </CardTitle>
-                  {product.variantGroups?.length > 0 && (
+                  {product.variants?.length > 0 && (
                   <CardDescription>
                     Choose your desired options to see the final price.
                   </CardDescription>
@@ -234,22 +234,22 @@ export default function ProductPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {product.variantGroups && product.variantGroups.length > 0 ? (
+                    {product.variants && product.variants.length > 0 ? (
                       <div className="space-y-4">
-                        {product.variantGroups.map((group: any) => (
-                           <div key={group.name}>
-                               <Label className="font-semibold">{group.name} {group.required && <span className="text-destructive">*</span>}</Label>
+                        {product.variants.map((group: any) => (
+                           <div key={group.groupName}>
+                               <Label className="font-semibold">{group.groupName} {group.required && <span className="text-destructive">*</span>}</Label>
                                <Select 
-                                 value={selectedVariants[group.name]}
-                                 onValueChange={(value) => handleVariantChange(group.name, value)}
+                                 value={selectedVariants[group.groupName]}
+                                 onValueChange={(value) => handleVariantChange(group.groupName, value)}
                                >
                                  <SelectTrigger>
-                                     <SelectValue placeholder={`Select ${group.name}`} />
+                                     <SelectValue placeholder={`Select ${group.groupName}`} />
                                  </SelectTrigger>
                                  <SelectContent>
                                      {group.options.map((option: any) => (
-                                         <SelectItem key={option} value={option}>
-                                             {option}
+                                         <SelectItem key={option.optionName} value={option.optionName}>
+                                             {option.optionName}
                                          </SelectItem>
                                      ))}
                                  </SelectContent>
