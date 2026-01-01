@@ -95,7 +95,7 @@ function BannedProfile({ user, banInfo, settings, onSignOut }: { user: any, banI
                          <p><strong>Expires:</strong> {expirationDate}</p>
                     )}
                 </div>
-                 <div className="text-sm p-4 border rounded-md bg-primary/10 text-primary-foreground/80">
+                 <div className="text-sm p-4 border rounded-md bg-primary/10 text-black">
                    If you believe this is a mistake, you can request an appeal. Our team will review your account. For urgent matters, contact us on WhatsApp.
                 </div>
                 <div className="flex flex-col gap-2">
@@ -211,97 +211,101 @@ export default function ProfilePage() {
         (userData.ban.type === 'temporary' && userData.ban.expiresAt && new Date(userData.ban.expiresAt) > new Date())
     );
 
+  if (!isUserLoading && user && isBanActive) {
+      return (
+         <main className="flex-grow container mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8 flex items-center justify-center">
+            <BannedProfile user={user} banInfo={userData.ban} settings={settingsData} onSignOut={handleSignOut} />
+         </main>
+      )
+  }
+
   return (
     <main className="flex-grow container mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8 flex items-center justify-center">
-      {isBanActive && userData ? (
-          <BannedProfile user={user} banInfo={userData.ban} settings={settingsData} onSignOut={handleSignOut} />
-      ) : (
-        <div className="space-y-8 w-full">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-4">
-                <UserIcon className="h-8 w-8 text-primary" />
-                <CardTitle className="text-2xl">My Profile</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-16 w-16">
-                      <AvatarImage src={user.photoURL ?? ''} />
-                      <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Your name" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+      <div className="space-y-8 w-full">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-4">
+              <UserIcon className="h-8 w-8 text-primary" />
+              <CardTitle className="text-2xl">My Profile</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-16 w-16">
+                    <AvatarImage src={user.photoURL ?? ''} />
+                    <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Your name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone Number</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g., +923001234567" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                   <CardDescription>{user.email}</CardDescription>
-                  <div className="flex gap-2 pt-4">
-                    <Button type="submit" disabled={form.formState.isSubmitting}>
-                      {form.formState.isSubmitting ? 'Saving...' : 'Save Changes'}
-                    </Button>
-                    <Button onClick={handleSignOut} variant="destructive">
-                      Sign Out
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
+                </div>
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., +923001234567" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <CardDescription>{user.email}</CardDescription>
+                <div className="flex gap-2 pt-4">
+                  <Button type="submit" disabled={form.formState.isSubmitting}>
+                    {form.formState.isSubmitting ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                  <Button onClick={handleSignOut} variant="destructive">
+                    Sign Out
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>My Orders</CardTitle>
-              <CardDescription>
-                Here is a list of your recent subscription orders. Click an order to see details.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoadingOrders && <p>Loading orders...</p>}
-              {!isLoadingOrders && orders && orders.length > 0 ? (
-                 <div className="divide-y divide-border">
-                  {orders.map((order) => (
-                    <OrderItemRow key={order.id} order={order} />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                    <p className="text-muted-foreground">You have not placed any orders yet.</p>
-                    <Button asChild variant="link" className="mt-2">
-                        <Link href="/products">Start Shopping</Link>
-                    </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
+        <Card>
+          <CardHeader>
+            <CardTitle>My Orders</CardTitle>
+            <CardDescription>
+              Here is a list of your recent subscription orders. Click an order to see details.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoadingOrders && <p>Loading orders...</p>}
+            {!isLoadingOrders && orders && orders.length > 0 ? (
+               <div className="divide-y divide-border">
+                {orders.map((order) => (
+                  <OrderItemRow key={order.id} order={order} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                  <p className="text-muted-foreground">You have not placed any orders yet.</p>
+                  <Button asChild variant="link" className="mt-2">
+                      <Link href="/products">Start Shopping</Link>
+                  </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </main>
   );
 }
