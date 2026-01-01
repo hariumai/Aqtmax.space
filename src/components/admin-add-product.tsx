@@ -9,11 +9,13 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, collection, setDoc, query } from 'firebase/firestore';
-import { PlusCircle, Trash } from 'lucide-react';
+import { PlusCircle, Trash, Sparkles, Loader2 } from 'lucide-react';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
+import { generateDescriptionAction } from '@/app/admin/actions';
+import { useState } from 'react';
 
 const variantOptionSchema = z.object({
   optionName: z.string().min(1, 'Option name is required'),
@@ -39,6 +41,7 @@ const productSchema = z.object({
 export default function AdminAddProduct() {
   const firestore = useFirestore();
   const { toast } = useToast();
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const categoriesQuery = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'categories')) : null),
@@ -76,6 +79,28 @@ export default function AdminAddProduct() {
       toast({ variant: 'destructive', title: 'Error Adding Product', description: error.message || 'An unexpected error occurred.' });
     }
   }
+
+  const handleGenerateDescription = async () => {
+      const productName = productForm.getValues('name');
+      if (!productName) {
+          toast({ variant: 'destructive', title: 'Product Name Required', description: 'Please enter a product name first.' });
+          return;
+      }
+      setIsGenerating(true);
+      try {
+          const result = await generateDescriptionAction(productName);
+          if (result.success && result.description) {
+              productForm.setValue('description', result.description);
+              toast({ title: 'Description Generated!' });
+          } else {
+              throw new Error(result.error || 'Failed to generate description.');
+          }
+      } catch (error: any) {
+          toast({ variant: 'destructive', title: 'AI Error', description: error.message });
+      } finally {
+          setIsGenerating(false);
+      }
+  };
   
   const hasVariants = productForm.watch('variants', []).length > 0;
 
@@ -114,7 +139,40 @@ export default function AdminAddProduct() {
               />
             </div>
             
-            <FormField control={productForm.control} name="description" render={({ field }) => (<FormItem><FormLabel>Description (Optional)</FormLabel><FormControl><Textarea placeholder="A short description of the product." {...field} className="min-h-[100px]" /></FormControl><FormMessage /></FormItem>)} />
+             <FormField
+              control={productForm.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>Description (Optional)</FormLabel>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleGenerateDescription}
+                      disabled={isGenerating}
+                    >
+                      {isGenerating ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="mr-2 h-4 w-4" />
+                      )}
+                      Generate with AI
+                    </Button>
+                  </div>
+                  <FormControl>
+                    <Textarea
+                      placeholder="A short description of the product."
+                      {...field}
+                      className="min-h-[100px]"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField control={productForm.control} name="imageUrl" render={({ field }) => (<FormItem><FormLabel>Image URL (Optional)</FormLabel><FormControl><Input placeholder="https://example.com/image.png" {...field} /></FormControl><FormMessage /></FormItem>)} />
 
             
@@ -234,5 +292,3 @@ function VariantOptionsArray({ groupIndex, control }: { groupIndex: number, cont
     </div>
   );
 }
-
-    
