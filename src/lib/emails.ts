@@ -54,14 +54,9 @@ const emailWrapper = (content: string, preheader: string) => `
             max-width: 600px;
             margin: 0 auto;
         }
-        .button {
-            display: inline-block;
-            background-color: #2563eb;
-            color: #ffffff !important;
-            padding: 12px 24px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
+        .simple-link {
+            color: #2563eb !important;
+            text-decoration: underline;
         }
         .credentials-box {
             background-color: #f1f5f9;
@@ -142,7 +137,7 @@ export async function sendOrderConfirmationEmail(order: Order) {
         </table>
 
         <div style="text-align: center; margin: 32px 0;">
-            <a href="${process.env.NEXT_PUBLIC_APP_URL}/profile" class="button">View My Orders</a>
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/profile" class="simple-link">View My Orders</a>
         </div>
     `;
 
@@ -175,7 +170,7 @@ export async function sendOrderFulfilledEmail(order: Order) {
         </div>
         
         <div style="text-align: center; margin: 32px 0;">
-            <a href="${process.env.NEXT_PUBLIC_APP_URL}/profile" class="button">Go to My Profile</a>
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/profile" class="simple-link">Go to My Profile</a>
         </div>
     `;
     
@@ -193,7 +188,7 @@ export async function sendAppealApprovedEmail(userEmail: string, userName: strin
         <p style="color: #475569; line-height: 1.5;">Thank you for your patience and understanding.</p>
         
         <div style="text-align: center; margin: 32px 0;">
-            <a href="${process.env.NEXT_PUBLIC_APP_URL}/profile" class="button">Check Account Status</a>
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/profile" class="simple-link">Check Account Status</a>
         </div>
     `;
     
