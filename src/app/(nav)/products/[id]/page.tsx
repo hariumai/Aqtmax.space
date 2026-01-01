@@ -1,6 +1,6 @@
 
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, use } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Clapperboard, CreditCard, Lock, Music, Palette, ShoppingCart, Tv, Plus, Minus, AlertTriangle } from "lucide-react";
@@ -55,7 +55,7 @@ function RulesSection() {
     )
 }
 
-export default function ProductPage() {
+export default function ProductPage({ params: paramsProp }: { params: { id: string } }) {
   const params = useParams();
   const id = params.id as string;
   const firestore = useFirestore();
@@ -211,7 +211,7 @@ export default function ProductPage() {
   };
   
   const formattedDescription = product?.description
-    ?.replace(/\((.*?)\)/g, '<span class="text-red-500 dark:text-red-400 font-semibold">$1</span>')
+    ?.replace(/\(cl\)(.*?)\(cl\)/g, '<span class="text-red-500 dark:text-red-400 font-semibold">$1</span>')
     .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-primary hover:underline">$1</a>')
     .replace(/\n/g, '<br />');
 
