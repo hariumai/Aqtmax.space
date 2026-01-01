@@ -57,6 +57,7 @@ import { ScrollArea } from './ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
+import { useAdminDashboard } from './admin-dashboard';
 
 const variantOptionSchema = z.object({
   name: z.string().min(1, 'Option name is required'),
@@ -346,6 +347,7 @@ function VariantGroup({ groupIndex, removeGroup, form }: { groupIndex: number; r
 export default function AdminManageProducts() {
   const firestore = useFirestore();
   const { toast } = useToast();
+  const { setActiveSection } = useAdminDashboard();
   
   // State management
   const [view, setView] = useState<'categories' | 'products'>('categories');
@@ -410,6 +412,11 @@ export default function AdminManageProducts() {
       setView('products');
   };
 
+  const handleAddNewClick = () => {
+    setActiveSection('addProduct', { categoryId: selectedCategory?.id !== 'uncategorized' ? selectedCategory?.id : null });
+  };
+
+
   const pageIsLoading = isLoadingProducts || isLoadingCategories;
 
   if (view === 'categories') {
@@ -444,14 +451,20 @@ export default function AdminManageProducts() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center gap-4">
-            <Button variant="outline" size="icon" onClick={() => setView('categories')}>
-                <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-                <CardTitle>Manage Products</CardTitle>
-                <CardDescription>Showing products in: <span className="font-semibold">{selectedCategory?.name}</span></CardDescription>
+        <div className="flex justify-between items-center gap-4">
+            <div className="flex items-center gap-4">
+                <Button variant="outline" size="icon" onClick={() => setView('categories')}>
+                    <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <div>
+                    <CardTitle>Manage Products</CardTitle>
+                    <CardDescription>Showing products in: <span className="font-semibold">{selectedCategory?.name}</span></CardDescription>
+                </div>
             </div>
+            <Button onClick={handleAddNewClick}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add New Product
+            </Button>
         </div>
       </CardHeader>
       <CardContent>

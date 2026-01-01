@@ -27,7 +27,8 @@ export type AdminSection = 'users' | 'addProduct' | 'manageProducts' | 'orders' 
 
 type AdminDashboardContextType = {
   activeSection: AdminSection;
-  setActiveSection: (section: AdminSection) => void;
+  setActiveSection: (section: AdminSection, context?: any) => void;
+  newProductCategoryId: string | null;
 };
 
 const AdminDashboardContext = createContext<AdminDashboardContextType | null>(null);
@@ -41,9 +42,20 @@ export function useAdminDashboard() {
 }
 
 export function AdminDashboardProvider({ children }: { children: React.ReactNode }) {
-  const [activeSection, setActiveSection] = useState<AdminSection>('orders');
+  const [activeSection, setActiveSectionState] = useState<AdminSection>('orders');
+  const [newProductCategoryId, setNewProductCategoryId] = useState<string | null>(null);
+  
+  const setActiveSection = (section: AdminSection, context?: any) => {
+    setActiveSectionState(section);
+    if (section === 'addProduct' && context?.categoryId) {
+      setNewProductCategoryId(context.categoryId);
+    } else {
+      setNewProductCategoryId(null);
+    }
+  };
+
   return (
-    <AdminDashboardContext.Provider value={{ activeSection, setActiveSection }}>
+    <AdminDashboardContext.Provider value={{ activeSection, setActiveSection, newProductCategoryId }}>
       {children}
     </AdminDashboardContext.Provider>
   );

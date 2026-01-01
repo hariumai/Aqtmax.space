@@ -1,3 +1,4 @@
+
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -16,6 +17,7 @@ import { Switch } from './ui/switch';
 import { Label } from '@/components/ui/label';
 import { useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
+import { useAdminDashboard } from './admin-dashboard';
 
 const variantOptionSchema = z.object({
   name: z.string().min(1, 'Option name is required'),
@@ -50,6 +52,7 @@ const cartesian = <T>(...a: T[][]): T[][] => a.reduce((a, b) => a.flatMap(d => b
 export default function AdminAddProduct() {
   const firestore = useFirestore();
   const { toast } = useToast();
+  const { newProductCategoryId, setActiveSection } = useAdminDashboard();
 
   const categoriesQuery = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'categories')) : null),
@@ -64,11 +67,18 @@ export default function AdminAddProduct() {
       description: '',
       price: 0,
       imageUrl: '',
-      categoryId: '',
+      categoryId: newProductCategoryId || '',
       variantGroups: [],
       variantMatrix: [],
     },
   });
+  
+  useEffect(() => {
+    if (newProductCategoryId) {
+      productForm.reset({ ...productForm.getValues(), categoryId: newProductCategoryId });
+    }
+  }, [newProductCategoryId, productForm]);
+
 
   const { fields: variantGroups, append: appendVariantGroup, remove: removeVariantGroup } = useFieldArray({
     control: productForm.control,
@@ -124,6 +134,7 @@ export default function AdminAddProduct() {
       await setDoc(doc(firestore, 'subscriptions', newId), { ...values, id: newId, description: values.description || '' });
       toast({ title: 'Product Added', description: `${values.name} has been successfully added.` });
       productForm.reset();
+      setActiveSection('manageProducts');
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Error Adding Product', description: error.message || 'An unexpected error occurred.' });
     }
@@ -148,7 +159,7 @@ export default function AdminAddProduct() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a category" />
