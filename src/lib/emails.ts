@@ -182,3 +182,21 @@ export async function sendOrderFulfilledEmail(order: Order) {
     const preheader = `Your credentials for order #${order.id} are here!`;
     await sendEmail(order.customerEmail, subject, emailWrapper(content, preheader));
 }
+
+export async function sendAppealApprovedEmail(userEmail: string, userName: string) {
+    const subject = `Your AQT Max Account Appeal Has Been Approved`;
+
+    const content = `
+        <h1 style="color: #1e293b; font-size: 24px; font-weight: 700; margin-top: 0;">Great News, ${userName}!</h1>
+        <p style="color: #475569; line-height: 1.5;">We have reviewed your appeal and we are happy to inform you that your account access will be restored.</p>
+        <p style="color: #475569; line-height: 1.5;">Your account will be automatically unbanned within the next 24 hours. You will be able to log in and access your profile as normal after this period.</p>
+        <p style="color: #475569; line-height: 1.5;">Thank you for your patience and understanding.</p>
+        
+        <div style="text-align: center; margin: 32px 0;">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/profile" class="button">Check Account Status</a>
+        </div>
+    `;
+    
+    const preheader = `Your appeal has been approved and your account will be restored soon.`;
+    await sendEmail(userEmail, subject, emailWrapper(content, preheader));
+}

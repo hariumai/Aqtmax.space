@@ -1,4 +1,5 @@
 
+
 'use client';
 import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
@@ -7,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { collection, query, doc, where, setDoc } from 'firebase/firestore';
 import { useDoc } from '@/firebase';
-import { Info, AlertTriangle, MessageCircle, ShieldX, Bell, Phone, User as UserIcon } from 'lucide-react';
+import { Info, AlertTriangle, MessageCircle, ShieldX, Bell, Phone, User as UserIcon, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -62,6 +63,34 @@ function BannedProfile({ user, banInfo, settings, onSignOut }: { user: any, banI
     const [appealMessage, setAppealMessage] = useState('');
     const MAX_WORDS = 150;
     const wordCount = appealMessage.trim().split(/\s+/).filter(Boolean).length;
+    
+    const [timeLeft, setTimeLeft] = useState('');
+
+    useEffect(() => {
+        if (banInfo.appealStatus === 'approved' && banInfo.unbanAt) {
+            const interval = setInterval(() => {
+                const now = new Date();
+                const unbanDate = new Date(banInfo.unbanAt);
+                const difference = unbanDate.getTime() - now.getTime();
+                
+                if (difference <= 0) {
+                    setTimeLeft('Your account should now be active.');
+                    clearInterval(interval);
+                    // Optionally, trigger a page reload or state update to unlock the profile
+                    window.location.reload();
+                    return;
+                }
+
+                const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+                const minutes = Math.floor((difference / 1000 / 60) % 60);
+                const seconds = Math.floor((difference / 1000) % 60);
+
+                setTimeLeft(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+            }, 1000);
+
+            return () => clearInterval(interval);
+        }
+    }, [banInfo.appealStatus, banInfo.unbanAt]);
 
     const handleAppealRequest = async () => {
         if (!firestore || !user) return;
@@ -80,6 +109,7 @@ function BannedProfile({ user, banInfo, settings, onSignOut }: { user: any, banI
                 ban: { 
                     appealRequested: true,
                     appealMessage: appealMessage,
+                    appealStatus: 'pending',
                 } 
             }, { merge: true });
             toast({
@@ -109,18 +139,33 @@ function BannedProfile({ user, banInfo, settings, onSignOut }: { user: any, banI
                 <CardDescription>Your account has been {isTemporary ? 'temporarily' : 'permanently'} banned.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className="text-left space-y-2 p-4 border rounded-md bg-muted/50">
-                    <p><strong>Reason:</strong> {banInfo.reason || 'No reason provided.'}</p>
-                    {isTemporary && expirationDate && (
-                         <p><strong>Expires:</strong> {expirationDate}</p>
-                    )}
-                </div>
-                <div className="text-sm p-4 border rounded-md bg-primary/10 text-black">
-                   If you believe this is a mistake, you can request an appeal. Our team will review your account. For urgent matters, contact us on WhatsApp
-                   {settings?.whatsappNumber && ` at ${settings.whatsappNumber}`}.
-                </div>
+                {banInfo.appealStatus === 'approved' && timeLeft ? (
+                    <div className="text-center space-y-2 p-4 border rounded-md bg-green-500/10 text-green-700 dark:text-green-300">
+                        <Clock className="h-8 w-8 mx-auto text-green-500" />
+                        <h3 className="font-semibold">Appeal Approved!</h3>
+                        <p>Your account will be unbanned in:</p>
+                        <p className="font-mono text-2xl font-bold">{timeLeft}</p>
+                    </div>
+                ) : (
+                    <div className="text-left space-y-2 p-4 border rounded-md bg-muted/50">
+                        <p><strong>Reason:</strong> {banInfo.reason || 'No reason provided.'}</p>
+                        {isTemporary && expirationDate && (
+                             <p><strong>Expires:</strong> {expirationDate}</p>
+                        )}
+                         {banInfo.appealDecision && (
+                           <p className="border-t pt-2 mt-2"><strong>Admin Note:</strong> {banInfo.appealDecision}</p>
+                        )}
+                    </div>
+                )}
+                
+                {banInfo.appealStatus !== 'approved' && (
+                    <div className="text-sm p-4 border rounded-md bg-primary/10 text-black">
+                    If you believe this is a mistake, you can request an appeal. Our team will review your account. For urgent matters, contact us on WhatsApp
+                    {settings?.whatsappNumber && ` at ${settings.whatsappNumber}`}.
+                    </div>
+                )}
 
-                {!banInfo.appealRequested && (
+                {banInfo.appealStatus !== 'approved' && !banInfo.appealRequested && (
                     <div className="space-y-2 text-left">
                         <Label htmlFor="appeal-message">Your Appeal</Label>
                         <Textarea 
@@ -140,16 +185,20 @@ function BannedProfile({ user, banInfo, settings, onSignOut }: { user: any, banI
                 )}
                 
                 <div className="flex flex-col gap-2">
-                   {banInfo.appealRequested ? (
-                       <Button disabled>
-                           <Bell className="mr-2 h-4 w-4" />
-                           Appeal Requested
-                       </Button>
-                   ) : (
-                       <Button onClick={handleAppealRequest}>
-                           <MessageCircle className="mr-2 h-4 w-4" />
-                           Request Appeal
-                       </Button>
+                   {banInfo.appealStatus !== 'approved' && (
+                       <>
+                        {banInfo.appealRequested ? (
+                            <Button disabled>
+                                <Bell className="mr-2 h-4 w-4" />
+                                Appeal Requested
+                            </Button>
+                        ) : (
+                            <Button onClick={handleAppealRequest}>
+                                <MessageCircle className="mr-2 h-4 w-4" />
+                                Request Appeal
+                            </Button>
+                        )}
+                       </>
                    )}
                    <Button onClick={onSignOut} variant="outline">Sign Out</Button>
                 </div>
@@ -246,10 +295,11 @@ export default function ProfilePage() {
     }
   };
   
-  const isBanActive = userData?.ban?.isBanned && 
+  const isBanActive = userData?.ban?.isBanned &&
     (
-        userData.ban.type === 'permanent' || 
-        (userData.ban.type === 'temporary' && userData.ban.expiresAt && new Date(userData.ban.expiresAt) > new Date())
+        userData.ban.type === 'permanent' ||
+        (userData.ban.type === 'temporary' && userData.ban.expiresAt && new Date(userData.ban.expiresAt) > new Date()) ||
+        (userData.ban.appealStatus === 'approved' && userData.ban.unbanAt && new Date(userData.ban.unbanAt) > new Date())
     );
 
   if (!isUserLoading && user && isBanActive) {

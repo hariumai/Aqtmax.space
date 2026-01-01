@@ -22,7 +22,10 @@
             "reason": { "type": "string", "description": "The reason for the ban." },
             "expiresAt": { "type": "string", "format": "date-time", "description": "When the ban expires." },
             "appealRequested": { "type": "boolean", "description": "Whether the user has requested an appeal." },
-            "appealMessage": { "type": "string", "description": "The user's appeal message." }
+            "appealMessage": { "type": "string", "description": "The user's appeal message." },
+            "appealStatus": { "type": "string", "enum": ["pending", "approved", "rejected"], "description": "The status of the user's appeal." },
+            "unbanAt": { "type": "string", "format": "date-time", "description": "Timestamp for when a scheduled unban will occur." },
+            "appealDecision": { "type": "string", "description": "The admin's decision or notes regarding the appeal." }
           }
         }
       },
