@@ -5,13 +5,13 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-  SheetFooter,
   SheetClose,
+  SheetDescription,
 } from '@/components/ui/sheet';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { collection, deleteDoc, doc, query, writeBatch, orderBy } from 'firebase/firestore';
+import { collection, writeBatch, query, orderBy } from 'firebase/firestore';
 import { Bell, BellOff, Trash } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -42,6 +42,17 @@ export function NotificationsDrawer() {
     }
   }, [isSheetOpen, firestore, user, notifications, unreadCount]);
 
+  const handleClearAll = async () => {
+    if (!firestore || !user || !notifications || notifications.length === 0) return;
+    
+    const batch = writeBatch(firestore);
+    notifications.forEach(n => {
+        const notifRef = doc(firestore, 'users', user.uid, 'notifications', n.id);
+        batch.delete(notifRef);
+    });
+    await batch.commit().catch(console.error);
+  }
+
   return (
     <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
       <SheetTrigger asChild>
@@ -55,13 +66,14 @@ export function NotificationsDrawer() {
           <span className="sr-only">Open Notifications</span>
         </Button>
       </SheetTrigger>
-      <SheetContent className="flex w-full flex-col pr-0 sm:max-w-lg">
-        <SheetHeader className="px-6">
+      <SheetContent side="bottom" className="w-full h-auto max-h-[80vh] rounded-t-2xl p-0 flex flex-col bg-background/95 backdrop-blur-xl">
+        <SheetHeader className="p-6 pb-4">
           <SheetTitle>Notifications</SheetTitle>
+          <SheetDescription>Your recent account updates and alerts.</SheetDescription>
         </SheetHeader>
         <Separator />
         {isLoading && (
-          <div className="flex-1 px-6 space-y-4 pt-4">
+          <div className="flex-1 px-6 space-y-4 py-4">
             {Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="flex items-center gap-4 p-4">
                 <Skeleton className="h-8 w-8 rounded-full" />
@@ -74,14 +86,14 @@ export function NotificationsDrawer() {
           </div>
         )}
         {!isLoading && (!notifications || notifications.length === 0) ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center px-6">
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center p-6 h-48">
             <BellOff className="h-16 w-16 text-muted-foreground" />
             <h3 className="text-xl font-semibold">No notifications yet</h3>
             <p className="text-muted-foreground">Important updates will appear here.</p>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto px-6">
-            <ul className="divide-y divide-border -mx-6">
+          <div className="flex-1 overflow-y-auto">
+            <ul className="divide-y divide-border">
               {notifications?.map(notif => (
                 <li key={notif.id}>
                   <SheetClose asChild>
@@ -103,6 +115,16 @@ export function NotificationsDrawer() {
               ))}
             </ul>
           </div>
+        )}
+        {notifications && notifications.length > 0 && (
+            <>
+                <Separator />
+                <div className="p-4">
+                    <Button variant="ghost" className="w-full text-destructive hover:text-destructive" onClick={handleClearAll}>
+                        <Trash className="mr-2 h-4 w-4" /> Clear All Notifications
+                    </Button>
+                </div>
+            </>
         )}
       </SheetContent>
     </Sheet>
