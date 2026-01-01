@@ -260,11 +260,11 @@ export default function ProductCard({ product, viewMode = 'grid' }: { product: a
               </div>
               {description && (
                   <div className='flex-grow'>
-                    <CardDescription className="mt-2 text-sm min-h-[40px]">
+                    <div className="text-sm text-muted-foreground mt-2 min-h-[40px]">
                       <div>
                         {displayedDescription.split('\n').map((line, i) => <span key={i} className="block">{line}</span>)}
                       </div>
-                    </CardDescription>
+                    </div>
                     {viewMode === 'grid' && !hasVariants && isLongDescription && (
                       <Button variant="link" size="sm" className="p-0 h-auto" onClick={toggleExpand}>
                         {isExpanded ? 'Show less' : 'Show more'}
@@ -294,7 +294,7 @@ export default function ProductCard({ product, viewMode = 'grid' }: { product: a
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
-                            </Select>
+                              </Select>
                         </div>
                     )})}
                 </div>
