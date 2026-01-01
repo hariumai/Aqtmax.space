@@ -8,9 +8,10 @@ type CreateNotificationParams = {
     userId: string;
     message: string;
     href: string;
+    browser?: string;
 };
 
-export async function createNotification({ userId, message, href }: CreateNotificationParams) {
+export async function createNotification({ userId, message, href, browser }: CreateNotificationParams) {
     if (!userId || !message || !href) {
         console.error("Missing required fields for notification");
         return;
@@ -18,13 +19,17 @@ export async function createNotification({ userId, message, href }: CreateNotifi
 
     try {
         const notificationsCol = collection(firestore, 'users', userId, 'notifications');
-        await addDoc(notificationsCol, {
+        const notificationData: any = {
             userId,
             message,
             href,
             createdAt: serverTimestamp(),
-            read: false
-        });
+            read: false,
+        };
+        if (browser) {
+            notificationData.browser = browser;
+        }
+        await addDoc(notificationsCol, notificationData);
     } catch (error) {
         console.error("Error creating notification:", error);
     }
@@ -81,7 +86,7 @@ export async function sendNotification(params: SendNotificationParams): Promise<
     }
 }
 
-export async function signOutAndNotify(userId: string) {
+export async function signOutAndNotify(userId: string, browser: string) {
     if (!userId) {
         console.error("User ID is required to sign out and notify.");
         return;
@@ -90,7 +95,8 @@ export async function signOutAndNotify(userId: string) {
         await createNotification({
           userId: userId,
           message: 'You have been logged out.',
-          href: '/login'
+          href: '/login',
+          browser,
         });
         // This doesn't actually sign the user out on the client,
         // The client-side SDK's onAuthStateChanged will handle the UI update.

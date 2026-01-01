@@ -305,7 +305,8 @@ export default function ProfilePage() {
 
   const handleSignOut = async () => {
     if (auth && user) {
-      await signOutAndNotify(user.uid);
+      const browserInfo = navigator.userAgent;
+      await signOutAndNotify(user.uid, browserInfo);
       await auth.signOut();
     }
   };

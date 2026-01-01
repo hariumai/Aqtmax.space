@@ -12,12 +12,35 @@ import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { collection, writeBatch, query, orderBy, doc, where } from 'firebase/firestore';
-import { Bell, BellOff, Trash } from 'lucide-react';
+import { Bell, BellOff, Trash, Smartphone, Monitor } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Skeleton } from './ui/skeleton';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
+
+function parseUserAgent(userAgent: string) {
+    let browserName = 'Unknown Browser';
+    let osName = 'Unknown OS';
+
+    // OS Detection
+    if (userAgent.indexOf("Win") != -1) osName = "Windows";
+    if (userAgent.indexOf("Mac") != -1) osName = "macOS";
+    if (userAgent.indexOf("Linux") != -1) osName = "Linux";
+    if (userAgent.indexOf("Android") != -1) osName = "Android";
+    if (userAgent.indexOf("like Mac") != -1) osName = "iOS";
+
+    // Browser Detection
+    if (userAgent.indexOf("Chrome") != -1) browserName = "Chrome";
+    else if (userAgent.indexOf("Safari") != -1 && userAgent.indexOf("Chrome") == -1) browserName = "Safari";
+    else if (userAgent.indexOf("Firefox") != -1) browserName = "Firefox";
+    else if (userAgent.indexOf("MSIE") != -1 || userAgent.indexOf("Trident/") != -1) browserName = "Internet Explorer";
+
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+
+    return { browserName, osName, isMobile };
+}
+
 
 export function NotificationsDrawer() {
   const { user } = useUser();
@@ -102,25 +125,37 @@ export function NotificationsDrawer() {
         ) : (
           <div className="flex-1 overflow-y-auto">
             <ul className="divide-y divide-border">
-              {notifications?.map(notif => (
-                <li key={notif.id}>
-                  <SheetClose asChild>
-                    <Link href={notif.href || '#'} className="block">
-                      <div className="p-4 hover:bg-muted/50 transition-colors">
-                        <div className="flex items-start gap-4">
-                          {!notif.read && <div className="h-2 w-2 rounded-full bg-primary mt-1.5 flex-shrink-0 animate-pulse"></div>}
-                          <div className={cn("flex-1", notif.read && "pl-4")}>
-                            <p className="text-sm text-foreground">{notif.message}</p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {notif.createdAt ? formatDistanceToNow(notif.createdAt.toDate(), { addSuffix: true }) : ''}
-                            </p>
+              {notifications?.map(notif => {
+                  const agentInfo = notif.browser ? parseUserAgent(notif.browser) : null;
+                  const DeviceIcon = agentInfo?.isMobile ? Smartphone : Monitor;
+                  return (
+                    <li key={notif.id}>
+                      <SheetClose asChild>
+                        <Link href={notif.href || '#'} className="block">
+                          <div className="p-4 hover:bg-muted/50 transition-colors">
+                            <div className="flex items-start gap-4">
+                              {!notif.read && <div className="h-2 w-2 rounded-full bg-primary mt-1.5 flex-shrink-0 animate-pulse"></div>}
+                              <div className={cn("flex-1", notif.read && "pl-4")}>
+                                <p className="text-sm text-foreground">{notif.message}</p>
+                                <div className='flex items-center gap-4 text-xs text-muted-foreground mt-1'>
+                                    <p>
+                                    {notif.createdAt ? formatDistanceToNow(notif.createdAt.toDate(), { addSuffix: true }) : ''}
+                                    </p>
+                                    {agentInfo && (
+                                        <div className="flex items-center gap-1">
+                                            <DeviceIcon className="h-3 w-3" />
+                                            <span>{agentInfo.browserName} on {agentInfo.osName}</span>
+                                        </div>
+                                    )}
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    </Link>
-                  </SheetClose>
-                </li>
-              ))}
+                        </Link>
+                      </SheetClose>
+                    </li>
+                  );
+              })}
             </ul>
           </div>
         )}

@@ -176,7 +176,8 @@
         "message": { "type": "string", "description": "The content of the notification message." },
         "href": { "type": "string", "description": "A URL path for the notification to link to." },
         "createdAt": { "type": "string", "description": "Timestamp when the notification was created.", "format": "date-time" },
-        "read": { "type": "boolean", "description": "Indicates if the user has read the notification." }
+        "read": { "type": "boolean", "description": "Indicates if the user has read the notification." },
+        "browser": { "type": "string", "description": "Browser and OS information of the user's device." }
       },
       "required": ["id", "userId", "message", "createdAt", "read"]
     }

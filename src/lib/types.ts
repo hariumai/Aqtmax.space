@@ -42,4 +42,5 @@ export type Notification = {
     href: string;
     createdAt: any; // Can be Date or FieldValue
     read: boolean;
+    browser?: string;
 };

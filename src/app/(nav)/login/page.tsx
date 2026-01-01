@@ -72,11 +72,13 @@ export default function LoginPage() {
         await auth.signOut(); 
         return;
       }
-
+      
+      const browserInfo = navigator.userAgent;
       await createNotification({
         userId: loggedInUser.uid,
         message: 'You have successfully logged in.',
-        href: '/profile'
+        href: '/profile',
+        browser: browserInfo,
       });
 
       toast({
