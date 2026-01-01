@@ -5,7 +5,7 @@ import { doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { notFound, useRouter } from 'next/navigation';
+import { notFound, useRouter, useParams } from 'next/navigation';
 import { AlertTriangle, CheckCircle, FileDown, ImageIcon, Phone, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
@@ -37,8 +37,9 @@ function OrderDetailsSkeleton() {
     );
 }
 
-export default function OrderDetailsPage({ params }: { params: { orderId: string } }) {
-    const { orderId } = params;
+export default function OrderDetailsPage() {
+    const params = useParams();
+    const orderId = params.orderId as string;
     const firestore = useFirestore();
     const { user, isUserLoading } = useUser();
     const router = useRouter();
@@ -213,3 +214,4 @@ export default function OrderDetailsPage({ params }: { params: { orderId: string
         </main>
     );
 }
+    
