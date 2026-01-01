@@ -38,12 +38,12 @@ export default function RootLayout({
         <NextTopLoader
           color="#DC2626"
           initialPosition={0.08}
-          crawlSpeed={200}
+          crawlSpeed={50}
           height={3}
           crawl={true}
           showSpinner={false}
           easing="ease"
-          speed={200}
+          speed={400}
           shadow="0 0 10px #DC2626,0 0 5px #DC2626"
         />
         <ThemeProvider
