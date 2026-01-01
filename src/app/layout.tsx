@@ -9,10 +9,15 @@ import { ThemeProvider } from '@/components/theme-provider';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'AQT Max',
-  description: 'Your one-stop shop for premium digital subscriptions.',
+  title: 'AQT Max | Best & Cheap Subscription Panel in Pakistan',
+  description: 'Get the best rates for Netflix, Prime Video, and more digital subscriptions in Pakistan. AQT Max is your fast, cheap, and reliable service panel.',
+  keywords: ['cheap subscriptions pakistan', 'netflix pakistan', 'prime video pakistan', 'best rates panel', 'fast service panel', 'subscription panel', 'aqtmax.space'],
   openGraph: {
+    title: 'AQT Max | Best & Cheap Subscription Panel in Pakistan',
+    description: 'The fastest and most affordable digital subscription panel in Pakistan.',
     images: ['https://pub-084453786b28495bac2d56e573071005.r2.dev/file_00000000135472079d159aeaa589b909.png'],
+    url: 'https://aqtmax.space',
+    siteName: 'AQT Max',
   },
 };
 
