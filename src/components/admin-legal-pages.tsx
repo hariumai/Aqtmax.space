@@ -27,7 +27,7 @@ const defaultLegalContent = {
         title: 'Terms of Service',
         content: `**Last Updated: [Date]**
 
-Welcome to AQT Max! These Terms of Service ("Terms") govern your use of our website, [Your Website URL], and the services offered through it (collectively, the "Service"). By accessing or using our Service, you agree to be bound by these Terms.
+Welcome to AQT Max! These Terms of Service ("Terms") govern your use of our website and the services offered through it (collectively, the "Service"). By accessing or using our Service, you agree to be bound by these Terms.
 
 **1. Service Description**
 AQT Max provides a marketplace for purchasing digital subscription credentials for various third-party services ("Subscriptions"). We facilitate the sale and delivery of these credentials. We are not affiliated with the owners of the Subscriptions (e.g., Netflix, Spotify).
@@ -65,13 +65,13 @@ We reserve the right to modify these Terms at any time. We will notify you of an
         title: 'Privacy Policy',
         content: `**Last Updated: [Date]**
 
-AQT Max ("we," "us," or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website, [Your Website URL], and use our services.
+AQT Max ("we," "us," or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services.
 
 **1. Information We Collect**
 We may collect personal information from you in a variety of ways, including:
 - **Personal Data:** Information you voluntarily provide to us when you register for an account, such as your name, email address, and phone number.
-- **Order Data:** Information related to your purchases, such as the products you buy and payment details (processed securely by我們的付款處理商).
-- **Device and Usage Data:** Information automatically collected when you access the Service, such as your IP address, browser type, operating system, and pages you have viewed.
+- **Order Data:** Information related to your purchases, such as the products you buy. Payment screenshots are stored temporarily and securely and are deleted after order verification.
+- **Device and Usage Data:** Information automatically collected when you access the Service, such as your IP address, browser type, operating system, and login history to enhance security.
 
 **2. How We Use Your Information**
 We use the information we collect for various purposes, including to:
@@ -100,33 +100,33 @@ You have the right to:
 We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last Updated" date.
 
 **7. Contact Us**
-If you have questions or comments about this Privacy Policy, please contact us at [Your Contact Email/Page].`
+If you have questions or comments about this Privacy Policy, please refer to the contact information provided on our website.`
     },
     refund: {
         title: 'Refund Policy',
         content: `**Last Updated: [Date]**
 
-At AQT Max, we strive for customer satisfaction. Our Refund Policy outlines the conditions under which refunds are processed.
+At AQT Max, we are committed to customer satisfaction. This Refund Policy outlines the specific conditions under which a refund may be granted.
 
-**1. Eligibility for a Full Refund**
-You are eligible for a 100% full refund under the following condition:
-- **Non-Delivery:** If we fail to deliver your purchased subscription credentials to your registered email address and AQT Max account dashboard within our guaranteed 24-hour delivery window after your payment has been successfully verified.
+**1. Full Refund Conditions**
+A 100% full refund will be issued **only** under the following circumstance:
+- **Service Non-Delivery:** If we fail to deliver your purchased subscription credentials to both your registered email address and your AQT Max account dashboard within our guaranteed 24-hour delivery window, which begins after your payment has been successfully verified.
 
 **2. Non-Refundable Scenarios**
-Refunds will **not** be issued in the following circumstances:
-- **Successful Delivery:** Once subscription credentials have been successfully delivered, the sale is considered final and is non-refundable.
-- **Violation of Terms:** If your subscription warranty is voided due to a violation of our [Account Rules](/legal/rules) or [Terms of Service](/legal/terms) (e.g., changing account password, pinning profiles), you are not eligible for a refund.
-- **Change of Mind:** We do not offer refunds if you change your mind after the credentials have been delivered.
-- **Account Issues Caused by User:** We are not responsible for account issues that arise from your failure to follow the provided rules.
+Please be aware that refunds will **not** be provided in the following situations:
+- **Successful Delivery:** Once subscription credentials have been successfully delivered to your account, the transaction is considered final and non-refundable.
+- **Terms of Service Violations:** If your subscription warranty becomes void due to a violation of our [Account Rules](/legal/rules) or [Terms of Service](/legal/terms)—such as changing the account password, email, or profile PIN—you forfeit any right to a refund.
+- **Customer Error or Change of Mind:** We do not offer refunds for purchases made by mistake or if you change your mind after the credentials have been delivered.
+- **Account Issues Caused by User:** We are not liable for account access issues or suspensions that arise from your failure to comply with the provided account usage rules.
 
-**3. How to Request a Refund**
-If you have not received your order within the 24-hour delivery window, please follow these steps:
-1. Contact our customer support team immediately via WhatsApp or our contact page.
-2. Provide your Order ID and the email address used for the purchase.
-3. Our team will investigate the delivery status. If we confirm that the credentials were not delivered, we will process a full refund to your original payment method.
+**3. How to Request a Refund for Non-Delivery**
+If you have not received your order within the guaranteed 24-hour delivery period, please take the following steps:
+1. Contact our customer support team immediately through the official WhatsApp number provided on our website.
+2. Provide your Order ID and the email address associated with your AQT Max account.
+3. Our team will promptly investigate the delivery status. If we confirm that the credentials were not delivered as promised, we will process a full refund to your original payment method.
 
-**4. Chargeback Policy**
-As stated in our Terms of Service, initiating a payment dispute or chargeback for an order that has been successfully delivered is strictly prohibited. This action will lead to a permanent ban from our platform and the forfeiture of any active warranties or subscriptions, with no possibility of a refund. We urge you to contact our support team to resolve any issues before considering a chargeback.`
+**4. Chargeback and Dispute Policy**
+Initiating a payment dispute or chargeback with your bank or payment provider for an order that has been successfully delivered is a material breach of our Terms of Service. Such action will result in the immediate and permanent termination of your AQT Max account, forfeiture of all active warranties, and cancellation of any active subscriptions without any possibility of a refund. We strongly urge you to contact our support team to resolve any issues amicably before taking such action.`
     },
     rules: {
         title: 'Account Rules',
