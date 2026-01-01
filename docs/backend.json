@@ -41,32 +41,40 @@
         "name": { "type": "string", "description": "Name of the subscription (e.g., Netflix Premium)." },
         "description": { "type": "string", "description": "Detailed description of the subscription benefits and features." },
         "price": { "type": "number", "description": "The base price of the subscription in PKR." },
-        "discountedPrice": { "type": "number", "description": "The discounted price of the subscription in PKR (optional)." },
         "imageUrl": { "type": "string", "description": "URL of the image representing the subscription.", "format": "uri" },
         "categoryId": { "type": "string", "description": "Reference to Category. (Relationship: Category 1:N Subscription)" },
-        "variants": {
-            "type": "array",
-            "description": "Groups of different versions or plans for the subscription (e.g., Size, Color).",
-            "items": {
+        "variantGroups": {
+          "type": "array",
+          "description": "Defines the groups of options available, like 'Screens' or 'Duration'.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string", "description": "Name of the variant group (e.g., 'Screens')." },
+              "options": {
+                "type": "array",
+                "description": "List of possible options in this group.",
+                "items": { "type": "string" }
+              }
+            },
+            "required": ["name", "options"]
+          }
+        },
+        "variantMatrix": {
+          "type": "array",
+          "description": "Defines all valid combinations of variants and their specific prices.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "options": {
                 "type": "object",
-                "properties": {
-                    "groupName": { "type": "string", "description": "Name of the variant group (e.g., 'Size')." },
-                    "required": { "type": "boolean", "description": "Whether this variant group selection is compulsory." },
-                    "options": {
-                        "type": "array",
-                        "description": "Available options within this group.",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "optionName": { "type": "string", "description": "Name of the option (e.g., 'Large')." },
-                                "price": { "type": "number", "description": "Price for this specific option in PKR." }
-                            },
-                            "required": ["optionName", "price"]
-                        }
-                    }
-                },
-                "required": ["groupName", "options"]
-            }
+                "description": "A key-value map where the key is the groupName and value is the selected optionName.",
+                "additionalProperties": { "type": "string" }
+              },
+              "price": { "type": "number", "description": "Price for this specific combination in PKR." },
+              "inStock": { "type": "boolean", "description": "Whether this specific combination is available." }
+            },
+            "required": ["options", "price", "inStock"]
+          }
         }
       },
       "required": ["id", "name", "price", "categoryId"]
@@ -74,7 +82,7 @@
     "Category": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Category",
-      "type-": "object",
+      "type": "object",
       "description": "Represents a category of subscriptions (e.g., Entertainment, Music).",
       "properties": {
         "id": { "type": "string", "description": "Unique identifier for the category entity." },
