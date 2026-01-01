@@ -101,7 +101,7 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="flex-grow flex items-center justify-center">
+    <main className="flex-grow flex items-center justify-center p-4">
       <Card className="mx-auto max-w-sm w-full">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-2">

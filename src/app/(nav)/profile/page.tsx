@@ -96,7 +96,8 @@ function BannedProfile({ user, banInfo, settings, onSignOut }: { user: any, banI
                     )}
                 </div>
                  <div className="text-sm p-4 border rounded-md bg-primary/10 text-black">
-                   If you believe this is a mistake, you can request an appeal. Our team will review your account. For urgent matters, contact us on WhatsApp.
+                   If you believe this is a mistake, you can request an appeal. Our team will review your account. For urgent matters, contact us on WhatsApp
+                   {settings?.whatsappNumber && ` at ${settings.whatsappNumber}`}.
                 </div>
                 <div className="flex flex-col gap-2">
                    {banInfo.appealRequested ? (
