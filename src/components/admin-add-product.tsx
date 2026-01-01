@@ -1,4 +1,3 @@
-
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -10,35 +9,43 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, collection, setDoc, query } from 'firebase/firestore';
-import { PlusCircle, Trash, Info } from 'lucide-react';
+import { PlusCircle, Trash } from 'lucide-react';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { Switch } from './ui/switch';
 import { Label } from '@/components/ui/label';
+import { useEffect, useMemo } from 'react';
+import { cn } from '@/lib/utils';
 
 const variantOptionSchema = z.object({
-  optionName: z.string().min(1, 'Option name is required'),
-  price: z.coerce.number().min(0, 'Price must be a positive number'),
+  name: z.string().min(1, 'Option name is required'),
 });
 
 const variantGroupSchema = z.object({
-  groupName: z.string().min(1, 'Group name is required'),
-  required: z.boolean().default(true),
+  name: z.string().min(1, 'Group name is required'),
   options: z.array(variantOptionSchema).min(1, 'At least one option is required'),
+});
+
+const variantMatrixItemSchema = z.object({
+  options: z.record(z.string()),
+  price: z.coerce.number().min(0, 'Price must be non-negative'),
+  inStock: z.boolean(),
 });
 
 const productSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
   price: z.coerce.number().min(0, 'Base price must be a positive number'),
-  discountedPrice: z.coerce.number().nullable().optional(),
   imageUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   categoryId: z.string().min(1, 'Category ID is required'),
-  variants: z.array(variantGroupSchema).optional(),
+  variantGroups: z.array(variantGroupSchema).optional(),
+  variantMatrix: z.array(variantMatrixItemSchema).optional(),
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
+
+// Helper to generate cartesian product of variant options
+const cartesian = <T>(...a: T[][]): T[][] => a.reduce((a, b) => a.flatMap(d => b.map(e => [d, e].flat())));
 
 export default function AdminAddProduct() {
   const firestore = useFirestore();
@@ -56,17 +63,57 @@ export default function AdminAddProduct() {
       name: '',
       description: '',
       price: 0,
-      discountedPrice: null,
       imageUrl: '',
       categoryId: '',
-      variants: [],
+      variantGroups: [],
+      variantMatrix: [],
     },
   });
 
   const { fields: variantGroups, append: appendVariantGroup, remove: removeVariantGroup } = useFieldArray({
     control: productForm.control,
-    name: 'variants',
+    name: 'variantGroups',
   });
+
+  const { fields: variantMatrix, replace: replaceVariantMatrix } = useFieldArray({
+    control: productForm.control,
+    name: "variantMatrix",
+  });
+  
+  const watchedVariantGroups = productForm.watch('variantGroups');
+
+  useEffect(() => {
+    if (!watchedVariantGroups || watchedVariantGroups.length === 0) {
+      replaceVariantMatrix([]);
+      return;
+    }
+
+    const optionGroups = watchedVariantGroups.map(g => g.options?.map(o => ({ group: g.name, option: o.name })) || []);
+    const validOptionGroups = optionGroups.filter(g => g.length > 0 && g.every(o => o.group && o.option));
+
+    if (validOptionGroups.length === 0) {
+      replaceVariantMatrix([]);
+      return;
+    }
+    
+    const combinations = cartesian(...validOptionGroups);
+
+    const newMatrix = combinations.map(combo => {
+      const optionsRecord = combo.reduce((acc, curr) => {
+        acc[curr.group] = curr.option;
+        return acc;
+      }, {} as Record<string, string>);
+      
+      return {
+        options: optionsRecord,
+        price: 0,
+        inStock: true
+      };
+    });
+
+    replaceVariantMatrix(newMatrix);
+  }, [watchedVariantGroups, replaceVariantMatrix]);
+
 
   async function onProductSubmit(values: ProductFormData) {
     if (!firestore) return;
@@ -80,7 +127,7 @@ export default function AdminAddProduct() {
     }
   }
 
-  const hasVariants = productForm.watch('variants', []).length > 0;
+  const hasVariants = (watchedVariantGroups || []).length > 0;
 
   return (
     <Card>
@@ -127,33 +174,71 @@ export default function AdminAddProduct() {
 
             <FormField control={productForm.control} name="imageUrl" render={({ field }) => (<FormItem><FormLabel>Image URL (Optional)</FormLabel><FormControl><Input placeholder="https://example.com/image.png" {...field} /></FormControl><FormMessage /></FormItem>)} />
 
+            {!hasVariants && (
+              <FormField control={productForm.control} name="price" render={({ field }) => (<FormItem><FormLabel>Base Price (PKR)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="3000" {...field} /></FormControl><FormMessage /></FormItem>)} />
+            )}
+            
             <div className="p-4 border rounded-lg space-y-4 bg-muted/50">
-                <h3 className="text-lg font-medium">Pricing</h3>
-                <CardDescription>
-                    If your product has multiple options (e.g., 1 Month, 3 Months), add them as variants. Otherwise, set a base price below.
-                </CardDescription>
-                {!hasVariants && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-                    <FormField control={productForm.control} name="price" render={({ field }) => (<FormItem><FormLabel>Base Price (PKR)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="3000" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={productForm.control} name="discountedPrice" render={({ field }) => (<FormItem><FormLabel>Discounted Price (PKR)</FormLabel><FormControl><Input type="number" step="0.01" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? null : Number(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
-                  </div>
-                )}
-                
-                {variantGroups.map((group, groupIndex) => (
-                  <VariantGroup key={group.id} groupIndex={groupIndex} removeGroup={removeVariantGroup} control={productForm.control} />
-                ))}
+              <h3 className="text-lg font-medium">Variants</h3>
+              <CardDescription>
+                Define groups of options, like 'Duration' or 'Screens'. This will generate a matrix below to manage price and stock for each combination.
+              </CardDescription>
+
+              {variantGroups.map((group, groupIndex) => (
+                <VariantGroup key={group.id} groupIndex={groupIndex} removeGroup={removeVariantGroup} form={productForm} />
+              ))}
 
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="mt-4"
-                onClick={() => appendVariantGroup({ groupName: '', required: true, options: [{ optionName: '', price: 0 }] })}
+                onClick={() => appendVariantGroup({ name: '', options: [{ name: '' }] })}
               >
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add Variant Group
               </Button>
             </div>
+            
+            {hasVariants && variantMatrix.length > 0 && (
+                 <div className="p-4 border rounded-lg space-y-4 bg-muted/50">
+                    <h3 className="text-lg font-medium">Variant Matrix</h3>
+                     <CardDescription>
+                        Set the price and availability for each specific variant combination.
+                    </CardDescription>
+                    <div className="space-y-2">
+                        {variantMatrix.map((matrixItem, index) => (
+                             <div key={matrixItem.id} className="grid grid-cols-3 gap-4 items-center p-2 bg-background rounded-md">
+                                <span className="text-sm font-medium">{Object.values(matrixItem.options).join(' / ')}</span>
+                                 <FormField
+                                    control={productForm.control}
+                                    name={`variantMatrix.${index}.price`}
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormControl>
+                                            <Input type="number" step="0.01" placeholder="Price" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={productForm.control}
+                                    name={`variantMatrix.${index}.inStock`}
+                                    render={({ field }) => (
+                                      <FormItem className="flex items-center gap-2 space-y-0">
+                                        <FormControl>
+                                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                        </FormControl>
+                                        <FormLabel>In Stock</FormLabel>
+                                      </FormItem>
+                                    )}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
 
             <Button type="submit" size="lg" className="w-full">Add Product</Button>
           </form>
@@ -163,90 +248,54 @@ export default function AdminAddProduct() {
   );
 }
 
-function VariantOptionsArray({ groupIndex, control }: { groupIndex: number, control: any }) {
+function VariantGroup({ groupIndex, removeGroup, form }: { groupIndex: number; removeGroup: (index: number) => void; form: any }) {
+  const { control } = form;
   const { fields, append, remove } = useFieldArray({
     control,
-    name: `variants.${groupIndex}.options`,
+    name: `variantGroups.${groupIndex}.options`,
   });
 
   return (
-    <div className="space-y-2 pl-4 border-l-2">
-      {fields.map((option, optionIndex) => (
-        <div key={option.id} className="flex items-end gap-2">
-          <FormField
-            control={control}
-            name={`variants.${groupIndex}.options.${optionIndex}.optionName`}
-            render={({ field }) => (
-              <FormItem className="flex-grow">
-                <FormLabel className="text-xs">Option Name</FormLabel>
-                <FormControl><Input placeholder="e.g., 1 Month" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={control}
-            name={`variants.${groupIndex}.options.${optionIndex}.price`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs">Price (PKR)</FormLabel>
-                <FormControl><Input type="number" step="1" placeholder="300" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button type="button" variant="ghost" size="icon" onClick={() => remove(optionIndex)}>
-            <Trash className="h-4 w-4 text-destructive" />
-          </Button>
-        </div>
-      ))}
-      <Button type="button" variant="ghost" size="sm" onClick={() => append({ optionName: '', price: 0 })}>
-        <PlusCircle className="mr-2 h-4 w-4" /> Add Option
-      </Button>
+    <div className="p-4 border rounded-lg space-y-4 bg-background">
+      <div className="flex justify-between items-start gap-4">
+        <FormField
+          control={control}
+          name={`variantGroups.${groupIndex}.name`}
+          render={({ field }) => (
+            <FormItem className="flex-grow">
+              <FormLabel>Group Name</FormLabel>
+              <FormControl><Input placeholder="e.g., Duration" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button type="button" variant="destructive" size="icon" onClick={() => removeGroup(groupIndex)} className="mt-6">
+          <Trash className="h-4 w-4" />
+        </Button>
+      </div>
+      <div className="space-y-2 pl-4 border-l-2">
+        <Label>Options</Label>
+        {fields.map((option, optionIndex) => (
+          <div key={option.id} className="flex items-center gap-2">
+            <FormField
+              control={control}
+              name={`variantGroups.${groupIndex}.options.${optionIndex}.name`}
+              render={({ field }) => (
+                <FormItem className="flex-grow">
+                  <FormControl><Input placeholder="e.g., 1 Month" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="button" variant="ghost" size="icon" onClick={() => remove(optionIndex)}>
+              <Trash className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>
+        ))}
+        <Button type="button" variant="ghost" size="sm" onClick={() => append({ name: '' })}>
+          <PlusCircle className="mr-2 h-4 w-4" /> Add Option
+        </Button>
+      </div>
     </div>
   );
 }
-
-
-function VariantGroup({ groupIndex, removeGroup, control }: { groupIndex: number; removeGroup: (index: number) => void; control: any }) {
-    return (
-        <div className="p-4 border rounded-lg space-y-4 bg-background">
-            <div className="flex justify-between items-start gap-4">
-                <FormField
-                    control={control}
-                    name={`variants.${groupIndex}.groupName`}
-                    render={({ field }) => (
-                    <FormItem className="flex-grow">
-                        <FormLabel>Group Name</FormLabel>
-                        <FormControl><Input placeholder="e.g., Duration" {...field} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                <div className="flex flex-col items-center gap-2 pt-1">
-                   <Label htmlFor={`required-switch-${groupIndex}`} className="text-xs font-normal">Compulsory</Label>
-                   <FormField
-                        control={control}
-                        name={`variants.${groupIndex}.required`}
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormControl>
-                                    <Switch
-                                        id={`required-switch-${groupIndex}`}
-                                        checked={field.value}
-                                        onCheckedChange={field.onChange}
-                                    />
-                                </FormControl>
-                            </FormItem>
-                        )}
-                    />
-                </div>
-                <Button type="button" variant="destructive" size="icon" onClick={() => removeGroup(groupIndex)} className="mt-6">
-                    <Trash className="h-4 w-4" />
-                </Button>
-            </div>
-            <VariantOptionsArray groupIndex={groupIndex} control={control} />
-        </div>
-    );
-}
-

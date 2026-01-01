@@ -53,7 +53,13 @@
               "options": {
                 "type": "array",
                 "description": "List of possible options in this group.",
-                "items": { "type": "string" }
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": { "type": "string" }
+                  },
+                  "required": ["name"]
+                }
               }
             },
             "required": ["name", "options"]
@@ -235,5 +241,3 @@
     ]
   }
 }
-
-    

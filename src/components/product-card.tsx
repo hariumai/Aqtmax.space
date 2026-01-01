@@ -33,53 +33,51 @@ export default function ProductCard({ product }: { product: any }) {
   const [selectedVariants, setSelectedVariants] = useState<SelectedVariants>({});
   const [isAdding, setIsAdding] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
+  const [inStock, setInStock] = useState(true);
 
-  const hasVariants = product.variants && product.variants.length > 0;
+  const hasVariants = product.variantGroups && product.variantGroups.length > 0;
 
   useEffect(() => {
     if (hasVariants) {
       const initialSelections: SelectedVariants = {};
-      product.variants.forEach((group: any) => {
-        if (group.options && group.options.length > 0) {
-          initialSelections[group.groupName] = group.options[0].optionName;
-        }
+      product.variantGroups.forEach((group: any) => {
+        initialSelections[group.name] = group.options[0].name;
       });
       setSelectedVariants(initialSelections);
+    } else {
+        setCurrentPrice(product.price);
+        setInStock(true);
     }
   }, [product, hasVariants]);
 
-  useMemo(() => {
+  useEffect(() => {
     if (!hasVariants) {
-        setCurrentPrice(product.discountedPrice ?? product.price);
+        setCurrentPrice(product.price);
+        setInStock(true);
         return;
     }
     
-    let allOptionsSelected = true;
-    let price = 0;
-    product.variants.forEach((group: any) => {
-        const selectedOptionName = selectedVariants[group.groupName];
-        if (selectedOptionName) {
-            const selectedOption = group.options?.find((opt: any) => opt.optionName === selectedOptionName);
-            if (selectedOption) {
-                price += selectedOption.price;
-            }
-        } else if (group.required) {
-            allOptionsSelected = false;
-        }
-    });
+    if (Object.keys(selectedVariants).length > 0) {
+        const matchingCombination = product.variantMatrix?.find((combo: any) => 
+            Object.keys(selectedVariants).every(key => combo.options[key] === selectedVariants[key])
+        );
 
-    if (allOptionsSelected) {
-        setCurrentPrice(price);
+        if (matchingCombination) {
+            setCurrentPrice(matchingCombination.price);
+            setInStock(matchingCombination.inStock);
+        } else {
+            setCurrentPrice(null);
+            setInStock(false);
+        }
     } else {
-        const minPrice = product.variants.reduce((total: number, group: any) => {
-            if (group.options && group.options.length > 0 && group.required) {
-                const minOptionPrice = Math.min(...group.options.map((opt: any) => opt.price));
-                return total + minOptionPrice;
-            }
-            return total;
-        }, 0);
-        setCurrentPrice(minPrice);
+         const lowestPrice = product.variantMatrix
+        ?.filter((c: any) => c.inStock)
+        .reduce((min: number, c: any) => (c.price < min ? c.price : min), Infinity);
+      
+      setCurrentPrice(lowestPrice === Infinity ? null : lowestPrice);
+      setInStock(true);
     }
 
   }, [product, hasVariants, selectedVariants]);
@@ -88,30 +86,57 @@ export default function ProductCard({ product }: { product: any }) {
     setSelectedVariants(prev => ({ ...prev, [groupName]: optionName }));
   };
   
+  const getAvailableOptions = (groupName: string) => {
+    if (!product || !hasVariants) return [];
+  
+    const otherSelections = { ...selectedVariants };
+    delete otherSelections[groupName];
+  
+    const availableOptions = new Set<string>();
+    
+    product.variantMatrix.forEach((combo: any) => {
+      const isMatch = Object.keys(otherSelections).every(key => combo.options[key] === otherSelections[key]);
+      if (isMatch && combo.inStock) {
+        availableOptions.add(combo.options[groupName]);
+      }
+    });
+
+    const allOptionsForGroup = product.variantGroups.find((g:any) => g.name === groupName)?.options || [];
+
+    return allOptionsForGroup.map((opt: any) => ({
+      ...opt,
+      isAvailable: availableOptions.has(opt.name)
+    }));
+  };
+  
   const handleAddToCart = async (redirect: boolean = false) => {
     if (!user) {
       toast({ variant: "destructive", title: "Not logged in", description: "You need to be logged in to add items to your cart."});
       router.push('/login');
       return;
     }
+    
+    if (!inStock || currentPrice === null) {
+      toast({ variant: "destructive", title: "Unavailable", description: "This product combination is out of stock."});
+      return;
+    }
 
     if (hasVariants) {
-        const allRequiredSelected = product.variants.every((group:any) => !group.required || selectedVariants[group.groupName]);
+        const allRequiredSelected = product.variantGroups.every((group:any) => selectedVariants[group.name]);
         if(!allRequiredSelected) {
              toast({ variant: "destructive", title: "Options Required", description: "Please select all required product options."});
              return;
         }
     }
 
-    if (!firestore || !product || currentPrice === null || quantity < 1) return;
+    if (!firestore || !product || quantity < 1) return;
     setIsAdding(true);
 
     try {
         const cartRef = collection(firestore, 'users', user.uid, 'cart');
         const variantName = hasVariants 
-            ? product.variants
-                .filter((group: any) => selectedVariants[group.groupName])
-                .map((group: any) => selectedVariants[group.groupName])
+            ? product.variantGroups
+                .map((group: any) => selectedVariants[group.name])
                 .join(' / ')
             : 'Default';
         
@@ -164,8 +189,7 @@ export default function ProductCard({ product }: { product: any }) {
     setQuantity(prev => Math.max(1, prev + amount));
   }
 
-  const pricePrefix = hasVariants && !product.variants.every((g:any) => !g.required || selectedVariants[g.groupName]) ? 'From' : '';
-  const hasDiscount = product.discountedPrice && product.discountedPrice < product.price && !hasVariants;
+  const pricePrefix = hasVariants && !product.variantGroups.every((g:any) => selectedVariants[g.name]) ? 'From' : '';
 
   return (
     <Card
@@ -188,9 +212,6 @@ export default function ProductCard({ product }: { product: any }) {
       <CardContent className="flex-grow flex flex-col space-y-4">
         <div className="text-4xl font-bold">
             {pricePrefix && <span className="text-lg font-normal text-muted-foreground mr-1">{pricePrefix}</span>}
-            {hasDiscount && (
-                <span className="text-2xl font-normal text-muted-foreground line-through mr-2">{product.price}</span>
-            )}
             {currentPrice?.toFixed(2)}
             <span className="text-base font-normal text-muted-foreground"> PKR</span>
         </div>
@@ -203,26 +224,28 @@ export default function ProductCard({ product }: { product: any }) {
 
         {hasVariants && (
           <div className="space-y-2 flex-grow">
-              {product.variants.map((group: any, index: number) => (
-                  <div key={`${group.groupName}-${index}`}>
-                      <Label className="text-xs text-muted-foreground">{group.groupName}</Label>
+              {product.variantGroups.map((group: any, index: number) => {
+                  const options = getAvailableOptions(group.name);
+                  return (
+                  <div key={`${group.name}-${index}`}>
+                      <Label className="text-xs text-muted-foreground">{group.name}</Label>
                        <Select
-                          onValueChange={(value) => handleVariantChange(group.groupName, value)}
-                          value={selectedVariants[group.groupName]}
+                          onValueChange={(value) => handleVariantChange(group.name, value)}
+                          value={selectedVariants[group.name]}
                         >
                           <SelectTrigger className="h-9">
-                              <SelectValue placeholder={`Select ${group.groupName}`} />
+                              <SelectValue placeholder={`Select ${group.name}`} />
                           </SelectTrigger>
                           <SelectContent>
-                              {group.options?.map((option: any) => (
-                                  <SelectItem key={option.optionName} value={option.optionName}>
-                                      {option.optionName}
+                              {options.map((option: any) => (
+                                  <SelectItem key={option.name} value={option.name} disabled={!option.isAvailable}>
+                                      {option.name}
                                   </SelectItem>
                               ))}
                           </SelectContent>
                       </Select>
                   </div>
-              ))}
+              )})}
           </div>
         )}
       </CardContent>
@@ -232,11 +255,11 @@ export default function ProductCard({ product }: { product: any }) {
             <Input type="number" value={quantity} onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))} className="w-full text-center" />
             <Button variant="outline" size="icon" onClick={() => handleQuantityChange(1)}><Plus className="h-4 w-4" /></Button>
           </div>
-          <Button size="sm" className="w-full" onClick={() => handleAddToCart(false)} disabled={isAdding}>
+          <Button size="sm" className="w-full" onClick={() => handleAddToCart(false)} disabled={isAdding || !inStock}>
               <ShoppingCart className="mr-2 h-4 w-4" />
-              Add to Cart
+              {inStock ? 'Add to Cart' : 'Out of Stock'}
           </Button>
-          <Button size="sm" variant="outline" className="w-full" onClick={handleBuyNow} disabled={isAdding}>
+          <Button size="sm" variant="outline" className="w-full" onClick={handleBuyNow} disabled={isAdding || !inStock}>
               <CreditCard className="mr-2 h-4 w-4" />
               Buy Now
           </Button>

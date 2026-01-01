@@ -1,6 +1,6 @@
 
 'use client';
-import { useState, useEffect, useMemo, use } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Clapperboard, CreditCard, Lock, Music, Palette, ShoppingCart, Tv, Plus, Minus, AlertTriangle } from "lucide-react";
@@ -67,17 +67,17 @@ export default function ProductPage({ params: paramsProp }: { params: { id: stri
   const [selectedVariants, setSelectedVariants] = useState<SelectedVariants>({});
   const [isAdding, setIsAdding] = useState(false);
   const [quantity, setQuantity] = useState(1);
-  const [currentPrice, setCurrentPrice] = useState<number | null>(null);
   
-  const hasVariants = product?.variants && product.variants.length > 0;
+  const [currentPrice, setCurrentPrice] = useState<number | null>(null);
+  const [inStock, setInStock] = useState(true);
+
+  const hasVariants = product?.variantGroups && product.variantGroups.length > 0;
 
   useEffect(() => {
     if (product && hasVariants) {
       const initialSelections: SelectedVariants = {};
-      product.variants.forEach((group: any) => {
-        if (group.options && group.options.length > 0) {
-          initialSelections[group.groupName] = group.options[0].optionName;
-        }
+      product.variantGroups.forEach((group: any) => {
+        initialSelections[group.name] = group.options[0].name;
       });
       setSelectedVariants(initialSelections);
     }
@@ -87,35 +87,39 @@ export default function ProductPage({ params: paramsProp }: { params: { id: stri
     if (!product) return;
 
     if (!hasVariants) {
-      setCurrentPrice(product.discountedPrice ?? product.price);
+      setCurrentPrice(product.price);
+      setInStock(true); // Assuming base product is always in stock
       return;
     }
 
-    let allOptionsSelected = true;
-    let price = 0;
-    product.variants.forEach((group: any) => {
-        const selectedOptionName = selectedVariants[group.groupName];
-        if (selectedOptionName) {
-            const selectedOption = group.options?.find((opt: any) => opt.optionName === selectedOptionName);
-            if (selectedOption) {
-                price += selectedOption.price;
-            }
-        } else if (group.required) {
-            allOptionsSelected = false;
-        }
-    });
+    // Check if all variant groups have a selection
+    const allOptionsSelected = product.variantGroups.every(
+      (group: any) => selectedVariants[group.name]
+    );
 
     if (allOptionsSelected) {
-        setCurrentPrice(price);
+      const matchingCombination = product.variantMatrix?.find((combo: any) => {
+        return Object.keys(selectedVariants).every(key => {
+          return combo.options[key] === selectedVariants[key];
+        });
+      });
+
+      if (matchingCombination) {
+        setCurrentPrice(matchingCombination.price);
+        setInStock(matchingCombination.inStock);
+      } else {
+        // This combination is not defined in the matrix
+        setCurrentPrice(null);
+        setInStock(false);
+      }
     } else {
-        const minPrice = product.variants.reduce((total: number, group: any) => {
-            if (group.options && group.options.length > 0 && group.required) {
-                const minOptionPrice = Math.min(...group.options.map((opt: any) => opt.price));
-                return total + minOptionPrice;
-            }
-            return total;
-        }, 0);
-        setCurrentPrice(minPrice);
+      // Not all options are selected yet, find the lowest price of available options
+      const lowestPrice = product.variantMatrix
+        ?.filter((c: any) => c.inStock)
+        .reduce((min: number, c: any) => (c.price < min ? c.price : min), Infinity);
+      
+      setCurrentPrice(lowestPrice === Infinity ? null : lowestPrice);
+      setInStock(true); // Don't show out of stock for the whole product yet
     }
   }, [selectedVariants, product, hasVariants]);
 
@@ -126,20 +130,38 @@ export default function ProductPage({ params: paramsProp }: { params: { id: stri
     setSelectedVariants(prev => ({ ...prev, [groupName]: optionName }));
   };
 
+  const getAvailableOptions = (groupName: string) => {
+    if (!product || !hasVariants) return [];
+  
+    const otherSelections = { ...selectedVariants };
+    delete otherSelections[groupName];
+  
+    const availableOptions = new Set<string>();
+    
+    product.variantMatrix.forEach((combo: any) => {
+      const isMatch = Object.keys(otherSelections).every(key => combo.options[key] === otherSelections[key]);
+      if (isMatch && combo.inStock) {
+        availableOptions.add(combo.options[groupName]);
+      }
+    });
+
+    const allOptionsForGroup = product.variantGroups.find((g:any) => g.name === groupName)?.options || [];
+
+    return allOptionsForGroup.map((opt: any) => ({
+      ...opt,
+      isAvailable: availableOptions.has(opt.name)
+    }));
+  };
+
   const handleAddToCart = async (redirect: boolean = false) => {
     if (!user) {
       toast({ variant: "destructive", title: "Not logged in", description: "You need to be logged in to add items to your cart."});
       router.push('/login');
       return;
     }
-    if (!product || currentPrice === null || quantity < 1) return;
-    
-    if (hasVariants) {
-        const allRequiredSelected = product.variants.every((group:any) => !group.required || selectedVariants[group.groupName]);
-        if(!allRequiredSelected) {
-             toast({ variant: "destructive", title: "Options Required", description: "Please select all required product options."});
-             return;
-        }
+    if (!product || currentPrice === null || quantity < 1 || !inStock) {
+        toast({ variant: "destructive", title: "Unavailable", description: "This product combination is currently out of stock."});
+        return;
     }
     
     setIsAdding(true);
@@ -147,9 +169,8 @@ export default function ProductPage({ params: paramsProp }: { params: { id: stri
     try {
         const cartRef = collection(firestore, 'users', user.uid, 'cart');
         const variantName = hasVariants 
-            ? product.variants
-                .filter((group: any) => selectedVariants[group.groupName])
-                .map((group: any) => selectedVariants[group.groupName])
+            ? product.variantGroups
+                .map((group: any) => selectedVariants[group.name])
                 .join(' / ')
             : 'Default';
         
@@ -210,8 +231,7 @@ export default function ProductPage({ params: paramsProp }: { params: { id: stri
     .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-primary hover:underline">$1</a>')
     .replace(/\n/g, '<br />');
 
-  const pricePrefix = hasVariants && !product.variants.every((g:any) => !g.required || selectedVariants[g.groupName]) ? 'From' : '';
-  const hasDiscount = product?.discountedPrice && product.discountedPrice < product.price && !hasVariants;
+  const pricePrefix = hasVariants && !product.variantGroups.every((g:any) => selectedVariants[g.name]) ? 'From' : '';
 
   return (
     <main className="flex-grow container mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
@@ -252,34 +272,37 @@ export default function ProductPage({ params: paramsProp }: { params: { id: stri
                   <div className="space-y-4">
                     {hasVariants ? (
                       <div className="space-y-4">
-                        {product.variants.map((group: any) => (
-                           <div key={group.groupName}>
-                               <Label className="font-semibold">{group.groupName} {group.required && <span className="text-destructive">*</span>}</Label>
+                        {product.variantGroups.map((group: any) => {
+                          const options = getAvailableOptions(group.name);
+                          return (
+                           <div key={group.name}>
+                               <Label className="font-semibold">{group.name}</Label>
                                <Select 
-                                 value={selectedVariants[group.groupName]}
-                                 onValueChange={(value) => handleVariantChange(group.groupName, value)}
+                                 value={selectedVariants[group.name]}
+                                 onValueChange={(value) => handleVariantChange(group.name, value)}
                                >
                                  <SelectTrigger>
-                                     <SelectValue placeholder={`Select ${group.groupName}`} />
+                                     <SelectValue placeholder={`Select ${group.name}`} />
                                  </SelectTrigger>
                                  <SelectContent>
-                                     {group.options.map((option: any) => (
-                                         <SelectItem key={option.optionName} value={option.optionName}>
-                                             {option.optionName} (+{option.price} PKR)
+                                     {options.map((option: any) => (
+                                         <SelectItem key={option.name} value={option.name} disabled={!option.isAvailable}>
+                                             {option.name} {!option.isAvailable && '(Out of stock)'}
                                          </SelectItem>
                                      ))}
                                  </SelectContent>
                                </Select>
                            </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     ) : null}
 
                     <div className="text-4xl font-bold pt-4">
                         {pricePrefix && <span className="text-lg font-normal text-muted-foreground mr-1">{pricePrefix}</span>}
-                        {hasDiscount && <span className="text-2xl font-normal text-muted-foreground line-through mr-2">{product.price.toFixed(2)}</span>}
                         
                         {currentPrice !== null ? `${(currentPrice * quantity).toFixed(2)} PKR` : <Skeleton className="h-10 w-48" />}
+                        {!inStock && <p className="text-sm text-destructive font-semibold">Out of Stock</p>}
                     </div>
                     
                     <div className="space-y-2">
@@ -294,11 +317,11 @@ export default function ProductPage({ params: paramsProp }: { params: { id: stri
                 </CardContent>
                 <CardFooter className="flex-col items-stretch gap-4">
                   <div className="flex flex-col gap-2">
-                      <Button size="lg" className="w-full" onClick={() => handleAddToCart(false)} disabled={isAdding}>
+                      <Button size="lg" className="w-full" onClick={() => handleAddToCart(false)} disabled={isAdding || !inStock}>
                           <ShoppingCart className="mr-2 h-5 w-5" />
                           Add to Cart
                       </Button>
-                       <Button size="lg" variant="outline" className="w-full" onClick={handleBuyNow} disabled={isAdding}>
+                       <Button size="lg" variant="outline" className="w-full" onClick={handleBuyNow} disabled={isAdding || !inStock}>
                           <CreditCard className="mr-2 h-5 w-5" />
                           Buy Now
                       </Button>
