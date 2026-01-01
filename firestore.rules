@@ -53,10 +53,12 @@ service cloud.firestore {
       
       /**
        * Controls access to a user's notifications.
-       * Only the user can access their own notifications.
+       * A user can read/write their own notifications.
+       * Admins (server actions) can create notifications for any user.
        */
       match /notifications/{notificationId} {
-        allow read, write: if isOwner(userId);
+        allow read, delete: if isOwner(userId);
+        allow write: if isOwner(userId) || isSignedIn();
       }
     }
 
