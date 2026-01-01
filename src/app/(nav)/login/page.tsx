@@ -20,6 +20,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
+import { Gem } from 'lucide-react';
 
 const formSchema = z.object({
   email: z.string().email({
@@ -110,8 +111,10 @@ export default function LoginPage() {
   return (
     <main className="flex-grow flex items-center justify-center">
       <Card className="mx-auto max-w-sm w-full">
-        <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
+        <CardHeader className="text-center">
+           <div className="flex items-center justify-center gap-2">
+            <CardTitle className="text-2xl">Login</CardTitle>
+          </div>
           <CardDescription>
             Enter your email below to login to your account
           </CardDescription>

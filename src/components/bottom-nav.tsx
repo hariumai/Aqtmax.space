@@ -11,16 +11,19 @@ import {
   SheetTitle,
   SheetTrigger,
   SheetDescription,
+  SheetClose,
 } from '@/components/ui/sheet';
 import { Button } from './ui/button';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { useTheme } from 'next-themes';
+import { useState } from 'react';
 
 export default function BottomNav() {
   const pathname = usePathname();
   const { user } = useUser();
   const firestore = useFirestore();
   const { theme, setTheme } = useTheme();
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const menuItemsQuery = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'menuItems'), orderBy('order')) : null),
@@ -99,7 +102,7 @@ export default function BottomNav() {
              </span>
            </Link>
         )})}
-        <Sheet>
+        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
                 <button
                     type="button"
@@ -116,16 +119,20 @@ export default function BottomNav() {
                   </SheetHeader>
                  <div className="flex flex-col gap-6 p-6">
                         <div className="flex justify-between items-center">
-                          <Link href="/" className="flex items-center gap-2">
-                              <Gem className="h-6 w-6 text-primary" />
-                              <span className="text-xl font-bold tracking-tighter">AQT Max</span>
-                          </Link>
+                           <SheetClose asChild>
+                            <Link href="/" className="flex items-center gap-2">
+                                <Gem className="h-6 w-6 text-primary" />
+                                <span className="text-xl font-bold tracking-tighter">AQT Max</span>
+                            </Link>
+                           </SheetClose>
                         </div>
                         <nav className="flex flex-col gap-4">
                         {overflowNavItems.map(link => (
-                            <Link key={link.id} href={link.href} className="text-lg font-medium text-foreground hover:text-primary transition-colors">
+                           <SheetClose asChild key={link.id}>
+                            <Link href={link.href} className="text-lg font-medium text-foreground hover:text-primary transition-colors">
                                 {link.label}
                             </Link>
+                           </SheetClose>
                         ))}
                         </nav>
                         
@@ -144,12 +151,16 @@ export default function BottomNav() {
                         
                         {!user && (
                           <div className="flex flex-col gap-2 border-t pt-6 mt-2">
-                              <Button asChild size="lg">
-                                  <Link href="/signup">Get Started <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                              </Button>
-                              <Button asChild variant="ghost">
-                                  <Link href="/login">Sign In</Link>
-                              </Button>
+                              <SheetClose asChild>
+                                <Button asChild size="lg">
+                                    <Link href="/signup">Get Started <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                                </Button>
+                              </SheetClose>
+                              <SheetClose asChild>
+                                <Button asChild variant="ghost">
+                                    <Link href="/login">Sign In</Link>
+                                </Button>
+                              </SheetClose>
                           </div>
                         )}
                     </div>

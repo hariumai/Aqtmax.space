@@ -17,6 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import Link from 'next/link';
 import { useAuth } from '@/firebase';
 import { sendPasswordResetEmail } from 'firebase/auth';
+import { Gem } from 'lucide-react';
 
 const formSchema = z.object({
   email: z.string().email({
@@ -61,8 +62,10 @@ export default function ForgotPasswordPage() {
   return (
     <main className="flex-grow flex items-center justify-center">
       <Card className="mx-auto max-w-sm w-full">
-        <CardHeader>
-          <CardTitle className="text-2xl">Forgot Password</CardTitle>
+        <CardHeader className="text-center">
+          <div className="flex items-center justify-center gap-2">
+            <CardTitle className="text-2xl">Forgot Password</CardTitle>
+          </div>
           <CardDescription>
             Enter your email and we&apos;ll send you a link to reset your password.
           </CardDescription>

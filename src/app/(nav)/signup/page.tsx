@@ -20,6 +20,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { createUserWithEmailAndPassword, sendEmailVerification, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
+import { Gem } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.'}),
@@ -102,8 +103,10 @@ export default function SignupPage() {
   return (
     <main className="flex-grow flex items-center justify-center">
       <Card className="mx-auto max-w-sm w-full">
-        <CardHeader>
-          <CardTitle className="text-2xl">Sign Up</CardTitle>
+        <CardHeader className="text-center">
+          <div className="flex items-center justify-center gap-2">
+            <CardTitle className="text-2xl">Sign Up</CardTitle>
+          </div>
           <CardDescription>
             Enter your information to create an account
           </CardDescription>
