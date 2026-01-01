@@ -17,6 +17,7 @@ import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { Switch } from './ui/switch';
+import { Label } from '@/components/ui/label';
 
 
 const variantGroupSchema = z.object({
