@@ -50,6 +50,14 @@ service cloud.firestore {
       match /cart/{cartItemId} {
         allow read, write: if isOwner(userId);
       }
+      
+      /**
+       * Controls access to a user's notifications.
+       * Only the user can access their own notifications.
+       */
+      match /notifications/{notificationId} {
+        allow read, write: if isOwner(userId);
+      }
     }
 
     /**

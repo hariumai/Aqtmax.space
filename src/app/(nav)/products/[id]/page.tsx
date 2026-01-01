@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { createNotification } from '@/lib/notifications';
 
 const iconMap: { [key: string]: React.ElementType } = {
   'Netflix Premium': Clapperboard,
@@ -138,7 +139,11 @@ export default function ProductPage({ params }: { params: { id: string } }) {
         }
 
         if (!redirect) {
-            toast({ title: "Added to Cart", description: `${product.name} has been added to your cart.`});
+            await createNotification({
+                userId: user.uid,
+                message: `"${product.name}" has been added to your cart.`,
+                href: '/checkout'
+            });
         } else {
             router.push('/checkout');
         }

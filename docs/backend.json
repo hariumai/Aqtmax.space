@@ -164,6 +164,21 @@
             "whatsappNumber": { "type": "string", "description": "The contact number for WhatsApp support." }
         },
         "required": ["bankName", "accountNumber", "accountHolderName"]
+    },
+    "Notification": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Notification",
+      "type": "object",
+      "description": "Represents a notification for a user.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the notification." },
+        "userId": { "type": "string", "description": "The ID of the user this notification is for." },
+        "message": { "type": "string", "description": "The content of the notification message." },
+        "href": { "type": "string", "description": "A URL path for the notification to link to." },
+        "createdAt": { "type": "string", "description": "Timestamp when the notification was created.", "format": "date-time" },
+        "read": { "type": "boolean", "description": "Indicates if the user has read the notification." }
+      },
+      "required": ["id", "userId", "message", "createdAt", "read"]
     }
   },
   "auth": {
@@ -202,6 +217,10 @@
       {
         "path": "/settings/payment",
         "definition": { "entityName": "AppSettings", "schema": { "$ref": "#/entities/AppSettings" }, "description": "Stores application settings like payment details." }
+      },
+      {
+        "path": "/users/{userId}/notifications/{notificationId}",
+        "definition": { "entityName": "Notification", "schema": { "$ref": "#/entities/Notification" }, "description": "Stores user-specific notifications." }
       }
     ]
   }

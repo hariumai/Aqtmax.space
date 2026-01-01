@@ -1,5 +1,6 @@
 
 
+
 'use client';
 import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
@@ -23,6 +24,7 @@ import { updateProfile } from 'firebase/auth';
 import { type Order } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { createNotification } from '@/lib/notifications';
 
 const profileFormSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -112,10 +114,13 @@ function BannedProfile({ user, banInfo, settings, onSignOut }: { user: any, banI
                     appealStatus: 'pending',
                 } 
             }, { merge: true });
-            toast({
-                title: 'Appeal Requested',
-                description: 'Our support team will review your case shortly.',
+            
+            await createNotification({
+                userId: user.uid,
+                message: 'Your appeal has been submitted and is now pending review.',
+                href: '/profile'
             });
+
              if (settings?.whatsappNumber) {
                window.open(`https://wa.me/${settings.whatsappNumber.replace(/[^0-9]/g, '')}`, '_blank');
              }

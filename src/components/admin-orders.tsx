@@ -22,6 +22,7 @@ import { type Order } from '@/lib/types';
 import { ScrollArea } from './ui/scroll-area';
 import { Textarea } from './ui/textarea';
 import { sendOrderFulfilledEmail } from '@/lib/emails';
+import { createNotification } from '@/lib/notifications';
 
 
 const completeOrderSchema = z.object({
@@ -200,6 +201,12 @@ export default function AdminOrders() {
         }
 
         await sendOrderFulfilledEmail(updatedOrderData);
+
+        await createNotification({
+            userId: order.userId,
+            message: `Your order #${order.id.substring(0, 6)} has been completed!`,
+            href: `/order/details/${order.id}`
+        });
 
         toast({
             title: 'Order Completed',

@@ -25,6 +25,7 @@ import Link from 'next/link';
 import { type Order } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { sendOrderConfirmationEmail } from '@/lib/emails';
+import { createNotification } from '@/lib/notifications';
 
 
 const checkoutSchema = z.object({
@@ -165,6 +166,12 @@ export default function CheckoutPage() {
         await sendOrderConfirmationEmail({
             ...newOrderData,
             orderDate: newOrderData.orderDate.toISOString() 
+        });
+
+        await createNotification({
+            userId: user.uid,
+            message: `Your order #${newOrderRef.id.substring(0, 6)} has been placed and is now pending.`,
+            href: `/order/details/${newOrderRef.id}`
         });
 
         router.push(`/order/details/${newOrderRef.id}`);
