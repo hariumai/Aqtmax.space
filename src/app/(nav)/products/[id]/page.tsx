@@ -9,7 +9,7 @@ import { doc, collection, addDoc, serverTimestamp, writeBatch, getDocs, where, q
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createNotification } from '@/lib/notifications';
 import { Input } from '@/components/ui/input';
@@ -76,11 +76,11 @@ export default function ProductPage() {
 
   // Auto-select first variant on product load
   useEffect(() => {
-    if (product && product.variants && product.variants.length > 0) {
+    if (product && product.variantGroups && product.variantGroups.length > 0) {
       const initialSelections: SelectedVariants = {};
-      product.variants.forEach((group: any) => {
+      product.variantGroups.forEach((group: any) => {
         if (group.options && group.options.length > 0) {
-          initialSelections[group.groupName] = group.options[0].optionName;
+          initialSelections[group.name] = group.options[0];
         }
       });
       setSelectedVariants(initialSelections);
@@ -92,7 +92,7 @@ export default function ProductPage() {
     if (!product) return;
 
     if (product.variantMatrix && product.variantMatrix.length > 0) {
-      const allOptionsSelected = Object.keys(selectedVariants).length === product.variantGroups.length;
+      const allOptionsSelected = product.variantGroups.every((group: any) => selectedVariants[group.name]);
 
       if (allOptionsSelected) {
         const matchedVariant = product.variantMatrix.find((variant: any) => {
@@ -108,6 +108,10 @@ export default function ProductPage() {
           setCurrentPrice(null);
           setInStock(false);
         }
+      } else {
+        // If not all options are selected, we can't determine a price.
+        setCurrentPrice(null);
+        setInStock(false);
       }
     } else {
       // For products without variants
@@ -222,11 +226,11 @@ export default function ProductPage() {
               <Card className="rounded-2xl border-border/10 bg-card/50 backdrop-blur-xl">
                 <CardHeader>
                   <CardTitle>
-                      {product.variants && product.variants.length > 0 
+                      {product.variantGroups && product.variantGroups.length > 0 
                           ? 'Select Options' 
                           : 'Complete Your Order'}
                   </CardTitle>
-                  {product.variants?.length > 0 && (
+                  {product.variantGroups?.length > 0 && (
                   <CardDescription>
                     Choose your desired options to see the final price.
                   </CardDescription>
@@ -234,22 +238,22 @@ export default function ProductPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {product.variants && product.variants.length > 0 ? (
+                    {product.variantGroups && product.variantGroups.length > 0 ? (
                       <div className="space-y-4">
-                        {product.variants.map((group: any) => (
-                           <div key={group.groupName}>
-                               <Label className="font-semibold">{group.groupName} {group.required && <span className="text-destructive">*</span>}</Label>
+                        {product.variantGroups.map((group: any) => (
+                           <div key={group.name}>
+                               <Label className="font-semibold">{group.name} {group.required && <span className="text-destructive">*</span>}</Label>
                                <Select 
-                                 value={selectedVariants[group.groupName]}
-                                 onValueChange={(value) => handleVariantChange(group.groupName, value)}
+                                 value={selectedVariants[group.name]}
+                                 onValueChange={(value) => handleVariantChange(group.name, value)}
                                >
                                  <SelectTrigger>
-                                     <SelectValue placeholder={`Select ${group.groupName}`} />
+                                     <SelectValue placeholder={`Select ${group.name}`} />
                                  </SelectTrigger>
                                  <SelectContent>
                                      {group.options.map((option: any) => (
-                                         <SelectItem key={option.optionName} value={option.optionName}>
-                                             {option.optionName}
+                                         <SelectItem key={option} value={option}>
+                                             {option}
                                          </SelectItem>
                                      ))}
                                  </SelectContent>
