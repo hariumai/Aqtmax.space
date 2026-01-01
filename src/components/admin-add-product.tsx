@@ -12,6 +12,8 @@ import { doc, collection, setDoc, query } from 'firebase/firestore';
 import { PlusCircle, Trash } from 'lucide-react';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Switch } from './ui/switch';
+import { Label } from './ui/label';
 
 const variantOptionSchema = z.object({
   optionName: z.string().min(1, 'Option name is required'),
@@ -20,6 +22,7 @@ const variantOptionSchema = z.object({
 
 const variantGroupSchema = z.object({
   groupName: z.string().min(1, 'Group name is required'),
+  required: z.boolean().default(true),
   options: z.array(variantOptionSchema).min(1, 'At least one option is required'),
 });
 
@@ -112,49 +115,68 @@ export default function AdminAddProduct() {
             </div>
             
             <FormField control={productForm.control} name="description" render={({ field }) => (<FormItem><FormLabel>Description (Optional)</FormLabel><FormControl><Textarea placeholder="A short description of the product." {...field} className="min-h-[100px]" /></FormControl><FormMessage /></FormItem>)} />
+            <FormField control={productForm.control} name="imageUrl" render={({ field }) => (<FormItem><FormLabel>Image URL (Optional)</FormLabel><FormControl><Input placeholder="https://example.com/image.png" {...field} /></FormControl><FormMessage /></FormItem>)} />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {!hasVariants && (
-                  <>
-                    <FormField control={productForm.control} name="price" render={({ field }) => (<FormItem><FormLabel>Base Price (PKR)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="3000" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={productForm.control} name="discountedPrice" render={({ field }) => (<FormItem><FormLabel>Discounted Price (PKR)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="2499" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? null : Number(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
-                  </>
-                )}
-                 <FormField control={productForm.control} name="imageUrl" render={({ field }) => (<FormItem><FormLabel>Image URL (Optional)</FormLabel><FormControl><Input placeholder="https://example.com/image.png" {...field} /></FormControl><FormMessage /></FormItem>)} />
-            </div>
             
             <div className="p-4 border rounded-lg space-y-4 bg-muted/50">
-                <h3 className="text-lg font-medium">Product Variants</h3>
+                <h3 className="text-lg font-medium">Pricing</h3>
                 <CardDescription>
-                    Add variants if the product has multiple options (e.g., different plan durations). If no variants are added, the base price will be used.
+                    If your product has multiple options (e.g., 1 Month, 3 Months), add them as variants. Otherwise, set a base price below.
                 </CardDescription>
+
+                {!hasVariants && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                    <FormField control={productForm.control} name="price" render={({ field }) => (<FormItem><FormLabel>Base Price (PKR)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="3000" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={productForm.control} name="discountedPrice" render={({ field }) => (<FormItem><FormLabel>Discounted Price (PKR)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="2499" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? null : Number(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
+                  </div>
+                )}
+                
                 {variantGroups.map((group, groupIndex) => (
                   <div key={group.id} className="p-4 border rounded-lg space-y-4 bg-background">
-                    <div className="flex items-end gap-4">
-                      <FormField
-                        control={productForm.control}
-                        name={`variants.${groupIndex}.groupName`}
-                        render={({ field }) => (
-                          <FormItem className="flex-grow">
-                            <FormLabel>Group Name</FormLabel>
-                            <FormControl><Input placeholder="e.g., Duration" {...field} /></FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button type="button" variant="destructive" size="icon" onClick={() => removeVariantGroup(groupIndex)}>
-                        <Trash className="h-4 w-4" />
-                      </Button>
+                    <div className="flex justify-between items-start gap-4">
+                        <FormField
+                            control={productForm.control}
+                            name={`variants.${groupIndex}.groupName`}
+                            render={({ field }) => (
+                            <FormItem className="flex-grow">
+                                <FormLabel>Group Name</FormLabel>
+                                <FormControl><Input placeholder="e.g., Duration" {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                         <div className="flex flex-col items-center gap-2 pt-1">
+                           <Label htmlFor={`required-switch-${groupIndex}`} className="text-xs font-normal">Compulsory</Label>
+                           <FormField
+                                control={productForm.control}
+                                name={`variants.${groupIndex}.required`}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormControl>
+                                            <Switch
+                                                id={`required-switch-${groupIndex}`}
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                        <Button type="button" variant="destructive" size="icon" onClick={() => removeVariantGroup(groupIndex)} className="mt-6">
+                            <Trash className="h-4 w-4" />
+                        </Button>
                     </div>
                     <VariantOptionsArray groupIndex={groupIndex} control={productForm.control} />
                   </div>
                 ))}
+
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 className="mt-4"
-                onClick={() => appendVariantGroup({ groupName: '', options: [{ optionName: '', price: 0 }] })}
+                onClick={() => appendVariantGroup({ groupName: '', required: true, options: [{ optionName: '', price: 0 }] })}
               >
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add Variant Group
@@ -212,3 +234,5 @@ function VariantOptionsArray({ groupIndex, control }: { groupIndex: number, cont
     </div>
   );
 }
+
+    

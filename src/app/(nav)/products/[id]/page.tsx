@@ -76,7 +76,11 @@ export default function ProductPage({ params }: { params: { id: string } }) {
     if (product?.variants && product.variants.length > 0) {
       const initialSelections: SelectedVariants = {};
       product.variants.forEach((group: any) => {
-        initialSelections[group.groupName] = group.options[0].optionName;
+        if (!group.required) {
+            initialSelections[group.groupName] = 'Not Selected';
+        } else {
+             initialSelections[group.groupName] = group.options[0].optionName;
+        }
       });
       setSelectedVariants(initialSelections);
     } else {
@@ -85,33 +89,30 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   }, [product]);
 
   useEffect(() => {
-      if (product?.variants && product.variants.length > 0) {
-          let price = 0;
-          let allOptionsSelected = true;
-          product.variants.forEach((group: any) => {
-              const selectedOptionName = selectedVariants[group.groupName];
-              if (selectedOptionName) {
-                  const selectedOption = group.options.find((opt: any) => opt.optionName === selectedOptionName);
-                  if (selectedOption) {
-                      price += selectedOption.price;
-                  }
-              } else {
-                  allOptionsSelected = false;
-              }
-          });
+    if (!product) return;
 
-          if (allOptionsSelected) {
-              setCurrentPrice(price);
-          } else {
-              // Find the minimum possible price
-              const minPrice = product.variants.reduce((total: number, group: any) => {
-                  const minOptionPrice = Math.min(...group.options.map((opt: any) => opt.price));
-                  return total + minOptionPrice;
-              }, 0);
-              setCurrentPrice(minPrice);
-          }
-      }
-  }, [selectedVariants, product]);
+    if (product.variants && product.variants.length > 0) {
+        let price = product.price || 0;
+        let allOptionsSelected = true;
+        
+        product.variants.forEach((group: any) => {
+            const selectedOptionName = selectedVariants[group.groupName];
+            if (group.required && (!selectedOptionName || selectedOptionName === 'Not Selected')) {
+                allOptionsSelected = false;
+            }
+
+            if (selectedOptionName && selectedOptionName !== 'Not Selected') {
+                const selectedOption = group.options.find((opt: any) => opt.optionName === selectedOptionName);
+                if (selectedOption) {
+                    price += selectedOption.price;
+                }
+            }
+        });
+        setCurrentPrice(price);
+    } else {
+        setCurrentPrice(product.discountedPrice ?? product.price ?? null);
+    }
+}, [selectedVariants, product]);
 
 
   const ProductIcon = product ? (product.imageUrl ? null : iconMap[product.name] || iconMap.default) : null;
@@ -128,10 +129,12 @@ export default function ProductPage({ params }: { params: { id: string } }) {
     }
     if (!product || currentPrice === null || quantity < 1) return;
     
-    const allVariantsSelected = product.variants?.every((group: any) => selectedVariants[group.groupName]) ?? true;
+    const allRequiredVariantsSelected = product.variants?.every((group: any) => {
+        return !group.required || (selectedVariants[group.groupName] && selectedVariants[group.groupName] !== 'Not Selected');
+    }) ?? true;
 
-    if (!allVariantsSelected) {
-      toast({ variant: "destructive", title: "Options required", description: "Please select an option from each group."});
+    if (!allRequiredVariantsSelected) {
+      toast({ variant: "destructive", title: "Options required", description: "Please select all compulsory options."});
       return;
     }
 
@@ -141,6 +144,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
         const cartRef = collection(firestore, 'users', user.uid, 'cart');
         const variantName = product.variants
             ?.map((group: any) => selectedVariants[group.groupName])
+            .filter(name => name && name !== 'Not Selected')
             .join(' / ') || 'Default';
         
         const q = query(
@@ -213,7 +217,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
               <h1 className="font-headline text-4xl font-extrabold tracking-tighter sm:text-5xl">
                 {product.name}
               </h1>
-              <div className="mt-4 text-muted-foreground prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: formattedDescription || '' }} />
+              {formattedDescription && <div className="mt-4 text-muted-foreground prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: formattedDescription || '' }} />}
               <ul className="mt-6 space-y-2 text-muted-foreground">
                 <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-primary" /> Instant Delivery</li>
                 <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-primary" /> 24/7 Support</li>
@@ -239,7 +243,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                       <div className="space-y-4">
                         {product.variants.map((group: any) => (
                            <div key={group.groupName}>
-                               <Label className="font-semibold">{group.groupName}</Label>
+                               <Label className="font-semibold">{group.groupName} {group.required && <span className="text-destructive">*</span>}</Label>
                                <Select 
                                  value={selectedVariants[group.groupName]}
                                  onValueChange={(value) => handleVariantChange(group.groupName, value)}
@@ -248,6 +252,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                                      <SelectValue placeholder={`Select ${group.groupName}`} />
                                  </SelectTrigger>
                                  <SelectContent>
+                                     {!group.required && <SelectItem value="Not Selected">None</SelectItem>}
                                      {group.options.map((option: any) => (
                                          <SelectItem key={option.optionName} value={option.optionName}>
                                              {option.optionName} (+{option.price} PKR)
@@ -350,3 +355,5 @@ function ProductPageSkeleton() {
     </div>
   )
 }
+
+    

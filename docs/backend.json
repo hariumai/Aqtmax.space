@@ -51,6 +51,7 @@
                 "type": "object",
                 "properties": {
                     "groupName": { "type": "string", "description": "Name of the variant group (e.g., 'Size')." },
+                    "required": { "type": "boolean", "description": "Whether this variant group selection is compulsory." },
                     "options": {
                         "type": "array",
                         "description": "Available options within this group.",
@@ -226,3 +227,5 @@
     ]
   }
 }
+
+    
