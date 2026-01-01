@@ -1,18 +1,25 @@
+
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // If the request is for the root path, redirect to /u/r2/div
+  if (pathname === '/') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/u/r2/div';
+    return NextResponse.redirect(url);
+  }
+
   // Define paths that should NOT be rewritten
   const excludedPaths = ['/admin', '/api', '/_next', '/static', '/favicon.ico', '/login', '/signup', '/forgot-password', '/actions', '/verify-email', '/legal'];
 
   // Check if the pathname starts with any of the excluded paths
   const isExcluded = excludedPaths.some(p => pathname.startsWith(p));
-  const isRoot = pathname === '/';
 
-  // If it's an excluded path or the root, do nothing.
-  if (isExcluded || isRoot) {
+  // If it's an excluded path, do nothing.
+  if (isExcluded) {
     return NextResponse.next();
   }
 
