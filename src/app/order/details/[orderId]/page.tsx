@@ -50,7 +50,7 @@ export default function OrderDetailsPage() {
     const { data: settings } = useDoc(settingsRef);
 
     const orderRef = useMemoFirebase(
-        () => (firestore ? doc(firestore, 'orders', orderId) : null),
+        () => (firestore && orderId ? doc(firestore, 'orders', orderId) : null),
         [firestore, orderId]
     );
     const { data: order, isLoading: isOrderLoading } = useDoc<Order>(orderRef);
