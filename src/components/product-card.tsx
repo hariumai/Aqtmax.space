@@ -64,7 +64,7 @@ export default function ProductCard({ product }: { product: any }) {
             if (selectedOption) {
                 price += selectedOption.price;
             }
-        } else {
+        } else if (group.required) {
             allOptionsSelected = false;
         }
     });
@@ -73,7 +73,7 @@ export default function ProductCard({ product }: { product: any }) {
         setCurrentPrice(price);
     } else {
         const minPrice = product.variants.reduce((total: number, group: any) => {
-            if (group.options && group.options.length > 0) {
+            if (group.options && group.options.length > 0 && group.required) {
                 const minOptionPrice = Math.min(...group.options.map((opt: any) => opt.price));
                 return total + minOptionPrice;
             }
@@ -96,9 +96,9 @@ export default function ProductCard({ product }: { product: any }) {
     }
 
     if (hasVariants) {
-        const allSelected = product.variants.every((group:any) => selectedVariants[group.groupName]);
-        if(!allSelected) {
-             toast({ variant: "destructive", title: "Options Required", description: "Please select all product options."});
+        const allRequiredSelected = product.variants.every((group:any) => !group.required || selectedVariants[group.groupName]);
+        if(!allRequiredSelected) {
+             toast({ variant: "destructive", title: "Options Required", description: "Please select all required product options."});
              return;
         }
     }
@@ -109,7 +109,10 @@ export default function ProductCard({ product }: { product: any }) {
     try {
         const cartRef = collection(firestore, 'users', user.uid, 'cart');
         const variantName = hasVariants 
-            ? product.variants.map((group: any) => selectedVariants[group.groupName]).join(' / ')
+            ? product.variants
+                .filter((group: any) => selectedVariants[group.groupName])
+                .map((group: any) => selectedVariants[group.groupName])
+                .join(' / ')
             : 'Default';
         
         const q = query(
@@ -161,7 +164,7 @@ export default function ProductCard({ product }: { product: any }) {
     setQuantity(prev => Math.max(1, prev + amount));
   }
 
-  const pricePrefix = hasVariants && !product.variants.every((g:any) => selectedVariants[g.groupName]) ? 'From' : '';
+  const pricePrefix = hasVariants && !product.variants.every((g:any) => !g.required || selectedVariants[g.groupName]) ? 'From' : '';
   const hasDiscount = product.discountedPrice && product.discountedPrice < product.price && !hasVariants;
 
   return (

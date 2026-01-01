@@ -3,16 +3,16 @@ import { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Clapperboard, CreditCard, Lock, Music, Palette, ShoppingCart, Tv, Plus, Minus, AlertTriangle } from "lucide-react";
-import Link from "next/link";
 import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc, collection, addDoc, serverTimestamp, writeBatch, getDocs, where, query, limit, updateDoc } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createNotification } from '@/lib/notifications';
 import { Input } from '@/components/ui/input';
+import Link from 'next/link';
 
 const iconMap: { [key: string]: React.ElementType } = {
   'Netflix Premium': Clapperboard,
@@ -72,53 +72,57 @@ export default function ProductPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
-  const [inStock, setInStock] = useState(true);
+  
+  const hasVariants = product?.variants && product.variants.length > 0;
 
-  // Auto-select first variant on product load
   useEffect(() => {
-    if (product && product.variantGroups && product.variantGroups.length > 0) {
+    if (hasVariants) {
       const initialSelections: SelectedVariants = {};
-      product.variantGroups.forEach((group: any) => {
+      product.variants.forEach((group: any) => {
         if (group.options && group.options.length > 0) {
-          initialSelections[group.name] = group.options[0];
+          initialSelections[group.groupName] = group.options[0].optionName;
         }
       });
       setSelectedVariants(initialSelections);
     }
-  }, [product]);
+  }, [product, hasVariants]);
 
-  // Update price and stock status when variants change
   useEffect(() => {
     if (!product) return;
 
-    if (product.variantMatrix && product.variantMatrix.length > 0) {
-      const allOptionsSelected = product.variantGroups.every((group: any) => selectedVariants[group.name]);
-
-      if (allOptionsSelected) {
-        const matchedVariant = product.variantMatrix.find((variant: any) => {
-          return Object.entries(selectedVariants).every(
-            ([group, option]) => variant.options[group] === option
-          );
-        });
-
-        if (matchedVariant) {
-          setCurrentPrice(matchedVariant.price);
-          setInStock(matchedVariant.inStock);
-        } else {
-          setCurrentPrice(null);
-          setInStock(false);
-        }
-      } else {
-        // If not all options are selected, we can't determine a price.
-        setCurrentPrice(null);
-        setInStock(false);
-      }
-    } else {
-      // For products without variants
-      setCurrentPrice(product.price);
-      setInStock(true); // Assuming always in stock if no variants
+    if (!hasVariants) {
+      setCurrentPrice(product.discountedPrice ?? product.price);
+      return;
     }
-  }, [selectedVariants, product]);
+
+    let allOptionsSelected = true;
+    let price = 0;
+    product.variants.forEach((group: any) => {
+        const selectedOptionName = selectedVariants[group.groupName];
+        if (selectedOptionName) {
+            const selectedOption = group.options?.find((opt: any) => opt.optionName === selectedOptionName);
+            if (selectedOption) {
+                price += selectedOption.price;
+            }
+        } else if (group.required) {
+            allOptionsSelected = false;
+        }
+    });
+
+    if (allOptionsSelected) {
+        setCurrentPrice(price);
+    } else {
+        // Calculate a "From" price if not all required options are selected
+        const minPrice = product.variants.reduce((total: number, group: any) => {
+            if (group.options && group.options.length > 0 && group.required) {
+                const minOptionPrice = Math.min(...group.options.map((opt: any) => opt.price));
+                return total + minOptionPrice;
+            }
+            return total;
+        }, 0);
+        setCurrentPrice(minPrice);
+    }
+  }, [selectedVariants, product, hasVariants]);
 
 
   const ProductIcon = product ? (product.imageUrl ? null : iconMap[product.name] || iconMap.default) : null;
@@ -133,16 +137,26 @@ export default function ProductPage() {
       router.push('/login');
       return;
     }
-    if (!product || currentPrice === null || quantity < 1 || !inStock) {
-      if(!inStock) toast({ variant: "destructive", title: "Out of stock", description: "This variant combination is not available."});
-      return;
+    if (!product || currentPrice === null || quantity < 1) return;
+    
+    if (hasVariants) {
+        const allRequiredSelected = product.variants.every((group:any) => !group.required || selectedVariants[group.groupName]);
+        if(!allRequiredSelected) {
+             toast({ variant: "destructive", title: "Options Required", description: "Please select all required product options."});
+             return;
+        }
     }
     
     setIsAdding(true);
 
     try {
         const cartRef = collection(firestore, 'users', user.uid, 'cart');
-        const variantName = Object.values(selectedVariants).join(' / ') || 'Default';
+        const variantName = hasVariants 
+            ? product.variants
+                .filter((group: any) => selectedVariants[group.groupName])
+                .map((group: any) => selectedVariants[group.groupName])
+                .join(' / ')
+            : 'Default';
         
         const q = query(
             cartRef, 
@@ -198,6 +212,8 @@ export default function ProductPage() {
   
   const formattedDescription = product?.description?.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-primary hover:underline">$1</a>').replace(/\n/g, '<br />');
 
+  const pricePrefix = hasVariants && !product.variants.every((g:any) => !g.required || selectedVariants[g.groupName]) ? 'From' : '';
+  const hasDiscount = product?.discountedPrice && product.discountedPrice < product.price && !hasVariants;
 
   return (
     <main className="flex-grow container mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
@@ -226,11 +242,9 @@ export default function ProductPage() {
               <Card className="rounded-2xl border-border/10 bg-card/50 backdrop-blur-xl">
                 <CardHeader>
                   <CardTitle>
-                      {product.variantGroups && product.variantGroups.length > 0 
-                          ? 'Select Options' 
-                          : 'Complete Your Order'}
+                      {hasVariants ? 'Select Options' : 'Complete Your Order'}
                   </CardTitle>
-                  {product.variantGroups?.length > 0 && (
+                  {hasVariants && (
                   <CardDescription>
                     Choose your desired options to see the final price.
                   </CardDescription>
@@ -238,22 +252,22 @@ export default function ProductPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {product.variantGroups && product.variantGroups.length > 0 ? (
+                    {hasVariants ? (
                       <div className="space-y-4">
-                        {product.variantGroups.map((group: any) => (
-                           <div key={group.name}>
-                               <Label className="font-semibold">{group.name} {group.required && <span className="text-destructive">*</span>}</Label>
+                        {product.variants.map((group: any) => (
+                           <div key={group.groupName}>
+                               <Label className="font-semibold">{group.groupName} {group.required && <span className="text-destructive">*</span>}</Label>
                                <Select 
-                                 value={selectedVariants[group.name]}
-                                 onValueChange={(value) => handleVariantChange(group.name, value)}
+                                 value={selectedVariants[group.groupName]}
+                                 onValueChange={(value) => handleVariantChange(group.groupName, value)}
                                >
                                  <SelectTrigger>
-                                     <SelectValue placeholder={`Select ${group.name}`} />
+                                     <SelectValue placeholder={`Select ${group.groupName}`} />
                                  </SelectTrigger>
                                  <SelectContent>
                                      {group.options.map((option: any) => (
-                                         <SelectItem key={option} value={option}>
-                                             {option}
+                                         <SelectItem key={option.optionName} value={option.optionName}>
+                                             {option.optionName} (+{option.price} PKR)
                                          </SelectItem>
                                      ))}
                                  </SelectContent>
@@ -264,7 +278,10 @@ export default function ProductPage() {
                     ) : null}
 
                     <div className="text-4xl font-bold pt-4">
-                      {currentPrice !== null ? `${(currentPrice * quantity).toFixed(2)} PKR` : <Skeleton className="h-10 w-48" />}
+                        {pricePrefix && <span className="text-lg font-normal text-muted-foreground mr-1">{pricePrefix}</span>}
+                        {hasDiscount && <span className="text-2xl font-normal text-muted-foreground line-through mr-2">{product.price.toFixed(2)}</span>}
+                        
+                        {currentPrice !== null ? `${(currentPrice * quantity).toFixed(2)} PKR` : <Skeleton className="h-10 w-48" />}
                     </div>
                     
                     <div className="space-y-2">
@@ -275,17 +292,15 @@ export default function ProductPage() {
                             <Button variant="outline" size="icon" onClick={() => handleQuantityChange(1)}><Plus className="h-4 w-4" /></Button>
                         </div>
                     </div>
-                    {!inStock && <p className="text-sm text-destructive font-medium">This combination is currently out of stock.</p>}
-
                   </div>
                 </CardContent>
                 <CardFooter className="flex-col items-stretch gap-4">
                   <div className="flex flex-col gap-2">
-                      <Button size="lg" className="w-full" onClick={() => handleAddToCart(false)} disabled={isAdding || !inStock}>
+                      <Button size="lg" className="w-full" onClick={() => handleAddToCart(false)} disabled={isAdding}>
                           <ShoppingCart className="mr-2 h-5 w-5" />
                           Add to Cart
                       </Button>
-                       <Button size="lg" variant="outline" className="w-full" onClick={handleBuyNow} disabled={isAdding || !inStock}>
+                       <Button size="lg" variant="outline" className="w-full" onClick={handleBuyNow} disabled={isAdding}>
                           <CreditCard className="mr-2 h-5 w-5" />
                           Buy Now
                       </Button>
