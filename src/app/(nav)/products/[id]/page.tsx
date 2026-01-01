@@ -30,28 +30,23 @@ function RulesSection() {
     const rulesRef = useMemoFirebase(() => (firestore ? doc(firestore, 'legalPages/rules') : null), [firestore]);
     const { data: rulesPage, isLoading } = useDoc(rulesRef);
 
-    if (isLoading || !rulesPage?.content) {
+    if (isLoading) {
+        return (
+             <div className="mt-8 space-y-2">
+                <Skeleton className="h-5 w-1/3" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+            </div>
+        )
+    }
+
+    if (!rulesPage?.content) {
         return null;
     }
     
-    const rulesList = rulesPage.content
-        .split('\n')
-        .map(line => line.trim().replace(/^\d+\.\s*/, ''))
-        .filter(line => line.length > 0 && !line.startsWith('[') && !line.toLowerCase().includes('by using the subscription'));
-
-
     return (
-        <div className="mt-8 border-l-4 border-destructive pl-4 py-2 bg-destructive/10 text-red-950 dark:text-red-200">
-            <div className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" />
-                <h5 className="font-semibold">Important Account Rules</h5>
-            </div>
-            <ul className="text-xs list-disc pl-5 mt-2 space-y-1">
-                {rulesList.map((rule, index) => (
-                    <li key={index}>{rule}</li>
-                ))}
-            </ul>
-        </div>
+        <div className="mt-8 text-sm text-red-500 dark:text-red-400" dangerouslySetInnerHTML={{ __html: rulesPage.content.replace(/\n/g, '<br />') }} />
     )
 }
 
