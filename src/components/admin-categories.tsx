@@ -58,7 +58,7 @@ import { ScrollArea } from './ui/scroll-area';
 const categorySchema = z.object({
   id: z.string().optional(),
   name: z.string().min(1, 'Name is required'),
-  imageUrl: z.string().url('Must be a valid URL'),
+  imageUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
 });
 
 type Category = z.infer<typeof categorySchema>;
@@ -103,7 +103,7 @@ function CategoryForm({
         <ScrollArea className="h-[60vh] pr-6">
           <div className="space-y-6">
             <FormField control={form.control} name="name" render={({ field }) => (<FormItem><FormLabel>Category Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="imageUrl" render={({ field }) => (<FormItem><FormLabel>Image URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+            <FormField control={form.control} name="imageUrl" render={({ field }) => (<FormItem><FormLabel>Image URL (Optional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
           </div>
         </ScrollArea>
         <DialogFooter className="pt-6">

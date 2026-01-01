@@ -68,7 +68,7 @@
             }
         }
       },
-      "required": ["id", "name", "description", "price", "imageUrl", "categoryId"]
+      "required": ["id", "name", "description", "price", "categoryId"]
     },
     "Category": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -80,7 +80,7 @@
         "name": { "type": "string", "description": "Name of the category (eg., Entertainment)." },
         "imageUrl": { "type": "string", "description": "URL of the image representing the category.", "format": "uri" }
       },
-      "required": ["id", "name", "imageUrl"]
+      "required": ["id", "name"]
     },
     "Order": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -150,7 +150,7 @@
         "quantity": { "type": "number", "description": "Quantity of the item." },
         "imageUrl": { "type": "string", "description": "Image URL of the subscription." }
       },
-      "required": ["id", "subscriptionId", "subscriptionName", "variantName", "price", "quantity", "imageUrl"]
+      "required": ["id", "subscriptionId", "subscriptionName", "variantName", "price", "quantity"]
     },
     "AppSettings": {
         "$schema": "http://json-schema.org/draft-07/schema#",

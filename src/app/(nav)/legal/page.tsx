@@ -1,7 +1,7 @@
 
 'use client';
 import { Card } from '@/components/ui/card';
-import { FileText, Shield, Undo2 } from 'lucide-react';
+import { FileText, Shield, Undo2, Gavel } from 'lucide-react';
 import Link from 'next/link';
 
 const legalLinks = [
@@ -22,6 +22,12 @@ const legalLinks = [
         title: 'Refund Policy',
         description: 'Understand our policy on refunds and returns.',
         icon: Undo2
+    },
+    {
+        href: '/legal/rules',
+        title: 'Account Rules',
+        description: 'Important rules for using subscription accounts.',
+        icon: Gavel
     }
 ]
 

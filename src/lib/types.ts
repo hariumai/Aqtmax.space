@@ -7,7 +7,7 @@ export type CartItem = {
     variantName: string;
     price: number;
     quantity: number;
-    imageUrl: string;
+    imageUrl?: string;
 }
 
 export type Order = {

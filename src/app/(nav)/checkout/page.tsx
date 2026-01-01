@@ -232,7 +232,7 @@ export default function CheckoutPage() {
                                         {cartItems?.map(item => (
                                             <div key={item.id} className="flex items-center gap-4">
                                                 <div className="relative h-16 w-16 overflow-hidden rounded-md">
-                                                     <Image src={item.imageUrl} alt={item.subscriptionName} fill className="object-cover" />
+                                                     <Image src={item.imageUrl || `https://ui-avatars.com/api/?name=${item.subscriptionName.replace(/\s/g, "+")}&background=random`} alt={item.subscriptionName} fill className="object-cover" />
                                                 </div>
                                                 <div className="flex-1">
                                                     <p className="font-semibold">{item.subscriptionName}</p>

@@ -116,7 +116,7 @@ export default function ProductCard({ product }: { product: any }) {
             variantName: variantName,
             price: currentPrice,
             quantity: 1,
-            imageUrl: product.imageUrl,
+            imageUrl: product.imageUrl || `https://ui-avatars.com/api/?name=${product.name.replace(/\s/g, "+")}&background=random`,
         };
         
         const q = query(
@@ -184,7 +184,7 @@ export default function ProductCard({ product }: { product: any }) {
             <span className="text-base font-normal text-muted-foreground"> PKR</span>
         </div>
         <CardDescription className="mt-2 text-sm min-h-[40px] flex-grow">
-          {product.description}
+          {product.description.split('\n')[0]}
         </CardDescription>
 
         {hasVariants && (

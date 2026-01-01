@@ -71,7 +71,7 @@ export function CartDrawer() {
                     {cartItems?.map(item => (
                         <div key={item.id} className="flex items-start gap-4">
                             <div className="relative h-20 w-20 overflow-hidden rounded-md">
-                                <Image src={item.imageUrl} alt={item.subscriptionName} fill className="object-cover" />
+                                <Image src={item.imageUrl || `https://ui-avatars.com/api/?name=${item.subscriptionName.replace(/\s/g, "+")}&background=random`} alt={item.subscriptionName} fill className="object-cover" />
                             </div>
                             <div className="flex-1">
                                 <h4 className="font-semibold">{item.subscriptionName}</h4>

@@ -117,7 +117,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
             variantName: variantName,
             price: currentPrice,
             quantity: 1,
-            imageUrl: product.imageUrl,
+            imageUrl: product.imageUrl || `https://ui-avatars.com/api/?name=${product.name.replace(/\s/g, "+")}&background=random`,
         };
         
         const q = query(
@@ -162,6 +162,9 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   const handleBuyNow = async () => {
     await handleAddToCart(true);
   };
+  
+  const formattedDescription = product?.description?.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-primary hover:underline">$1</a>').replace(/\n/g, '<br />');
+
 
   return (
     <main className="flex-grow container mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
@@ -174,9 +177,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
               <h1 className="font-headline text-4xl font-extrabold tracking-tighter sm:text-5xl">
                 {product.name}
               </h1>
-              <p className="mt-4 text-muted-foreground">
-                {product.description}
-              </p>
+              <div className="mt-4 text-muted-foreground prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: formattedDescription || '' }} />
               <ul className="mt-6 space-y-2 text-muted-foreground">
                 <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-primary" /> Instant Delivery</li>
                 <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-primary" /> 24/7 Support</li>

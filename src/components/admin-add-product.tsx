@@ -28,10 +28,17 @@ const productSchema = z.object({
   description: z.string().min(1, 'Description is required'),
   price: z.coerce.number().min(0, 'Base price must be a positive number'),
   discountedPrice: z.coerce.number().nullable().optional(),
-  imageUrl: z.string().url('Must be a valid URL'),
+  imageUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   categoryId: z.string().min(1, 'Category ID is required'),
   variants: z.array(variantGroupSchema).optional(),
 });
+
+const defaultRules = `Password change not allowed
+Don't login on extra device
+don't mess up with account settings
+don't add or remove phone number
+no replacement refund in case of violating the rules and tos
+follow rules and tos for better experience at tos link`;
 
 export default function AdminAddProduct() {
   const firestore = useFirestore();
@@ -47,7 +54,7 @@ export default function AdminAddProduct() {
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: '',
-      description: '',
+      description: defaultRules.replace('tos link', '[tos link](/legal/rules)'),
       price: 0,
       discountedPrice: null,
       imageUrl: '',
@@ -108,12 +115,12 @@ export default function AdminAddProduct() {
               />
             </div>
             
-            <FormField control={productForm.control} name="description" render={({ field }) => (<FormItem><FormLabel>Description</FormLabel><FormControl><Textarea placeholder="Subscription details" {...field} /></FormControl><FormMessage /></FormItem>)} />
+            <FormField control={productForm.control} name="description" render={({ field }) => (<FormItem><FormLabel>Description</FormLabel><FormControl><Textarea placeholder="Subscription details" {...field} className="min-h-[150px]" /></FormControl><FormMessage /></FormItem>)} />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField control={productForm.control} name="price" render={({ field }) => (<FormItem><FormLabel>Base Price (PKR)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="3000" {...field} /></FormControl><FormMessage /></FormItem>)} />
                 <FormField control={productForm.control} name="discountedPrice" render={({ field }) => (<FormItem><FormLabel>Discounted Price (PKR)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="2499" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? null : Number(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField control={productForm.control} name="imageUrl" render={({ field }) => (<FormItem><FormLabel>Image URL</FormLabel><FormControl><Input placeholder="https://example.com/image.png" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={productForm.control} name="imageUrl" render={({ field }) => (<FormItem><FormLabel>Image URL (Optional)</FormLabel><FormControl><Input placeholder="https://example.com/image.png" {...field} /></FormControl><FormMessage /></FormItem>)} />
             </div>
 
             <div>

@@ -34,6 +34,10 @@ const defaultLegalContent = {
     refund: {
         title: 'Refund Policy',
         content: `Our refund policy is designed to be fair and transparent.\n\n1. Eligibility for Refund\nA full refund will be issued if we fail to deliver your subscription credentials to your registered email or account page within the guaranteed 24-hour delivery window after your payment has been successfully verified. \n\n2. Non-Refundable Items\nOnce subscription credentials have been delivered, the sale is final and cannot be refunded.\n\n3. How to Request a Refund\nIf you have not received your order within 24 hours, please contact our support team with your order ID. We will verify the delivery status and process your refund accordingly.\n\n4. Chargeback Policy\nInitiating a chargeback for a delivered order will result in a permanent ban from our services, as outlined in our Terms of Service.`
+    },
+    rules: {
+        title: 'Account Rules',
+        content: `To ensure a fair and stable service for everyone, you must adhere to the following rules for all subscription accounts purchased through our platform:\n\n1.  **Do Not Change Passwords:** You are strictly prohibited from changing the password of the subscription account provided.\n\n2.  **One Device Login:** Unless specified otherwise, each subscription is for a single user on a single device. Do not log in on multiple devices simultaneously.\n\n3.  **Do Not Alter Account Settings:** You must not change any account settings, including profile names, email addresses, or billing information.\n\n4.  **No Phone Number Changes:** Do not add, remove, or change any phone number associated with the account.\n\n5.  **Consequences of Violation:** Any violation of these rules will result in the immediate termination of your subscription without any replacement or refund. Your AQT Max account may also be permanently banned.\n\nBy using the subscription account, you agree to follow these rules and our full [Terms of Service](/legal/terms).`
     }
 };
 
