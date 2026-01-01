@@ -43,7 +43,9 @@ export default function ProductCard({ product }: { product: any }) {
     if (hasVariants) {
       const initialSelections: SelectedVariants = {};
       product.variantGroups.forEach((group: any) => {
-        initialSelections[group.name] = group.options[0].name;
+        if (group.options && group.options.length > 0) {
+          initialSelections[group.name] = group.options[0].name;
+        }
       });
       setSelectedVariants(initialSelections);
     } else {
@@ -82,7 +84,9 @@ export default function ProductCard({ product }: { product: any }) {
 
   }, [product, hasVariants, selectedVariants]);
 
-  const handleVariantChange = (groupName: string, optionName: string) => {
+  const handleVariantChange = (e: React.MouseEvent, groupName: string, optionName: string) => {
+    e.stopPropagation();
+    e.preventDefault();
     setSelectedVariants(prev => ({ ...prev, [groupName]: optionName }));
   };
   
@@ -94,7 +98,7 @@ export default function ProductCard({ product }: { product: any }) {
   
     const availableOptions = new Set<string>();
     
-    product.variantMatrix.forEach((combo: any) => {
+    product.variantMatrix?.forEach((combo: any) => {
       const isMatch = Object.keys(otherSelections).every(key => combo.options[key] === otherSelections[key]);
       if (isMatch && combo.inStock) {
         availableOptions.add(combo.options[groupName]);
@@ -109,6 +113,12 @@ export default function ProductCard({ product }: { product: any }) {
     }));
   };
   
+  const handleActionClick = (e: React.MouseEvent, action: () => void) => {
+    e.stopPropagation();
+    e.preventDefault();
+    action();
+  };
+
   const handleAddToCart = async (redirect: boolean = false) => {
     if (!user) {
       toast({ variant: "destructive", title: "Not logged in", description: "You need to be logged in to add items to your cart."});
@@ -185,85 +195,90 @@ export default function ProductCard({ product }: { product: any }) {
   };
 
   const handleBuyNow = () => handleAddToCart(true);
-  const handleQuantityChange = (amount: number) => {
+  const handleQuantityChange = (e: React.MouseEvent, amount: number) => {
+    e.stopPropagation();
+    e.preventDefault();
     setQuantity(prev => Math.max(1, prev + amount));
   }
+  
+  const handleQuantityInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setQuantity(Math.max(1, parseInt(e.target.value) || 1))
+  };
 
-  const pricePrefix = hasVariants && !product.variantGroups.every((g:any) => selectedVariants[g.name]) ? 'From' : '';
+  const pricePrefix = hasVariants && product.variantGroups && !product.variantGroups.every((g:any) => selectedVariants[g.name]) ? 'From' : '';
 
   return (
-    <Card
-      className="flex flex-col h-full overflow-hidden rounded-2xl border-border/10 bg-card/50 backdrop-blur-xl transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl"
-    >
-      <CardHeader className="flex-row items-center gap-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
-          {product.imageUrl ? (
-            <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover rounded-xl" />
-          ) : (
-            <ProductIcon className="h-6 w-6 text-foreground" />
-          )}
-        </div>
-        <div>
-          <Link href={`/products/${product.id}`}>
+    <Link href={`/products/${product.id}`} className="block h-full">
+      <Card className="flex flex-col h-full overflow-hidden rounded-2xl border-border/10 bg-card/50 backdrop-blur-xl transition-all duration-300 hover:border-primary/30 hover:shadow-primary/10 hover:shadow-2xl hover:-translate-y-1">
+        <CardHeader className="flex-row items-start gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted flex-shrink-0">
+            {product.imageUrl ? (
+              <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover rounded-xl" />
+            ) : (
+              <ProductIcon className="h-6 w-6 text-foreground" />
+            )}
+          </div>
+          <div>
             <CardTitle className="text-lg hover:underline">{product.name}</CardTitle>
-          </Link>
-        </div>
-      </CardHeader>
-      <CardContent className="flex-grow flex flex-col space-y-4">
-        <div className="text-4xl font-bold">
-            {pricePrefix && <span className="text-lg font-normal text-muted-foreground mr-1">{pricePrefix}</span>}
-            {currentPrice?.toFixed(2)}
-            <span className="text-base font-normal text-muted-foreground"> PKR</span>
-        </div>
-        {product.description && (
-            <CardDescription className="mt-2 text-sm min-h-[40px] flex-grow">
-            {product.description.split('\n')[0]}
-            </CardDescription>
-        )}
-
-
-        {hasVariants && (
-          <div className="space-y-2 flex-grow">
-              {product.variantGroups.map((group: any, index: number) => {
-                  const options = getAvailableOptions(group.name);
-                  return (
-                  <div key={`${group.name}-${index}`}>
-                      <Label className="text-xs text-muted-foreground">{group.name}</Label>
-                       <Select
-                          onValueChange={(value) => handleVariantChange(group.name, value)}
-                          value={selectedVariants[group.name]}
-                        >
-                          <SelectTrigger className="h-9">
-                              <SelectValue placeholder={`Select ${group.name}`} />
-                          </SelectTrigger>
-                          <SelectContent>
-                              {options.map((option: any) => (
-                                  <SelectItem key={option.name} value={option.name} disabled={!option.isAvailable}>
-                                      {option.name}
-                                  </SelectItem>
-                              ))}
-                          </SelectContent>
-                      </Select>
-                  </div>
-              )})}
           </div>
-        )}
-      </CardContent>
-      <CardFooter className="flex flex-col gap-2 pt-4">
-          <div className="flex items-center gap-2 w-full">
-            <Button variant="outline" size="icon" onClick={() => handleQuantityChange(-1)}><Minus className="h-4 w-4" /></Button>
-            <Input type="number" value={quantity} onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))} className="w-full text-center" />
-            <Button variant="outline" size="icon" onClick={() => handleQuantityChange(1)}><Plus className="h-4 w-4" /></Button>
+        </CardHeader>
+        <CardContent className="flex-grow flex flex-col space-y-4">
+          <div className="text-4xl font-bold">
+              {pricePrefix && <span className="text-lg font-normal text-muted-foreground mr-1">{pricePrefix}</span>}
+              {currentPrice?.toFixed(2)}
+              <span className="text-base font-normal text-muted-foreground"> PKR</span>
           </div>
-          <Button size="sm" className="w-full" onClick={() => handleAddToCart(false)} disabled={isAdding || !inStock}>
-              <ShoppingCart className="mr-2 h-4 w-4" />
-              {inStock ? 'Add to Cart' : 'Out of Stock'}
-          </Button>
-          <Button size="sm" variant="outline" className="w-full" onClick={handleBuyNow} disabled={isAdding || !inStock}>
-              <CreditCard className="mr-2 h-4 w-4" />
-              Buy Now
-          </Button>
-      </CardFooter>
-    </Card>
+          {product.description && (
+              <CardDescription className="mt-2 text-sm min-h-[40px] flex-grow">
+                {hasVariants ? product.description.split('\n')[0] : product.description}
+              </CardDescription>
+          )}
+
+          {hasVariants && (
+            <div className="space-y-2 flex-grow" onClick={(e) => e.preventDefault()}>
+                {product.variantGroups.map((group: any, index: number) => {
+                    const options = getAvailableOptions(group.name);
+                    return (
+                    <div key={`${group.name}-${index}`}>
+                        <Label className="text-xs text-muted-foreground">{group.name}</Label>
+                        <Select
+                            onValueChange={(value) => handleVariantChange(new MouseEvent('click') as any, group.name, value)}
+                            value={selectedVariants[group.name]}
+                          >
+                            <SelectTrigger className="h-9">
+                                <SelectValue placeholder={`Select ${group.name}`} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {options.map((option: any) => (
+                                    <SelectItem key={option.name} value={option.name} disabled={!option.isAvailable}>
+                                        {option.name} {!option.isAvailable && ' (Out of stock)'}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                )})}
+            </div>
+          )}
+        </CardContent>
+        <CardFooter className="flex flex-col gap-2 pt-4">
+            <div className="flex items-center gap-2 w-full">
+              <Button variant="outline" size="icon" onClick={(e) => handleQuantityChange(e, -1)}><Minus className="h-4 w-4" /></Button>
+              <Input type="number" value={quantity} onChange={handleQuantityInputChange} onClick={(e) => e.stopPropagation()} className="w-full text-center" />
+              <Button variant="outline" size="icon" onClick={(e) => handleQuantityChange(e, 1)}><Plus className="h-4 w-4" /></Button>
+            </div>
+            <Button size="sm" className="w-full" onClick={(e) => handleActionClick(e, () => handleAddToCart(false))} disabled={isAdding || !inStock}>
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                {inStock ? 'Add to Cart' : 'Out of Stock'}
+            </Button>
+            <Button size="sm" variant="outline" className="w-full" onClick={(e) => handleActionClick(e, handleBuyNow)} disabled={isAdding || !inStock}>
+                <CreditCard className="mr-2 h-4 w-4" />
+                Buy Now
+            </Button>
+        </CardFooter>
+      </Card>
+    </Link>
   );
 }
