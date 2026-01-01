@@ -133,7 +133,7 @@ function EditProductForm({
     const optionGroups = watchedVariantGroups.map(g => g.options?.map(o => ({ group: g.name, option: o.name })) || []);
     const validOptionGroups = optionGroups.filter(g => g.length > 0 && g.every(o => o.group && o.option));
 
-    if (validOptionGroups.length === 0) {
+    if (validOptionGroups.length < watchedVariantGroups.length) {
       replaceVariantMatrix([]);
       return;
     }
@@ -310,7 +310,7 @@ function VariantGroup({ groupIndex, removeGroup, form }: { groupIndex: number; r
             </FormItem>
           )}
         />
-        <Button type="button" variant="destructive" size="icon" onClick={() => removeGroup(groupIndex)} className="mt-6">
+        <Button type="button" variant="destructive" size="icon" onClick={() => removeGroup(groupIndex)} className="mt-8">
           <Trash className="h-4 w-4" />
         </Button>
       </div>
