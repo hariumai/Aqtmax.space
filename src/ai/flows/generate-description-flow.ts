@@ -25,7 +25,7 @@ export type GenerateDescriptionOutput = z.infer<typeof GenerateDescriptionOutput
 // Define the prompt template that will be sent to the language model.
 const generateDescriptionPrompt = ai.definePrompt({
   name: 'generateDescriptionPrompt',
-  model: googleAI.model('gemini-pro'),
+  model: googleAI.model('gemini-1.5-flash-latest'),
   input: { schema: GenerateDescriptionInputSchema },
   output: { schema: GenerateDescriptionOutputSchema },
   prompt: `You are a professional marketing copywriter specializing in digital services.
