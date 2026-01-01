@@ -32,14 +32,15 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 function OrderItemRow({ order }: { order: Order }) {
   const itemNames = order.items.map((item: any) => item.subscriptionName).join(', ');
+  const orderDate = order.orderDate?.toDate ? order.orderDate.toDate() : new Date(order.orderDate);
 
   return (
-    <Link href={`/order/details/${order.id}`}>
+    <Link href={`/order/${order.id}`}>
         <div className="flex justify-between items-center py-4 px-4 hover:bg-muted/50 rounded-lg cursor-pointer">
             <div>
                 <p className="font-semibold text-left">{itemNames}</p>
                 <p className="text-sm text-muted-foreground text-left">
-                {new Date(order.orderDate).toLocaleDateString()}
+                {orderDate instanceof Date && !isNaN(orderDate as any) ? orderDate.toLocaleDateString() : 'Invalid Date'}
                 </p>
             </div>
             <div className="text-right">
@@ -420,3 +421,5 @@ export default function ProfilePage() {
     </main>
   );
 }
+
+    
