@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -5,7 +6,7 @@ import { useCollection, useFirestore, useAuth, useMemoFirebase, useUser } from '
 import { collection, query, doc, deleteDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from './ui/button';
-import { Mail, Trash, Edit, Ban, Bell, Search } from 'lucide-react';
+import { Mail, Trash, Edit, Ban, Bell, Search, MessageSquare } from 'lucide-react';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
@@ -24,6 +25,7 @@ import { Calendar } from './ui/calendar';
 import { cn } from '@/lib/utils';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
+import { Textarea } from './ui/textarea';
 
 const banSchema = z.object({
   type: z.enum(['temporary', 'permanent']),
@@ -206,6 +208,7 @@ export default function AdminUsers() {
       await updateDoc(userRef, {
         "ban.isBanned": false,
         "ban.appealRequested": false, // Reset appeal status on unban
+        "ban.appealMessage": null,
       });
       toast({ title: "User Unbanned", description: "The user's ban has been lifted." });
     } catch (error: any) {
@@ -240,29 +243,47 @@ export default function AdminUsers() {
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Appeal</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoadingUsers ? (
               <TableRow>
-                <TableCell colSpan={4}>Loading users...</TableCell>
+                <TableCell colSpan={5}>Loading users...</TableCell>
               </TableRow>
             ) : (
               filteredUsers.map((user) => (
                 <TableRow key={user.id} className={user.ban?.isBanned ? 'bg-destructive/10' : ''}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                        {user.name}
-                        {user.ban?.appealRequested && <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600"><Bell className="h-3 w-3 mr-1" />Appeal</Badge>}
-                    </div>
-                  </TableCell>
+                  <TableCell>{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
                     {user.ban?.isBanned ? (
                       <Badge variant="destructive" className="capitalize">{user.ban.type}</Badge>
                     ) : (
                       <Badge variant="secondary">Active</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {user.ban?.appealRequested && (
+                       <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MessageSquare className="h-4 w-4 text-yellow-500" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Appeal from {user.name}</DialogTitle>
+                          </DialogHeader>
+                          <div className="py-4">
+                            <p className="text-sm text-muted-foreground">{user.ban?.appealMessage || "No message provided."}</p>
+                          </div>
+                          <DialogFooter>
+                            <DialogClose asChild><Button>Close</Button></DialogClose>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
@@ -308,7 +329,7 @@ export default function AdminUsers() {
             )}
             {!isLoadingUsers && filteredUsers.length === 0 && (
                 <TableRow>
-                    <TableCell colSpan={4} className="text-center">No users found.</TableCell>
+                    <TableCell colSpan={5} className="text-center">No users found.</TableCell>
                 </TableRow>
             )}
           </TableBody>

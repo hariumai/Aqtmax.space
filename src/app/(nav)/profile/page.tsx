@@ -1,3 +1,4 @@
+
 'use client';
 import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
@@ -19,6 +20,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { updateProfile } from 'firebase/auth';
 import { type Order } from '@/lib/types';
+import { Textarea } from '@/components/ui/textarea';
 
 const profileFormSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -56,12 +58,29 @@ function BannedProfile({ user, banInfo, settings, onSignOut }: { user: any, banI
     const expirationDate = isTemporary && banInfo.expiresAt ? new Date(banInfo.expiresAt).toLocaleString() : null;
     const firestore = useFirestore();
     const { toast } = useToast();
+    const [appealMessage, setAppealMessage] = useState('');
+    const MAX_WORDS = 150;
+    const wordCount = appealMessage.trim().split(/\s+/).filter(Boolean).length;
 
     const handleAppealRequest = async () => {
         if (!firestore || !user) return;
+        if (wordCount === 0) {
+            toast({
+                variant: 'destructive',
+                title: 'Appeal Message Required',
+                description: 'Please explain why you are appealing.',
+            });
+            return;
+        }
+
         const userRef = doc(firestore, 'users', user.uid);
         try {
-            await setDoc(userRef, { ban: { appealRequested: true } }, { merge: true });
+            await setDoc(userRef, { 
+                ban: { 
+                    appealRequested: true,
+                    appealMessage: appealMessage,
+                } 
+            }, { merge: true });
             toast({
                 title: 'Appeal Requested',
                 description: 'Our support team will review your case shortly.',
@@ -95,10 +114,30 @@ function BannedProfile({ user, banInfo, settings, onSignOut }: { user: any, banI
                          <p><strong>Expires:</strong> {expirationDate}</p>
                     )}
                 </div>
-                 <div className="text-sm p-4 border rounded-md bg-primary/10 text-black">
+                <div className="text-sm p-4 border rounded-md bg-primary/10 text-black">
                    If you believe this is a mistake, you can request an appeal. Our team will review your account. For urgent matters, contact us on WhatsApp
                    {settings?.whatsappNumber && ` at ${settings.whatsappNumber}`}.
                 </div>
+
+                {!banInfo.appealRequested && (
+                    <div className="space-y-2 text-left">
+                        <Label htmlFor="appeal-message">Your Appeal</Label>
+                        <Textarea 
+                            id="appeal-message"
+                            placeholder="Please explain why you believe this ban is a mistake..."
+                            value={appealMessage}
+                            onChange={(e) => {
+                                const words = e.target.value.trim().split(/\s+/);
+                                if (words.length <= MAX_WORDS) {
+                                    setAppealMessage(e.target.value);
+                                }
+                            }}
+                            className="min-h-[100px]"
+                        />
+                        <p className="text-xs text-muted-foreground text-right">{wordCount} / {MAX_WORDS} words</p>
+                    </div>
+                )}
+                
                 <div className="flex flex-col gap-2">
                    {banInfo.appealRequested ? (
                        <Button disabled>
