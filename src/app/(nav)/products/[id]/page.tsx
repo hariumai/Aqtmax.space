@@ -1,6 +1,6 @@
 
 'use client';
-import { useState, useEffect, useMemo, use } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Clapperboard, CreditCard, Lock, Music, Palette, ShoppingCart, Tv, Plus, Minus, AlertTriangle } from "lucide-react";
@@ -55,8 +55,8 @@ function RulesSection() {
     )
 }
 
-export default function ProductPage({ params: paramsProp }: { params: { id: string } }) {
-  const params = use(Promise.resolve(paramsProp));
+export default function ProductPage() {
+  const params = useParams();
   const id = params.id as string;
   const firestore = useFirestore();
   const { user } = useUser();
