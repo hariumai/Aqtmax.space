@@ -12,21 +12,10 @@ export default function RulesPage() {
     [firestore]
   );
   const { data: page, isLoading } = useDoc(pageRef);
-  const [lastUpdated, setLastUpdated] = useState('');
   const [htmlContent, setHtmlContent] = useState('');
 
   useEffect(() => {
     if (page?.content) {
-        // Find a date in the format **Last Updated: [Date]**
-        const dateMatch = page.content.match(/\*\*Last Updated: (.*?)\*\*/);
-        if (dateMatch && dateMatch[1] === '[Date]') {
-            setLastUpdated(new Date().toLocaleDateString());
-        } else if (dateMatch) {
-            setLastUpdated(dateMatch[1]);
-        } else {
-             setLastUpdated(new Date().toLocaleDateString());
-        }
-
         let content = page.content;
         // Replace markdown-style bold and links
         content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
@@ -44,7 +33,6 @@ export default function RulesPage() {
         {isLoading && (
             <div className="prose prose-invert max-w-none">
                 <Skeleton className="h-12 w-3/4 mb-4" />
-                <Skeleton className="h-6 w-1/4 mb-8" />
                 <Skeleton className="h-4 w-full mb-2" />
                 <Skeleton className="h-4 w-full mb-2" />
                 <Skeleton className="h-4 w-5/6 mb-8" />
@@ -56,7 +44,6 @@ export default function RulesPage() {
         {page && (
             <div className="prose prose-invert max-w-none">
             <h1 className="font-headline text-4xl font-extrabold tracking-tighter">{page.title}</h1>
-            {lastUpdated && <p className="lead">Last updated: {lastUpdated}</p>}
             <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
             </div>
         )}
