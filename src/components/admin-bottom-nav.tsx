@@ -1,7 +1,8 @@
+
 'use client';
 import { useAdminDashboard, type AdminSection } from './admin-dashboard';
 import { cn } from '@/lib/utils';
-import { ListOrdered, Users, ShoppingCart, Settings, PlusCircle, Menu as MenuIcon, Shapes, Bell } from 'lucide-react';
+import { ListOrdered, Users, ShoppingCart, Settings, PlusCircle, Menu as MenuIcon, Shapes, Bell, Mail } from 'lucide-react';
 import { useSidebar } from './ui/sidebar';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 
@@ -71,6 +72,10 @@ export default function AdminBottomNav() {
                                    <Bell className="w-6 h-6" />
                                    <span>Notifications</span>
                                </button>
+                                <button onClick={() => { setActiveSection('contactForms'); setOpenMobile(false);}} className="flex flex-col items-center gap-2 p-4 rounded-lg bg-muted/50">
+                                   <Mail className="w-6 h-6" />
+                                   <span>Contact Forms</span>
+                               </button>
                                 <button onClick={() => { setActiveSection('categories'); setOpenMobile(false);}} className="flex flex-col items-center gap-2 p-4 rounded-lg bg-muted/50">
                                    <Shapes className="w-6 h-6" />
                                    <span>Categories</span>
@@ -95,3 +100,5 @@ export default function AdminBottomNav() {
         </div>
     );
 }
+
+    

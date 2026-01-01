@@ -53,12 +53,12 @@ export default function HeroSection() {
 
             <div className="mt-8 flex flex-col items-center gap-4">
                <Button size="lg" asChild>
-                <Link href="/products">
+                <Link href="/u/r2/div/products">
                     Browse Products <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link href="/categories">
+                <Link href="/u/r2/div/categories">
                     View Categories
                 </Link>
               </Button>

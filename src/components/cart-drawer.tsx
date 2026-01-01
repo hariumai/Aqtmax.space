@@ -66,7 +66,7 @@ export function CartDrawer() {
             <p className="text-muted-foreground">Add items to your cart to see them here.</p>
             <SheetClose asChild>
                 <Button asChild>
-                    <Link href="/products">Continue Shopping</Link>
+                    <Link href="/u/r2/div/products">Continue Shopping</Link>
                 </Button>
             </SheetClose>
           </div>
@@ -105,7 +105,7 @@ export function CartDrawer() {
                 </div>
                 <SheetClose asChild>
                   <Button asChild size="lg" className="w-full">
-                    <Link href="/checkout">Proceed to Checkout</Link>
+                    <Link href="/u/r2/div/checkout">Proceed to Checkout</Link>
                   </Button>
                 </SheetClose>
               </div>

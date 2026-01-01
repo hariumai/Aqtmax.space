@@ -70,7 +70,7 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
           <div className="text-center col-span-full">
               <p className="text-muted-foreground">No products found in this category.</p>
               <Button asChild variant="link" className="mt-4">
-                  <Link href="/products">View all products</Link>
+                  <Link href="/u/r2/div/products">View all products</Link>
               </Button>
           </div>
       )}

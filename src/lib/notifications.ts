@@ -1,4 +1,3 @@
-
 'use server';
 import { firestore } from '@/firebase/server';
 import { collection, addDoc, serverTimestamp, writeBatch, getDocs, doc } from 'firebase/firestore';
@@ -103,4 +102,3 @@ export async function signOutAndNotify(userId: string, browser: string) {
         console.error("Error during sign out notification process:", error);
     }
 }
-

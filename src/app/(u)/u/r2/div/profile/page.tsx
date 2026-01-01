@@ -36,7 +36,7 @@ function OrderItemRow({ order }: { order: Order }) {
   const isCompleted = order.status === 'completed';
 
   return (
-    <Link href={`/order/${order.id}`}>
+    <Link href={`/u/r2/div/order/${order.id}`}>
         <div className="flex justify-between items-center py-4 px-4 hover:bg-muted/50 rounded-lg cursor-pointer">
             <div>
                 <p className="font-semibold text-left">{itemNames}</p>
@@ -126,7 +126,7 @@ function BannedProfile({ user, banInfo, settings, onSignOut }: { user: any, banI
             await createNotification({
                 userId: user.uid,
                 message: 'Your appeal has been submitted and is now pending review.',
-                href: '/profile'
+                href: '/u/r2/div/profile'
             });
 
              if (settings?.whatsappNumber) {
@@ -279,7 +279,7 @@ export default function ProfilePage() {
       await createNotification({
           userId: user.uid,
           message: 'Your profile has been successfully updated.',
-          href: '/profile',
+          href: '/u/r2/div/profile',
       });
       
       toast({
@@ -416,7 +416,7 @@ export default function ProfilePage() {
               <div className="text-center py-8">
                   <p className="text-muted-foreground">You have not placed any orders yet.</p>
                   <Button asChild variant="link" className="mt-2">
-                      <Link href="/products">Start Shopping</Link>
+                      <Link href="/u/r2/div/products">Start Shopping</Link>
                   </Button>
               </div>
             )}
@@ -426,5 +426,3 @@ export default function ProfilePage() {
     </main>
   );
 }
-
-    

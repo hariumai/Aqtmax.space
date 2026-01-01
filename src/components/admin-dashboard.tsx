@@ -11,7 +11,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { Settings, Users, ShoppingCart, FileText, Menu as MenuIcon, PlusCircle, ListOrdered, Shapes, Bell } from 'lucide-react';
+import { Settings, Users, ShoppingCart, FileText, Menu as MenuIcon, PlusCircle, ListOrdered, Shapes, Bell, Mail } from 'lucide-react';
 import AdminUsers from '@/components/admin-users';
 import AdminAddProduct from '@/components/admin-add-product';
 import AdminLegalPages from '@/components/admin-legal-pages';
@@ -22,8 +22,9 @@ import AdminSettings from '@/components/admin-settings';
 import AdminCategories from './admin-categories';
 import { Loader2 } from 'lucide-react';
 import AdminNotifications from './admin-notifications';
+import AdminContactForms from './admin-contact-forms';
 
-export type AdminSection = 'users' | 'addProduct' | 'manageProducts' | 'orders' | 'legal' | 'menu' | 'settings' | 'categories' | 'notifications';
+export type AdminSection = 'users' | 'addProduct' | 'manageProducts' | 'orders' | 'legal' | 'menu' | 'settings' | 'categories' | 'notifications' | 'contactForms';
 
 type AdminDashboardContextType = {
   activeSection: AdminSection;
@@ -101,6 +102,8 @@ export default function AdminDashboard({ isAuthenticated }: { isAuthenticated: b
         return <AdminCategories />;
       case 'notifications':
         return <AdminNotifications />;
+      case 'contactForms':
+        return <AdminContactForms />;
       default:
         return <AdminOrders />;
     }
@@ -117,6 +120,7 @@ export default function AdminDashboard({ isAuthenticated }: { isAuthenticated: b
       case 'settings': return 'Settings';
       case 'categories': return 'Categories';
       case 'notifications': return 'Notifications';
+      case 'contactForms': return 'Contact Forms';
       default: return 'Dashboard';
     }
   };
@@ -166,6 +170,12 @@ export default function AdminDashboard({ isAuthenticated }: { isAuthenticated: b
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => handleSectionClick('contactForms')} isActive={activeSection === 'contactForms'}>
+                    <Mail />
+                    <span>Contact Forms</span>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
               <SidebarMenuButton onClick={() => handleSectionClick('legal')} isActive={activeSection === 'legal'}>
                 <FileText />
                 <span>Legal Pages</span>
@@ -197,3 +207,5 @@ export default function AdminDashboard({ isAuthenticated }: { isAuthenticated: b
     </div>
   );
 }
+
+    

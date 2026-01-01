@@ -217,7 +217,7 @@ export default function OrderDetailsPage() {
                         </Button>
                     </div>
                      <Button asChild className="w-full" size="lg" variant="secondary">
-                        <Link href="/products">
+                        <Link href="/u/r2/div/products">
                             <ShoppingCart className="mr-2 h-4 w-4" /> Continue Shopping
                         </Link>
                     </Button>
@@ -226,5 +226,3 @@ export default function OrderDetailsPage() {
         </main>
     );
 }
-
-    

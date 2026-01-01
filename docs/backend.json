@@ -195,6 +195,22 @@
         "browser": { "type": "string", "description": "Browser and OS information of the user's device." }
       },
       "required": ["id", "userId", "message", "createdAt", "read"]
+    },
+    "ContactSubmission": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Contact Submission",
+      "type": "object",
+      "description": "Represents a submission from the contact us form.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the submission." },
+        "name": { "type": "string", "description": "Name of the person submitting the form." },
+        "email": { "type": "string", "description": "Email of the person submitting the form.", "format": "email" },
+        "subject": { "type": "string", "description": "Subject of the message." },
+        "message": { "type": "string", "description": "The message content." },
+        "submittedAt": { "type": "string", "description": "Timestamp when the form was submitted.", "format": "date-time" },
+        "isRead": { "type": "boolean", "description": "Indicates if an admin has read the submission." }
+      },
+      "required": ["id", "name", "email", "subject", "message", "submittedAt", "isRead"]
     }
   },
   "auth": {
@@ -237,7 +253,13 @@
       {
         "path": "/users/{userId}/notifications/{notificationId}",
         "definition": { "entityName": "Notification", "schema": { "$ref": "#/entities/Notification" }, "description": "Stores user-specific notifications." }
+      },
+      {
+        "path": "/contactSubmissions/{submissionId}",
+        "definition": { "entityName": "ContactSubmission", "schema": { "$ref": "#/entities/ContactSubmission" }, "description": "Stores submissions from the contact form." }
       }
     ]
   }
 }
+
+    

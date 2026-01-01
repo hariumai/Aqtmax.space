@@ -44,7 +44,7 @@ export default function CategoriesPage() {
         {!isLoading && categories?.map((category) => {
           const Icon = iconMap[category.name] || iconMap.default;
           return (
-            <Link href={`/category/${category.id}`} key={category.id}>
+            <Link href={`/u/r2/div/category/${category.id}`} key={category.id}>
               <div
                 className="group relative rounded-2xl border border-border/10 bg-card/50 p-6 text-center transition-all duration-300 hover:bg-card/70 hover:scale-105 hover:shadow-2xl backdrop-blur-xl"
               >

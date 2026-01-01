@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -199,12 +198,12 @@ export default function ProductCard({ product, viewMode = 'grid' }: { product: a
         }
 
         if (redirect) {
-            router.push('/checkout');
+            router.push('/u/r2/div/checkout');
         } else {
              createNotification({
                 userId: user.uid,
                 message: `"${product.name}" was added to your cart.`,
-                href: '/checkout'
+                href: '/u/r2/div/checkout'
             });
         }
 
@@ -237,7 +236,7 @@ export default function ProductCard({ product, viewMode = 'grid' }: { product: a
   const pricePrefix = hasVariants && product.variantGroups && !product.variantGroups.every((g:any) => selectedVariants[g.name]) ? 'From' : '';
 
   return (
-    <Link href={`/products/${product.id}`} className="block h-full">
+    <Link href={`/u/r2/div/products/${product.id}`} className="block h-full">
       <Card className={cn("flex flex-col h-full overflow-hidden rounded-2xl border-border/10 bg-card/50 backdrop-blur-xl transition-all duration-300 hover:border-primary/30 hover:shadow-primary/10 hover:shadow-2xl hover:-translate-y-1", viewMode === 'list' && 'md:flex-row')}>
         <CardHeader className={cn("flex-row items-start gap-4", viewMode === 'list' && 'md:w-1/3')}>
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted flex-shrink-0">
@@ -261,9 +260,7 @@ export default function ProductCard({ product, viewMode = 'grid' }: { product: a
               {description && (
                   <div className='flex-grow'>
                     <div className="text-sm text-muted-foreground mt-2 min-h-[40px]">
-                      <div>
-                        {displayedDescription.split('\n').map((line, i) => <span key={i} className="block">{line}</span>)}
-                      </div>
+                      {displayedDescription.split('\n').map((line, i) => <span key={i} className="block">{line}</span>)}
                     </div>
                     {viewMode === 'grid' && !hasVariants && isLongDescription && (
                       <Button variant="link" size="sm" className="p-0 h-auto" onClick={toggleExpand}>

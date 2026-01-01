@@ -46,9 +46,9 @@ export default function BottomNav() {
   };
 
   const defaultNavItems = [
-    { id: 'home', href: '/', label: 'Home', icon: Home, order: 1 },
-    { id: 'products', href: '/products', label: 'Products', icon: LayoutGrid, order: 2 },
-    { id: 'categories', href: '/categories', label: 'Categories', icon: Shapes, order: 3 },
+    { id: 'home', href: '/u/r2/div', label: 'Home', icon: Home, order: 1 },
+    { id: 'products', href: '/u/r2/div/products', label: 'Products', icon: LayoutGrid, order: 2 },
+    { id: 'categories', href: '/u/r2/div/categories', label: 'Categories', icon: Shapes, order: 3 },
   ];
 
   const navItems = menuItems && menuItems.length > 0
@@ -57,7 +57,7 @@ export default function BottomNav() {
   navItems.sort((a,b) => (a.order ?? 99) - (b.order ?? 99));
 
   // Manually add Account item
-  const accountItem = { id: 'account', href: user ? '/profile' : '/login', label: 'Account', icon: User, order: 4 };
+  const accountItem = { id: 'account', href: user ? '/u/r2/div/profile' : '/login', label: 'Account', icon: User, order: 4 };
 
   // Show first 3 items from config.
   const mainNavItems = navItems.slice(0, 3);
@@ -70,7 +70,7 @@ export default function BottomNav() {
 
   const getHref = (href: string) => {
     if (href === '/profile') {
-      return user ? '/profile' : '/login';
+      return user ? '/u/r2/div/profile' : '/login';
     }
     return href;
   };
@@ -125,7 +125,7 @@ export default function BottomNav() {
                  <div className="flex flex-col gap-6 p-6">
                         <div className="flex justify-between items-center">
                            <SheetClose asChild>
-                            <Link href="/" className="flex items-center gap-2">
+                            <Link href="/u/r2/div" className="flex items-center gap-2">
                                 <Gem className="h-6 w-6 text-primary" />
                                 <span className="text-xl font-bold tracking-tighter">AQT Max</span>
                             </Link>

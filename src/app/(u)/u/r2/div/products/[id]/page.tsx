@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
@@ -202,12 +201,12 @@ export default function ProductPage({ params: paramsProp }: { params: { id: stri
         }
 
         if (redirect) {
-            router.push('/checkout');
+            router.push('/u/r2/div/checkout');
         } else {
              createNotification({
                 userId: user.uid,
                 message: `"${product.name}" was added to your cart.`,
-                href: '/checkout'
+                href: '/u/r2/div/checkout'
             });
         }
 
@@ -334,7 +333,7 @@ export default function ProductPage({ params: paramsProp }: { params: { id: stri
             </div>
           </div>
           <div className="text-center mt-16">
-            <Link href="/#products" className="text-sm text-primary hover:underline">
+            <Link href="/u/r2/div/#products" className="text-sm text-primary hover:underline">
               &larr; Back to all products
             </Link>
           </div>
@@ -343,7 +342,7 @@ export default function ProductPage({ params: paramsProp }: { params: { id: stri
       {!isLoading && !product && (
          <div className="text-center">
           <h1 className="text-2xl font-bold">Product not found</h1>
-          <Link href="/" className="text-sm text-primary hover:underline mt-4 inline-block">
+          <Link href="/u/r2/div" className="text-sm text-primary hover:underline mt-4 inline-block">
               &larr; Back to homepage
           </Link>
          </div>

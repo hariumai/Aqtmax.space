@@ -60,7 +60,7 @@ export default function CheckoutPage() {
     useEffect(() => {
         // Redirect if cart is empty and page is done loading
         if (!isLoading && cartItems?.length === 0) {
-            router.replace('/');
+            router.replace('/u/r2/div');
         }
     }, [isLoading, cartItems, router]);
 
@@ -176,10 +176,10 @@ export default function CheckoutPage() {
         await createNotification({
             userId: user.uid,
             message: `Your order #${newOrderRef.id.substring(0, 6)} has been placed and is now pending.`,
-            href: `/order/details/${newOrderRef.id}`
+            href: `/u/r2/div/order/details/${newOrderRef.id}`
         });
 
-        router.push(`/order/details/${newOrderRef.id}`);
+        router.push(`/u/r2/div/order/details/${newOrderRef.id}`);
 
       } catch (err: any) {
         console.error('Order placement error:', err);

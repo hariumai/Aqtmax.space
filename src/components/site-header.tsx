@@ -74,7 +74,7 @@ export default function SiteHeader() {
         </div>
         
         <div className="flex items-center justify-center">
-            <Link href="/" className="flex items-center gap-2">
+            <Link href="/u/r2/div" className="flex items-center gap-2">
             <Gem className="h-6 w-6 text-primary" />
             <span className="text-xl font-bold tracking-tighter text-foreground">
                 AQT Max
@@ -108,7 +108,7 @@ export default function SiteHeader() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push('/profile')}>
+                <DropdownMenuItem onClick={() => router.push('/u/r2/div/profile')}>
                   Profile
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleSignOut}>

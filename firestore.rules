@@ -14,11 +14,6 @@
  * - `/categories/{categoryId}`: Publicly browsable product categories.
  * - `/subscriptions/{subscriptionId}`: Publicly browsable subscription products.
  *
- * ## Key Security Decisions
- * - **Strict User Scoping**: A user can only access their own profile and cart.
- * - **Admin-level Access**: Any authenticated user is treated as an admin and can list and modify all major data collections, which is necessary for the admin dashboard to function. For production, this should be locked down with custom claims.
- * - **Public Catalog**: `/categories` and `/subscriptions` are publicly readable for browsing.
- * - **Admin-Only Writes**: Writes to catalog data are restricted to authenticated (admin) users.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -117,5 +112,17 @@ service cloud.firestore {
         allow get: if true;
         allow write: if isSignedIn(); // Admin only
     }
+    
+    /**
+     * Controls access to contact form submissions.
+     * Anyone can create (submit the form).
+     * Only admins can read, update, or delete submissions.
+     */
+    match /contactSubmissions/{submissionId} {
+      allow create: if true;
+      allow read, update, delete: if isSignedIn(); // Admin only
+    }
   }
 }
+
+    
