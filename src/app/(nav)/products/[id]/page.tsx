@@ -71,48 +71,49 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   const [isAdding, setIsAdding] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
+  const [inStock, setInStock] = useState(true);
 
+  // Auto-select first variant on product load
   useEffect(() => {
-    if (product?.variants && product.variants.length > 0) {
+    if (product && product.variantGroups && product.variantGroups.length > 0) {
       const initialSelections: SelectedVariants = {};
-      product.variants.forEach((group: any) => {
-        if (!group.required) {
-            initialSelections[group.groupName] = 'Not Selected';
-        } else {
-             initialSelections[group.groupName] = group.options[0].optionName;
+      product.variantGroups.forEach((group: any) => {
+        if (group.options && group.options.length > 0) {
+          initialSelections[group.name] = group.options[0];
         }
       });
       setSelectedVariants(initialSelections);
-    } else {
-        setCurrentPrice(product?.discountedPrice ?? product?.price ?? null);
     }
   }, [product]);
 
+  // Update price and stock status when variants change
   useEffect(() => {
     if (!product) return;
 
-    if (product.variants && product.variants.length > 0) {
-        let price = product.price || 0;
-        let allOptionsSelected = true;
-        
-        product.variants.forEach((group: any) => {
-            const selectedOptionName = selectedVariants[group.groupName];
-            if (group.required && (!selectedOptionName || selectedOptionName === 'Not Selected')) {
-                allOptionsSelected = false;
-            }
+    if (product.variantMatrix && product.variantMatrix.length > 0) {
+      const allOptionsSelected = Object.keys(selectedVariants).length === product.variantGroups.length;
 
-            if (selectedOptionName && selectedOptionName !== 'Not Selected') {
-                const selectedOption = group.options.find((opt: any) => opt.optionName === selectedOptionName);
-                if (selectedOption) {
-                    price += selectedOption.price;
-                }
-            }
+      if (allOptionsSelected) {
+        const matchedVariant = product.variantMatrix.find((variant: any) => {
+          return Object.entries(selectedVariants).every(
+            ([group, option]) => variant.options[group] === option
+          );
         });
-        setCurrentPrice(price);
+
+        if (matchedVariant) {
+          setCurrentPrice(matchedVariant.price);
+          setInStock(matchedVariant.inStock);
+        } else {
+          setCurrentPrice(null);
+          setInStock(false);
+        }
+      }
     } else {
-        setCurrentPrice(product.discountedPrice ?? product.price ?? null);
+      // For products without variants
+      setCurrentPrice(product.price);
+      setInStock(true); // Assuming always in stock if no variants
     }
-}, [selectedVariants, product]);
+  }, [selectedVariants, product]);
 
 
   const ProductIcon = product ? (product.imageUrl ? null : iconMap[product.name] || iconMap.default) : null;
@@ -127,25 +128,16 @@ export default function ProductPage({ params }: { params: { id: string } }) {
       router.push('/login');
       return;
     }
-    if (!product || currentPrice === null || quantity < 1) return;
-    
-    const allRequiredVariantsSelected = product.variants?.every((group: any) => {
-        return !group.required || (selectedVariants[group.groupName] && selectedVariants[group.groupName] !== 'Not Selected');
-    }) ?? true;
-
-    if (!allRequiredVariantsSelected) {
-      toast({ variant: "destructive", title: "Options required", description: "Please select all compulsory options."});
+    if (!product || currentPrice === null || quantity < 1 || !inStock) {
+      if(!inStock) toast({ variant: "destructive", title: "Out of stock", description: "This variant combination is not available."});
       return;
     }
-
+    
     setIsAdding(true);
 
     try {
         const cartRef = collection(firestore, 'users', user.uid, 'cart');
-        const variantName = product.variants
-            ?.map((group: any) => selectedVariants[group.groupName])
-            .filter(name => name && name !== 'Not Selected')
-            .join(' / ') || 'Default';
+        const variantName = Object.values(selectedVariants).join(' / ') || 'Default';
         
         const q = query(
             cartRef, 
@@ -229,33 +221,34 @@ export default function ProductPage({ params }: { params: { id: string } }) {
               <Card className="rounded-2xl border-border/10 bg-card/50 backdrop-blur-xl">
                 <CardHeader>
                   <CardTitle>
-                      {product.variants && product.variants.length > 0 
+                      {product.variantGroups && product.variantGroups.length > 0 
                           ? 'Select Options' 
                           : 'Complete Your Order'}
                   </CardTitle>
+                  {product.variantGroups?.length > 0 && (
                   <CardDescription>
-                    {product.variants?.length > 0 ? "Choose your desired options." : "Final step to unlock premium access."}
+                    Choose your desired options to see the final price.
                   </CardDescription>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {product.variants && product.variants.length > 0 ? (
+                    {product.variantGroups && product.variantGroups.length > 0 ? (
                       <div className="space-y-4">
-                        {product.variants.map((group: any) => (
-                           <div key={group.groupName}>
-                               <Label className="font-semibold">{group.groupName} {group.required && <span className="text-destructive">*</span>}</Label>
+                        {product.variantGroups.map((group: any) => (
+                           <div key={group.name}>
+                               <Label className="font-semibold">{group.name} {group.required && <span className="text-destructive">*</span>}</Label>
                                <Select 
-                                 value={selectedVariants[group.groupName]}
-                                 onValueChange={(value) => handleVariantChange(group.groupName, value)}
+                                 value={selectedVariants[group.name]}
+                                 onValueChange={(value) => handleVariantChange(group.name, value)}
                                >
                                  <SelectTrigger>
-                                     <SelectValue placeholder={`Select ${group.groupName}`} />
+                                     <SelectValue placeholder={`Select ${group.name}`} />
                                  </SelectTrigger>
                                  <SelectContent>
-                                     {!group.required && <SelectItem value="Not Selected">None</SelectItem>}
                                      {group.options.map((option: any) => (
-                                         <SelectItem key={option.optionName} value={option.optionName}>
-                                             {option.optionName} (+{option.price} PKR)
+                                         <SelectItem key={option} value={option}>
+                                             {option}
                                          </SelectItem>
                                      ))}
                                  </SelectContent>
@@ -277,16 +270,17 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                             <Button variant="outline" size="icon" onClick={() => handleQuantityChange(1)}><Plus className="h-4 w-4" /></Button>
                         </div>
                     </div>
+                    {!inStock && <p className="text-sm text-destructive font-medium">This combination is currently out of stock.</p>}
 
                   </div>
                 </CardContent>
                 <CardFooter className="flex-col items-stretch gap-4">
                   <div className="flex flex-col gap-2">
-                      <Button size="lg" className="w-full" onClick={() => handleAddToCart(false)} disabled={isAdding}>
+                      <Button size="lg" className="w-full" onClick={() => handleAddToCart(false)} disabled={isAdding || !inStock}>
                           <ShoppingCart className="mr-2 h-5 w-5" />
                           Add to Cart
                       </Button>
-                       <Button size="lg" variant="outline" className="w-full" onClick={handleBuyNow} disabled={isAdding}>
+                       <Button size="lg" variant="outline" className="w-full" onClick={handleBuyNow} disabled={isAdding || !inStock}>
                           <CreditCard className="mr-2 h-5 w-5" />
                           Buy Now
                       </Button>
