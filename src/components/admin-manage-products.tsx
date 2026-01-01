@@ -1,3 +1,4 @@
+
 'use client';
 import {
   collection,
@@ -17,7 +18,7 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash, PlusCircle } from 'lucide-react';
+import { Pencil, Trash, PlusCircle, ArrowLeft, Folder, Shapes } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -145,7 +146,7 @@ function EditProductForm({
     const newMatrix = combinations.map(combo => {
       const comboArray = Array.isArray(combo) ? combo : [combo];
       const optionsRecord = comboArray.reduce((acc, curr) => {
-        acc[curr.group] = curr.option;
+        if(curr.group) acc[curr.group] = curr.option;
         return acc;
       }, {} as Record<string, string>);
 
@@ -281,9 +282,7 @@ function EditProductForm({
           </div>
         </ScrollArea>
         <DialogFooter className="pt-6">
-          <DialogClose asChild>
-            <Button type="button" variant="ghost">Cancel</Button>
-          </DialogClose>
+          <DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose>
           <Button type="submit">Save Changes</Button>
         </DialogFooter>
       </form>
@@ -347,14 +346,19 @@ function VariantGroup({ groupIndex, removeGroup, form }: { groupIndex: number; r
 export default function AdminManageProducts() {
   const firestore = useFirestore();
   const { toast } = useToast();
+  
+  // State management
+  const [view, setView] = useState<'categories' | 'products'>('categories');
+  const [selectedCategory, setSelectedCategory] = useState<{ id: string; name: string } | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
+  // Data fetching
   const productsQuery = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'subscriptions')) : null),
     [firestore]
   );
-  const { data: products, isLoading } = useCollection<Product>(productsQuery);
+  const { data: allProducts, isLoading: isLoadingProducts } = useCollection<Product>(productsQuery);
 
   const categoriesQuery = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'categories')) : null),
@@ -369,6 +373,15 @@ export default function AdminManageProducts() {
       return acc;
     }, {} as Record<string, string>);
   }, [categories]);
+
+  const productsByCategory = useMemo(() => {
+      if (!allProducts || !selectedCategory) return [];
+      if (selectedCategory.id === 'uncategorized') {
+          return allProducts.filter(p => !p.categoryId || !categoryMap[p.categoryId]);
+      }
+      return allProducts.filter(p => p.categoryId === selectedCategory.id);
+  }, [allProducts, selectedCategory, categoryMap]);
+  
 
   const handleDelete = async (productId: string) => {
     if (!firestore) return;
@@ -391,20 +404,61 @@ export default function AdminManageProducts() {
     setSelectedProduct(product);
     setIsEditDialogOpen(true);
   }
+  
+  const handleCategoryClick = (category: { id: string; name: string }) => {
+      setSelectedCategory(category);
+      setView('products');
+  };
 
-  const pageIsLoading = isLoading || isLoadingCategories;
+  const pageIsLoading = isLoadingProducts || isLoadingCategories;
+
+  if (view === 'categories') {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Select a Category</CardTitle>
+                <CardDescription>Choose a category to view and manage its products.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {isLoadingCategories && Array.from({ length: 4 }).map((_, i) => <Card key={i} className="h-24 animate-pulse bg-muted" />)}
+                
+                {categories?.map((category) => (
+                    <button key={category.id} onClick={() => handleCategoryClick(category)} className="p-0">
+                      <div className="group flex flex-col items-center justify-center p-6 rounded-lg border h-full text-center hover:bg-accent transition-colors">
+                        <Shapes className="h-8 w-8 mb-2 text-muted-foreground group-hover:text-accent-foreground" />
+                        <p className="font-semibold">{category.name}</p>
+                      </div>
+                    </button>
+                ))}
+                 <button onClick={() => handleCategoryClick({ id: 'uncategorized', name: 'Uncategorized' })} className="p-0">
+                      <div className="group flex flex-col items-center justify-center p-6 rounded-lg border h-full text-center hover:bg-accent transition-colors">
+                        <Folder className="h-8 w-8 mb-2 text-muted-foreground group-hover:text-accent-foreground" />
+                        <p className="font-semibold">Uncategorized</p>
+                      </div>
+                </button>
+            </CardContent>
+        </Card>
+    );
+  }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Manage Products</CardTitle>
+        <div className="flex items-center gap-4">
+            <Button variant="outline" size="icon" onClick={() => setView('categories')}>
+                <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+                <CardTitle>Manage Products</CardTitle>
+                <CardDescription>Showing products in: <span className="font-semibold">{selectedCategory?.name}</span></CardDescription>
+            </div>
+        </div>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Category</TableHead>
               <TableHead>Base Price</TableHead>
               <TableHead>Variants</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -413,13 +467,12 @@ export default function AdminManageProducts() {
           <TableBody>
             {pageIsLoading && (
               <TableRow>
-                <TableCell colSpan={5}>Loading products...</TableCell>
+                <TableCell colSpan={4}>Loading products...</TableCell>
               </TableRow>
             )}
-            {!pageIsLoading && products?.map((product) => (
+            {!pageIsLoading && productsByCategory?.map((product) => (
                 <TableRow key={product.id}>
                   <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>{categoryMap[product.categoryId] || product.categoryId}</TableCell>
                   <TableCell>{product.price.toFixed(2)} PKR</TableCell>
                   <TableCell>{product.variantGroups?.length || 0}</TableCell>
                   <TableCell className="text-right">
@@ -452,9 +505,9 @@ export default function AdminManageProducts() {
                   </TableCell>
                 </TableRow>
               ))}
-            {!pageIsLoading && products?.length === 0 && (
+            {!pageIsLoading && productsByCategory.length === 0 && (
                 <TableRow>
-                    <TableCell colSpan={5} className="text-center">No products found.</TableCell>
+                    <TableCell colSpan={4} className="text-center h-24">No products found in this category.</TableCell>
                 </TableRow>
             )}
           </TableBody>
