@@ -63,13 +63,7 @@ export default function ForgotPasswordPage() {
     <main className="flex-grow flex items-center justify-center p-4">
       <Card className="mx-auto max-w-sm w-full">
         <CardHeader className="text-center">
-          <div className="flex flex-col items-center justify-center gap-2 mb-2">
-            <div className="flex items-center gap-2">
-              <Gem className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold tracking-tighter">AQT Max</span>
-            </div>
-            <CardTitle className="text-2xl">Forgot Password</CardTitle>
-          </div>
+          <CardTitle className="text-2xl">Forgot Password</CardTitle>
           <CardDescription>
             Enter your email and we&apos;ll send you a link to reset your password.
           </CardDescription>
