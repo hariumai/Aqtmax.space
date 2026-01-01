@@ -11,7 +11,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { Settings, Users, ShoppingCart, FileText, Menu as MenuIcon, PlusCircle, ListOrdered, Shapes } from 'lucide-react';
+import { Settings, Users, ShoppingCart, FileText, Menu as MenuIcon, PlusCircle, ListOrdered, Shapes, Bell } from 'lucide-react';
 import AdminUsers from '@/components/admin-users';
 import AdminAddProduct from '@/components/admin-add-product';
 import AdminLegalPages from '@/components/admin-legal-pages';
@@ -21,8 +21,9 @@ import AdminOrders from '@/components/admin-orders';
 import AdminSettings from '@/components/admin-settings';
 import AdminCategories from './admin-categories';
 import { Loader2 } from 'lucide-react';
+import AdminNotifications from './admin-notifications';
 
-export type AdminSection = 'users' | 'addProduct' | 'manageProducts' | 'orders' | 'legal' | 'menu' | 'settings' | 'categories';
+export type AdminSection = 'users' | 'addProduct' | 'manageProducts' | 'orders' | 'legal' | 'menu' | 'settings' | 'categories' | 'notifications';
 
 type AdminDashboardContextType = {
   activeSection: AdminSection;
@@ -86,6 +87,8 @@ export default function AdminDashboard({ isAuthenticated }: { isAuthenticated: b
         return <AdminSettings />;
       case 'categories':
         return <AdminCategories />;
+      case 'notifications':
+        return <AdminNotifications />;
       default:
         return <AdminOrders />;
     }
@@ -101,6 +104,7 @@ export default function AdminDashboard({ isAuthenticated }: { isAuthenticated: b
       case 'menu': return 'Menu Items';
       case 'settings': return 'Settings';
       case 'categories': return 'Categories';
+      case 'notifications': return 'Notifications';
       default: return 'Dashboard';
     }
   };
@@ -141,6 +145,12 @@ export default function AdminDashboard({ isAuthenticated }: { isAuthenticated: b
                 <SidebarMenuButton onClick={() => handleSectionClick('manageProducts')} isActive={activeSection === 'manageProducts'}>
                     <ShoppingCart />
                     <span>Manage Products</span>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => handleSectionClick('notifications')} isActive={activeSection === 'notifications'}>
+                    <Bell />
+                    <span>Notifications</span>
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>

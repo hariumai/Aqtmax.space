@@ -11,7 +11,7 @@ import {
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { collection, writeBatch, query, orderBy } from 'firebase/firestore';
+import { collection, writeBatch, query, orderBy, doc, where } from 'firebase/firestore';
 import { Bell, BellOff, Trash } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -24,10 +24,18 @@ export function NotificationsDrawer() {
   const firestore = useFirestore();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
   const notificationsQuery = useMemoFirebase(
-    () => (firestore && user ? query(collection(firestore, 'users', user.uid, 'notifications'), orderBy('createdAt', 'desc')) : null),
+    () => (firestore && user ? query(
+        collection(firestore, 'users', user.uid, 'notifications'), 
+        where('createdAt', '>=', thirtyDaysAgo),
+        orderBy('createdAt', 'desc')
+    ) : null),
     [firestore, user]
   );
+  
   const { data: notifications, isLoading } = useCollection(notificationsQuery);
   const unreadCount = notifications?.filter(n => !n.read).length || 0;
 

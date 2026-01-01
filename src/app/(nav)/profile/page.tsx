@@ -270,6 +270,12 @@ export default function ProfilePage() {
 
       await setDoc(userRef, userDataToSave, { merge: true });
 
+      await createNotification({
+          userId: user.uid,
+          message: 'Your profile has been successfully updated.',
+          href: '/profile',
+      });
+
       toast({
         title: 'Profile Updated',
         description: 'Your profile has been successfully updated.',
@@ -298,7 +304,15 @@ export default function ProfilePage() {
 
   const handleSignOut = async () => {
     if (auth) {
+      const userId = auth.currentUser?.uid;
       await auth.signOut();
+      if (userId) {
+        await createNotification({
+          userId: userId,
+          message: 'You have been logged out.',
+          href: '/login'
+        });
+      }
     }
   };
   

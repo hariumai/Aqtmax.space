@@ -104,6 +104,15 @@ function EditOrderForm({ order, onFinished }: { order: Order; onFinished: () => 
                 credentials: values.credentials,
                 note: values.note,
             });
+
+            if (values.status === 'cancelled' && order.status !== 'cancelled') {
+                await createNotification({
+                    userId: order.userId,
+                    message: `Your order #${order.id.substring(0, 6)} has been cancelled.`,
+                    href: `/order/details/${order.id}`
+                });
+            }
+            
             toast({ title: "Order Updated", description: "The order details have been saved." });
             onFinished();
         } catch (e: any) {

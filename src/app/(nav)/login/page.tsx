@@ -21,6 +21,7 @@ import { useEffect } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { Gem } from 'lucide-react';
+import { createNotification } from '@/lib/notifications';
 
 const formSchema = z.object({
   email: z.string().email({
@@ -62,6 +63,27 @@ export default function LoginPage() {
       const userDoc = await getDoc(userDocRef);
       const userData = userDoc.data();
 
+      if (!loggedInUser.emailVerified) {
+        toast({
+            variant: 'destructive',
+            title: 'Email Not Verified',
+            description: 'Please verify your email before logging in.',
+        });
+        await auth.signOut(); 
+        return;
+      }
+
+      await createNotification({
+        userId: loggedInUser.uid,
+        message: 'You have successfully logged in.',
+        href: '/profile'
+      });
+
+      toast({
+        title: 'Login Successful',
+        description: "You've been successfully signed in.",
+      });
+
       // If user is banned, they can still log in, they will be redirected to the profile page
       // which will show the banned state.
       if (userData?.ban?.isBanned) {
@@ -73,21 +95,6 @@ export default function LoginPage() {
           });
       }
 
-
-      if (!loggedInUser.emailVerified) {
-        toast({
-            variant: 'destructive',
-            title: 'Email Not Verified',
-            description: 'Please verify your email before logging in.',
-        });
-        await auth.signOut(); 
-        return;
-      }
-
-      toast({
-        title: 'Login Successful',
-        description: "You've been successfully signed in.",
-      });
       // The useEffect will handle the redirect
     } catch (error: any) {
         const errorMessage = (error.message || 'An unexpected error occurred.').replace('Firebase: ', '');
