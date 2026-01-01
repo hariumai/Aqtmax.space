@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -28,6 +26,7 @@ import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { Textarea } from './ui/textarea';
 import { sendAppealApprovedEmail } from '@/lib/emails';
+import { createNotification } from '@/lib/notifications';
 
 const banSchema = z.object({
   type: z.enum(['temporary', 'permanent']),
@@ -165,6 +164,12 @@ function AppealReviewDialog({ user, isOpen, onOpenChange, onUnban }: { user: any
             }, { merge: true });
 
             await sendAppealApprovedEmail(user.email, user.name);
+
+            await createNotification({
+                userId: user.id,
+                message: 'Your appeal has been approved! Your account will be restored in 24 hours.',
+                href: '/profile'
+            });
 
             toast({ title: 'Appeal Approved', description: 'User will be unbanned in 24 hours.' });
             onOpenChange(false);

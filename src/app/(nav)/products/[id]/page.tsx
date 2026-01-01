@@ -134,6 +134,10 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                 ...itemToAdd,
                 createdAt: serverTimestamp(),
             });
+             toast({
+                title: "Added to Cart",
+                description: `"${product.name}" has been added to your cart.`,
+            });
         } else {
             toast({ title: "Item already in cart", description: `${product.name} (${variantName}) is already in your cart.`});
         }

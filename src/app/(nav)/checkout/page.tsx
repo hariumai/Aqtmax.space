@@ -163,6 +163,11 @@ export default function CheckoutPage() {
 
         await batch.commit();
         
+        toast({
+            title: "Order Placed!",
+            description: "Your order is now pending processing.",
+        });
+        
         await sendOrderConfirmationEmail({
             ...newOrderData,
             orderDate: newOrderData.orderDate.toISOString() 

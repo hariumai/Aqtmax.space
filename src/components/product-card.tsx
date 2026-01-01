@@ -10,6 +10,7 @@ import { Clapperboard, Music, Palette, Tv, ShoppingCart, CreditCard, Radio, Chev
 import Link from 'next/link';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
+import { createNotification } from '@/lib/notifications';
 
 const iconMap: { [key: string]: React.ElementType } = {
   'Netflix Premium': Clapperboard,
@@ -138,6 +139,11 @@ export default function ProductCard({ product }: { product: any }) {
 
         if (!redirect) {
             toast({ title: "Added to Cart", description: `${product.name} has been added to your cart.`});
+            createNotification({
+                userId: user.uid,
+                message: `"${product.name}" has been added to your cart.`,
+                href: '/checkout'
+            });
         } else {
             router.push('/checkout');
         }

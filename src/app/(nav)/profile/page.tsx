@@ -1,6 +1,3 @@
-
-
-
 'use client';
 import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
@@ -115,6 +112,11 @@ function BannedProfile({ user, banInfo, settings, onSignOut }: { user: any, banI
                 } 
             }, { merge: true });
             
+            toast({
+                title: 'Appeal Submitted',
+                description: 'Your appeal is now pending review.'
+            });
+
             await createNotification({
                 userId: user.uid,
                 message: 'Your appeal has been submitted and is now pending review.',
