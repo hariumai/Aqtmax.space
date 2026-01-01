@@ -33,19 +33,24 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 function OrderItemRow({ order }: { order: Order }) {
   const itemNames = order.items.map((item: any) => item.subscriptionName).join(', ');
   const orderDate = order.orderDate?.toDate ? order.orderDate.toDate() : new Date(order.orderDate);
+  const isCompleted = order.status === 'completed';
 
   return (
     <Link href={`/order/${order.id}`}>
         <div className="flex justify-between items-center py-4 px-4 hover:bg-muted/50 rounded-lg cursor-pointer">
             <div>
                 <p className="font-semibold text-left">{itemNames}</p>
-                <p className="text-sm text-muted-foreground text-left">
-                {orderDate instanceof Date && !isNaN(orderDate as any) ? orderDate.toLocaleDateString() : 'Invalid Date'}
-                </p>
+                {isCompleted ? (
+                    <p className="text-sm text-primary underline">Click to view details</p>
+                ) : (
+                    <p className="text-sm text-muted-foreground text-left">
+                        {orderDate instanceof Date && !isNaN(orderDate as any) ? orderDate.toLocaleDateString() : 'Processing...'}
+                    </p>
+                )}
             </div>
             <div className="text-right">
                 <p className="font-semibold">{order.totalAmount.toFixed(2)} PKR</p>
-                <Badge variant={order.status === 'completed' ? 'default' : 'secondary'} className="capitalize mt-1">
+                <Badge variant={isCompleted ? 'default' : 'secondary'} className="capitalize mt-1">
                 {order.status}
                 </Badge>
             </div>

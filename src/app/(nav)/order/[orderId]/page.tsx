@@ -60,11 +60,14 @@ export default function OrderDetailsPage() {
         return <main className="flex-grow container mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8"><OrderDetailsSkeleton /></main>;
     }
     
+    // After loading, if there's no order, it's a 404
     if (!order) {
         return notFound();
     }
     
-    if (order.userId !== user?.uid) {
+    // After loading, if the user is not the owner, redirect them
+    // This check runs only after we are sure who the user is.
+    if (!isUserLoading && user?.uid !== order.userId) {
         router.push('/login');
         return <main className="flex-grow container mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8"><OrderDetailsSkeleton /></main>;
     }
@@ -103,7 +106,6 @@ export default function OrderDetailsPage() {
         }
     };
     
-    const isOrderPending = order.status === 'pending';
     const isOrderComplete = order.status === 'completed';
     const orderDate = order.orderDate?.toDate ? order.orderDate.toDate() : new Date(order.orderDate);
 
