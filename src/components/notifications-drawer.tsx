@@ -14,7 +14,7 @@ import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebas
 import { collection, writeBatch, query, orderBy, doc, where, Timestamp } from 'firebase/firestore';
 import { Bell, BellOff, Trash, Smartphone, Monitor } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Skeleton } from './ui/skeleton';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
