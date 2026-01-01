@@ -230,9 +230,9 @@ export default function ProductPage({ params: paramsProp }: { params: { id: stri
               </h1>
               {formattedDescription && <div className="mt-4 text-muted-foreground prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: formattedDescription || '' }} />}
               <ul className="mt-6 space-y-2 text-muted-foreground">
-                <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-primary" /> Instant Delivery</li>
+                <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-primary" /> 24 hours delivery in account or email or WhatsApp</li>
                 <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-primary" /> 24/7 Support</li>
-                <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-primary" /> Full Warranty</li>
+                <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-primary" /> Full warranty if all legal tos and rules followed</li>
               </ul>
               <RulesSection />
             </div>
