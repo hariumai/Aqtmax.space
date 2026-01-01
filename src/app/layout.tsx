@@ -43,7 +43,7 @@ export default function RootLayout({
           crawl={true}
           showSpinner={false}
           easing="ease"
-          speed={400}
+          speed={3000}
           shadow="0 0 10px #DC2626,0 0 5px #DC2626"
         />
         <ThemeProvider
