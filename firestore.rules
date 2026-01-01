@@ -5,39 +5,20 @@
  * ## Core Philosophy
  * This ruleset enforces a hybrid security model designed for a marketplace application.
  * It combines a strict user-ownership model for private data with a public-read model for shared catalog data.
- * The primary goal is to ensure that users can only access and manage their own information (profiles, orders, cart)
- * while allowing anyone to browse the publicly available catalog (categories, subscriptions).
- * An admin user (any authenticated user for now) is allowed to list all users.
+ * An authenticated user (acting as an admin) has broad permissions to manage users, orders, and the product catalog.
  *
  * ## Data Structure
- * - `/users/{userId}`: Contains private user profile documents. All user-specific data, including subcollections,
- *   is nested under this path to leverage path-based security.
- * - `/users/{userId}/cart/{cartItemId}`: A subcollection containing a user's shopping cart items.
- * - `/orders/{orderId}`: A top-level collection containing all user orders. Access is restricted.
- * - `/categories/{categoryId}`: A top-level collection for subscription categories, intended for public browsing.
- * - `/subscriptions/{subscriptionId}`: A top-level collection for subscription products, intended for public browsing.
+ * - `/users/{userId}`: Contains private user profile documents.
+ * - `/users/{userId}/cart/{cartItemId}`: A user's shopping cart.
+ * - `/orders/{orderId}`: All user orders.
+ * - `/categories/{categoryId}`: Publicly browsable product categories.
+ * - `/subscriptions/{subscriptionId}`: Publicly browsable subscription products.
  *
  * ## Key Security Decisions
- * - **Strict User Scoping**: All paths under `/users/{userId}` are strictly controlled, ensuring a user can only ever
- *   interact with their own documents.
- * - **Admin-level access**: To allow the admin dashboard to function, authenticated users are permitted to list
- *   all documents in the `/users`, and `/orders` collections. This should be refined with custom claims for a true admin role.
- * - **Public Catalog**: The `/categories` and `/subscriptions` collections are publicly readable to allow browsing
- *   by any user, including unauthenticated visitors.
- * - **Admin-Only Writes**: Writes to the public catalog collections (`/categories`, `/subscriptions`) are currently
- *   restricted to authenticated users. This should be refined with custom claims for a true admin role.
- *
- * ## Denormalization for Authorization
- * To maintain performance and create simple, secure rules, we enforce relational integrity on document creation.
- * For example, a new document in the `/orders` collection must contain a `userId` field that
- * matches the authenticated user's UID. This creates a durable and easily verifiable link for authorization
- * without needing extra database reads.
- *
- * ## Structural Segregation
- * The ruleset leverages separate top-level collections for public and private data. Publicly listable data
- * like `/subscriptions` is stored separately from private, user-owned data like `/users/{userId}/cart`.
- * This is a critical pattern that makes it safe to allow broad `list` queries on public data without risking
- * the exposure of private information.
+ * - **Strict User Scoping**: A user can only access their own profile and cart.
+ * - **Admin-level Access**: Any authenticated user is treated as an admin and can list and modify all major data collections, which is necessary for the admin dashboard to function. For production, this should be locked down with custom claims.
+ * - **Public Catalog**: `/categories` and `/subscriptions` are publicly readable for browsing.
+ * - **Admin-Only Writes**: Writes to catalog data are restricted to authenticated (admin) users.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -52,30 +33,19 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
-    }
-
     /**
-     * @description Controls access to user profile documents.
-     * @path /users/{userId}
-     * @allow (create) An authenticated user creating their own user document for the first time.
-     * @deny (get) An authenticated user attempting to read another user's profile.
-     * @principle Restricts access to a user's own data tree and allows admins to list users.
+     * Controls access to user profile documents.
+     * Grants read/write access to the user for their own document.
+     * Grants full read/write access to admins (any signed-in user).
      */
     match /users/{userId} {
-      allow get: if isOwner(userId) || isSignedIn(); // Allow admin to get user doc
-      allow list: if isSignedIn(); // Admin-level access for now
+      allow get, update: if isOwner(userId) || isSignedIn();
+      allow list, delete: if isSignedIn(); // Admin-level access
       allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isOwner(userId) || isSignedIn(); // Allow owner to update, or any signed-in user (admin)
-      allow delete: if isSignedIn(); // Allow any signed-in user (admin) to delete
-      
+
       /**
-       * @description Controls access to a user's shopping cart.
-       * @path /users/{userId}/cart/{cartItemId}
-       * @allow (read, write) An authenticated user managing their own cart items.
-       * @deny An authenticated user accessing another user's cart.
-       * @principle Ensures a user can only manage items in their own cart subcollection.
+       * Controls access to a user's shopping cart.
+       * Only the user can access their own cart.
        */
       match /cart/{cartItemId} {
         allow read, write: if isOwner(userId);
@@ -83,79 +53,59 @@ service cloud.firestore {
     }
 
     /**
-     * @description Controls access to all orders.
-     * @path /orders/{orderId}
-     * @allow (list, get) Admin users.
-     * @allow (create) Authenticated user creating an order for themselves.
-     * @deny (get) A user attempting to read another user's order.
+     * Controls access to all orders.
+     * A user can create their own order.
+     * An admin (any signed-in user) can read and manage all orders.
      */
     match /orders/{orderId} {
-      allow get: if isOwner(resource.data.userId) || isSignedIn(); // User can get own order, admin can get any
-      allow list: if isSignedIn(); // Admin-level access for now
+      allow get: if isOwner(resource.data.userId) || isSignedIn();
+      allow list, update, delete: if isSignedIn(); // Admin-level access
       allow create: if isOwner(request.resource.data.userId);
-      allow update: if isSignedIn(); // Admin can update order
-      allow delete: if isSignedIn(); // Admin only
     }
 
     /**
-     * @description Controls access to public subscription categories.
-     * @path /categories/{categoryId}
-     * @allow (list) Any user, including unauthenticated visitors, listing all categories.
-     * @deny (create) Any user attempting to create a new category.
-     * @principle Enables public read access for catalog data while denying all writes as a secure default.
+     * Controls access to public subscription categories.
+     * Publicly readable, but only admins can write.
      */
     match /categories/{categoryId} {
-      allow get: if true;
-      allow list: if true;
-      allow create, update, delete: if isSignedIn(); // Admin only for now
+      allow get, list: if true;
+      allow create, update, delete: if isSignedIn(); // Admin only
     }
 
     /**
-     * @description Controls access to public subscription details.
-     * @path /subscriptions/{subscriptionId}
-     * @allow (get) Any user, including unauthenticated visitors, viewing a subscription.
-     * @deny (update) Any user attempting to change the price of a subscription.
-     * @principle Enables public read access for catalog data while denying all writes as a secure default.
+     * Controls access to public subscription details.
+     * Publicly readable, but only admins can write.
      */
     match /subscriptions/{subscriptionId} {
-      allow get: if true;
-      allow list: if true;
-      allow create, update, delete: if isSignedIn(); // Admin only for now
+      allow get, list: if true;
+      allow create, update, delete: if isSignedIn(); // Admin only
     }
 
     /**
-     * @description Controls access to legal pages (Terms, Privacy, etc.).
-     * @path /legalPages/{pageId}
-     * @allow (get, list) Publicly readable by all users.
-     * @deny (write) Any user attempting to modify legal content.
+     * Controls access to legal pages (Terms, Privacy, etc.).
+     * Publicly readable, admin-writable.
      */
     match /legalPages/{pageId} {
-        allow get: if true;
-        allow list: if true;
-        allow create, update, delete: if isSignedIn(); // Admin only for now
+        allow get, list: if true;
+        allow create, update, delete: if isSignedIn(); // Admin only
     }
 
     /**
-     * @description Controls access to navigation menu items.
-     * @path /menuItems/{menuItemId}
-     * @allow (get, list) Publicly readable for building navigation.
-     * @deny (write) Any user attempting to modify the site navigation.
+     * Controls access to navigation menu items.
+     * Publicly readable, admin-writable.
      */
     match /menuItems/{menuItemId} {
-        allow get: if true;
-        allow list: if true;
-        allow create, update, delete: if isSignedIn(); // Admin only for now
+        allow get, list: if true;
+        allow create, update, delete: if isSignedIn(); // Admin only
     }
 
     /**
-     * @description Controls access to global app settings.
-     * @path /settings/payment
-     * @allow (get) Any user can read payment details.
-     * @allow (write) Only admins can change settings.
+     * Controls access to global app settings.
+     * Publicly readable, admin-writable.
      */
     match /settings/payment {
         allow get: if true;
-        allow write: if isSignedIn(); // Admin only for now
+        allow write: if isSignedIn(); // Admin only
     }
   }
 }
