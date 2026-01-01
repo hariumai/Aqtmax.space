@@ -8,7 +8,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { geminiPro } from 'genkit/models';
+import { googleAI } from '@genkit-ai/google-genai';
 
 // Define the schema for the flow's input.
 const GenerateDescriptionInputSchema = z.object({
@@ -25,7 +25,7 @@ export type GenerateDescriptionOutput = z.infer<typeof GenerateDescriptionOutput
 // Define the prompt template that will be sent to the language model.
 const generateDescriptionPrompt = ai.definePrompt({
   name: 'generateDescriptionPrompt',
-  model: geminiPro,
+  model: googleAI.model('gemini-pro'),
   input: { schema: GenerateDescriptionInputSchema },
   output: { schema: GenerateDescriptionOutputSchema },
   prompt: `You are a professional marketing copywriter specializing in digital services.
