@@ -41,7 +41,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow get, update: if isOwner(userId) || isSignedIn();
       allow list, delete: if isSignedIn(); // Admin-level access
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow create: if isOwner(userId);
 
       /**
        * Controls access to a user's shopping cart.
