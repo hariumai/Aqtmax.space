@@ -1,7 +1,8 @@
 
 'use server';
 import { firestore } from '@/firebase/server';
-import { collection, addDoc, serverTimestamp, writeBatch, getDocs } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, writeBatch, getDocs, doc } from 'firebase/firestore';
+import { auth } from '@/firebase/server';
 
 type CreateNotificationParams = {
     userId: string;
@@ -80,3 +81,21 @@ export async function sendNotification(params: SendNotificationParams): Promise<
     }
 }
 
+export async function signOutAndNotify(userId: string) {
+    if (!userId) {
+        console.error("User ID is required to sign out and notify.");
+        return;
+    }
+    try {
+        await createNotification({
+          userId: userId,
+          message: 'You have been logged out.',
+          href: '/login'
+        });
+        // This doesn't actually sign the user out on the client,
+        // The client-side SDK's onAuthStateChanged will handle the UI update.
+        // We are just clearing the server-side session.
+    } catch (error) {
+        console.error("Error during sign out notification process:", error);
+    }
+}

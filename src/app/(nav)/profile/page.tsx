@@ -21,7 +21,7 @@ import { updateProfile } from 'firebase/auth';
 import { type Order } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { createNotification } from '@/lib/notifications';
+import { createNotification, signOutAndNotify } from '@/lib/notifications';
 
 const profileFormSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -275,11 +275,12 @@ export default function ProfilePage() {
           message: 'Your profile has been successfully updated.',
           href: '/profile',
       });
-
+      
       toast({
-        title: 'Profile Updated',
-        description: 'Your profile has been successfully updated.',
+        title: "Profile Updated",
+        description: "Your profile has been updated.",
       });
+
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -303,16 +304,9 @@ export default function ProfilePage() {
   }
 
   const handleSignOut = async () => {
-    if (auth) {
-      const userId = auth.currentUser?.uid;
+    if (auth && user) {
+      await signOutAndNotify(user.uid);
       await auth.signOut();
-      if (userId) {
-        await createNotification({
-          userId: userId,
-          message: 'You have been logged out.',
-          href: '/login'
-        });
-      }
     }
   };
   
