@@ -72,6 +72,8 @@ export default function AdminAddProduct() {
       toast({ variant: 'destructive', title: 'Error Adding Product', description: error.message || 'An unexpected error occurred.' });
     }
   }
+  
+  const hasVariants = productForm.watch('variants', []).length > 0;
 
   return (
     <Card>
@@ -108,19 +110,25 @@ export default function AdminAddProduct() {
               />
             </div>
             
-            <FormField control={productForm.control} name="description" render={({ field }) => (<FormItem><FormLabel>Description</FormLabel><FormControl><Textarea placeholder="Subscription details" {...field} className="min-h-[150px]" /></FormControl><FormMessage /></FormItem>)} />
+            <FormField control={productForm.control} name="description" render={({ field }) => (<FormItem><FormLabel>Description</FormLabel><FormControl><Textarea placeholder="A short description of the product." {...field} className="min-h-[100px]" /></FormControl><FormMessage /></FormItem>)} />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <FormField control={productForm.control} name="price" render={({ field }) => (<FormItem><FormLabel>Base Price (PKR)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="3000" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField control={productForm.control} name="discountedPrice" render={({ field }) => (<FormItem><FormLabel>Discounted Price (PKR)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="2499" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? null : Number(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField control={productForm.control} name="imageUrl" render={({ field }) => (<FormItem><FormLabel>Image URL (Optional)</FormLabel><FormControl><Input placeholder="https://example.com/image.png" {...field} /></FormControl><FormMessage /></FormItem>)} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {!hasVariants && (
+                  <>
+                    <FormField control={productForm.control} name="price" render={({ field }) => (<FormItem><FormLabel>Base Price (PKR)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="3000" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={productForm.control} name="discountedPrice" render={({ field }) => (<FormItem><FormLabel>Discounted Price (PKR)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="2499" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? null : Number(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
+                  </>
+                )}
+                 <FormField control={productForm.control} name="imageUrl" render={({ field }) => (<FormItem><FormLabel>Image URL (Optional)</FormLabel><FormControl><Input placeholder="https://example.com/image.png" {...field} /></FormControl><FormMessage /></FormItem>)} />
             </div>
-
-            <div>
-              <h3 className="text-lg font-medium mb-2">Product Variants</h3>
-              <div className="space-y-4">
+            
+            <div className="p-4 border rounded-lg space-y-4 bg-muted/50">
+                <h3 className="text-lg font-medium">Product Variants</h3>
+                <CardDescription>
+                    Add variants if the product has multiple options (e.g., different plan durations). If no variants are added, the base price will be used.
+                </CardDescription>
                 {variantGroups.map((group, groupIndex) => (
-                  <div key={group.id} className="p-4 border rounded-lg space-y-4 bg-muted/50">
+                  <div key={group.id} className="p-4 border rounded-lg space-y-4 bg-background">
                     <div className="flex items-end gap-4">
                       <FormField
                         control={productForm.control}
@@ -128,7 +136,7 @@ export default function AdminAddProduct() {
                         render={({ field }) => (
                           <FormItem className="flex-grow">
                             <FormLabel>Group Name</FormLabel>
-                            <FormControl><Input placeholder="e.g., Size" {...field} /></FormControl>
+                            <FormControl><Input placeholder="e.g., Duration" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -140,7 +148,6 @@ export default function AdminAddProduct() {
                     <VariantOptionsArray groupIndex={groupIndex} control={productForm.control} />
                   </div>
                 ))}
-              </div>
               <Button
                 type="button"
                 variant="outline"
@@ -177,7 +184,7 @@ function VariantOptionsArray({ groupIndex, control }: { groupIndex: number, cont
             render={({ field }) => (
               <FormItem className="flex-grow">
                 <FormLabel className="text-xs">Option Name</FormLabel>
-                <FormControl><Input placeholder="e.g., Large" {...field} /></FormControl>
+                <FormControl><Input placeholder="e.g., 1 Month" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}
