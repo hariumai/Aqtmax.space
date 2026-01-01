@@ -22,7 +22,7 @@ export default function ProductsPage() {
           Browse our full catalog of premium digital subscriptions.
         </p>
       </div>
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div className="grid grid-cols-2 gap-4 md:gap-6">
         {isLoading &&
           Array.from({ length: 8 }).map((_, i) => (
             <Card key={i} className="flex flex-col h-full overflow-hidden rounded-2xl p-4">
