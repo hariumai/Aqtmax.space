@@ -13,7 +13,6 @@ import { doc, collection, setDoc, query } from 'firebase/firestore';
 import { PlusCircle, Trash, Sparkles, Loader2, Info } from 'lucide-react';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { generateDescriptionAction } from '@/app/admin/actions';
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
@@ -68,7 +67,6 @@ const getCombinations = (groups: z.infer<typeof variantGroupSchema>[]) => {
 export default function AdminAddProduct() {
   const firestore = useFirestore();
   const { toast } = useToast();
-  const [isGenerating, setIsGenerating] = useState(false);
 
   const categoriesQuery = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'categories')) : null),
@@ -139,28 +137,6 @@ export default function AdminAddProduct() {
     }
   }
 
-  const handleGenerateDescription = async () => {
-      const productName = productForm.getValues('name');
-      if (!productName) {
-          toast({ variant: 'destructive', title: 'Product Name Required', description: 'Please enter a product name first.' });
-          return;
-      }
-      setIsGenerating(true);
-      try {
-          const result = await generateDescriptionAction(productName);
-          if (result.success && result.description) {
-              productForm.setValue('description', result.description);
-              toast({ title: 'Description Generated!' });
-          } else {
-              throw new Error(result.error || 'Failed to generate description.');
-          }
-      } catch (error: any) {
-          toast({ variant: 'destructive', title: 'AI Error', description: error.message });
-      } finally {
-          setIsGenerating(false);
-      }
-  };
-  
   const hasVariants = (watchedVariantGroups || []).length > 0;
 
   return (
@@ -205,20 +181,6 @@ export default function AdminAddProduct() {
                 <FormItem>
                   <div className="flex items-center justify-between">
                     <FormLabel>Description (Optional)</FormLabel>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleGenerateDescription}
-                      disabled={isGenerating}
-                    >
-                      {isGenerating ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Sparkles className="mr-2 h-4 w-4" />
-                      )}
-                      Generate with AI
-                    </Button>
                   </div>
                   <FormControl>
                     <Textarea
@@ -366,6 +328,3 @@ function VariantGroup({ groupIndex, removeGroup, control }: { groupIndex: number
         </div>
     );
 }
-
-
-    
