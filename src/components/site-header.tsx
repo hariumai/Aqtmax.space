@@ -17,6 +17,7 @@ import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { collection, query, orderBy, where } from 'firebase/firestore';
 import { CartDrawer } from './cart-drawer';
+import { NotificationsDrawer } from './notifications-drawer';
 
 export default function SiteHeader() {
   const { user, isUserLoading } = useUser();
@@ -31,11 +32,7 @@ export default function SiteHeader() {
   );
   const { data: navLinks } = useCollection(menuItemsQuery);
 
-  const notificationsQuery = useMemoFirebase(
-    () => (firestore && user ? query(collection(firestore, 'users', user.uid, 'notifications'), where('read', '==', false)) : null),
-    [firestore, user]
-  );
-  const { data: unreadNotifications } = useCollection(notificationsQuery);
+  
 
   useEffect(() => {
     const handleScroll = () => {
@@ -91,17 +88,7 @@ export default function SiteHeader() {
           ) : user ? (
             <>
             <CartDrawer />
-            <Button asChild variant="ghost" size="icon" className="relative">
-                <Link href="/notifications">
-                    <Bell className="h-5 w-5" />
-                    {unreadNotifications && unreadNotifications.length > 0 && (
-                        <span className="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
-                            {unreadNotifications.length}
-                        </span>
-                    )}
-                    <span className="sr-only">Notifications</span>
-                </Link>
-            </Button>
+            <NotificationsDrawer />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
