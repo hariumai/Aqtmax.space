@@ -1,9 +1,9 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
-import { marked } from 'marked';
 
 export default function RulesPage() {
   const firestore = useFirestore();
@@ -16,12 +16,25 @@ export default function RulesPage() {
   const [htmlContent, setHtmlContent] = useState('');
 
   useEffect(() => {
-    setLastUpdated(new Date().toLocaleDateString());
     if (page?.content) {
-        // Replace markdown-style links with HTML links
-        const contentWithHtmlLinks = page.content.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-primary hover:underline">$1</a>');
-        // Replace newlines with <br> tags
-        setHtmlContent(contentWithHtmlLinks.replace(/\n/g, '<br />'));
+        // Find a date in the format **Last Updated: [Date]**
+        const dateMatch = page.content.match(/\*\*Last Updated: (.*?)\*\*/);
+        if (dateMatch && dateMatch[1] === '[Date]') {
+            setLastUpdated(new Date().toLocaleDateString());
+        } else if (dateMatch) {
+            setLastUpdated(dateMatch[1]);
+        } else {
+             setLastUpdated(new Date().toLocaleDateString());
+        }
+
+        let content = page.content;
+        // Replace markdown-style bold and links
+        content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        content = content.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-primary hover:underline">$1</a>');
+        // Replace newlines with <br> for paragraphs
+        content = content.replace(/\n/g, '<br />');
+
+        setHtmlContent(content);
     }
   }, [page]);
 

@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
@@ -12,10 +13,27 @@ export default function RefundPage() {
   );
   const { data: page, isLoading } = useDoc(pageRef);
   const [lastUpdated, setLastUpdated] = useState('');
+  const [htmlContent, setHtmlContent] = useState('');
 
   useEffect(() => {
-    setLastUpdated(new Date().toLocaleDateString());
-  }, []);
+    if (page?.content) {
+        const dateMatch = page.content.match(/\*\*Last Updated: (.*?)\*\*/);
+        if (dateMatch && dateMatch[1] === '[Date]') {
+            setLastUpdated(new Date().toLocaleDateString());
+        } else if (dateMatch) {
+            setLastUpdated(dateMatch[1]);
+        } else {
+            setLastUpdated(new Date().toLocaleDateString());
+        }
+
+        let content = page.content;
+        content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        content = content.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-primary hover:underline">$1</a>');
+        content = content.replace(/\n/g, '<br />');
+
+        setHtmlContent(content);
+    }
+  }, [page]);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -36,7 +54,7 @@ export default function RefundPage() {
             <div className="prose prose-invert max-w-none">
             <h1 className="font-headline text-4xl font-extrabold tracking-tighter">{page.title}</h1>
             {lastUpdated && <p className="lead">Last updated: {lastUpdated}</p>}
-            <div dangerouslySetInnerHTML={{ __html: page.content.replace(/\n/g, '<br />') }} />
+            <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
             </div>
         )}
       </main>
