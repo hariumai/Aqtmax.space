@@ -1,6 +1,6 @@
 
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, use } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Clapperboard, CreditCard, Lock, Music, Palette, ShoppingCart, Tv, Plus, Minus, AlertTriangle } from "lucide-react";
@@ -31,12 +31,12 @@ function RulesSection() {
     const { data: rulesPage, isLoading } = useDoc(rulesRef);
 
     if (isLoading || !rulesPage?.content) {
-        return null; // Or a skeleton loader
+        return null;
     }
     
     const rulesList = rulesPage.content
         .split('\n')
-        .map(line => line.trim().replace(/^\d+\.\s*/, '')) // Remove numbering
+        .map(line => line.trim().replace(/^\d+\.\s*/, ''))
         .filter(line => line.length > 0 && !line.startsWith('[') && !line.toLowerCase().includes('by using the subscription'));
 
 
@@ -55,8 +55,8 @@ function RulesSection() {
     )
 }
 
-export default function ProductPage() {
-  const params = useParams();
+export default function ProductPage({ params: paramsProp }: { params: { id: string } }) {
+  const params = use(Promise.resolve(paramsProp));
   const id = params.id as string;
   const firestore = useFirestore();
   const { user } = useUser();
@@ -77,7 +77,7 @@ export default function ProductPage() {
   const hasVariants = product?.variants && product.variants.length > 0;
 
   useEffect(() => {
-    if (hasVariants) {
+    if (product && hasVariants) {
       const initialSelections: SelectedVariants = {};
       product.variants.forEach((group: any) => {
         if (group.options && group.options.length > 0) {
@@ -113,7 +113,6 @@ export default function ProductPage() {
     if (allOptionsSelected) {
         setCurrentPrice(price);
     } else {
-        // Calculate a "From" price if not all required options are selected
         const minPrice = product.variants.reduce((total: number, group: any) => {
             if (group.options && group.options.length > 0 && group.required) {
                 const minOptionPrice = Math.min(...group.options.map((opt: any) => opt.price));
@@ -211,7 +210,10 @@ export default function ProductPage() {
     setQuantity(prev => Math.max(1, prev + amount));
   };
   
-  const formattedDescription = product?.description?.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-primary hover:underline">$1</a>').replace(/\n/g, '<br />');
+  const formattedDescription = product?.description
+    ?.replace(/\((.*?)\)/g, '<span class="text-red-500 dark:text-red-400 font-semibold">$1</span>')
+    .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-primary hover:underline">$1</a>')
+    .replace(/\n/g, '<br />');
 
   const pricePrefix = hasVariants && !product.variants.every((g:any) => !g.required || selectedVariants[g.groupName]) ? 'From' : '';
   const hasDiscount = product?.discountedPrice && product.discountedPrice < product.price && !hasVariants;
@@ -370,5 +372,3 @@ function ProductPageSkeleton() {
     </div>
   )
 }
-
-    
