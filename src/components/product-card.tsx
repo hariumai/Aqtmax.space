@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,8 +37,22 @@ export default function ProductCard({ product }: { product: any }) {
   
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
   const [inStock, setInStock] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const hasVariants = product.variantGroups && product.variantGroups.length > 0;
+  const description = product.description || '';
+  const isLongDescription = description.length > 100;
+
+  const displayedDescription = useMemo(() => {
+    if (hasVariants) {
+      return description.split('\n')[0];
+    }
+    if (isLongDescription && !isExpanded) {
+      return `${description.substring(0, 100)}...`;
+    }
+    return description;
+  }, [hasVariants, isLongDescription, isExpanded, description]);
+
 
   useEffect(() => {
     if (hasVariants) {
@@ -207,6 +222,12 @@ export default function ProductCard({ product }: { product: any }) {
     setQuantity(Math.max(1, parseInt(e.target.value) || 1))
   };
 
+  const toggleExpand = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setIsExpanded(!isExpanded);
+  };
+
   const pricePrefix = hasVariants && product.variantGroups && !product.variantGroups.every((g:any) => selectedVariants[g.name]) ? 'From' : '';
 
   return (
@@ -230,10 +251,17 @@ export default function ProductCard({ product }: { product: any }) {
               {currentPrice?.toFixed(2)}
               <span className="text-base font-normal text-muted-foreground"> PKR</span>
           </div>
-          {product.description && (
-              <CardDescription className="mt-2 text-sm min-h-[40px] flex-grow">
-                {hasVariants ? product.description.split('\n')[0] : product.description}
-              </CardDescription>
+          {description && (
+              <div className='flex-grow'>
+                <CardDescription className="mt-2 text-sm min-h-[40px]">
+                  {displayedDescription}
+                </CardDescription>
+                {!hasVariants && isLongDescription && (
+                  <Button variant="link" size="sm" className="p-0 h-auto" onClick={toggleExpand}>
+                    {isExpanded ? 'Show less' : 'Show more'}
+                  </Button>
+                )}
+              </div>
           )}
 
           {hasVariants && (
