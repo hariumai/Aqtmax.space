@@ -33,13 +33,6 @@ const productSchema = z.object({
   variants: z.array(variantGroupSchema).optional(),
 });
 
-const defaultRules = `Password change not allowed
-Don't login on extra device
-don't mess up with account settings
-don't add or remove phone number
-no replacement refund in case of violating the rules and tos
-follow rules and tos for better experience at tos link`;
-
 export default function AdminAddProduct() {
   const firestore = useFirestore();
   const { toast } = useToast();
@@ -54,7 +47,7 @@ export default function AdminAddProduct() {
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: '',
-      description: defaultRules.replace('tos link', '[tos link](/legal/rules)'),
+      description: '',
       price: 0,
       discountedPrice: null,
       imageUrl: '',
