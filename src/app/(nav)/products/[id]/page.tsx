@@ -9,7 +9,7 @@ import { doc, collection, addDoc, serverTimestamp, writeBatch, getDocs, where, q
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createNotification } from '@/lib/notifications';
 import { Input } from '@/components/ui/input';
@@ -54,15 +54,16 @@ function RulesSection() {
     )
 }
 
-export default function ProductPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default function ProductPage() {
+  const params = useParams();
+  const id = params.id as string;
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
   const router = useRouter();
 
   const productRef = useMemoFirebase(
-    () => (firestore ? doc(firestore, 'subscriptions', id) : null),
+    () => (firestore && id ? doc(firestore, 'subscriptions', id) : null),
     [firestore, id]
   );
   const { data: product, isLoading } = useDoc(productRef);
@@ -349,5 +350,3 @@ function ProductPageSkeleton() {
     </div>
   )
 }
-
-    

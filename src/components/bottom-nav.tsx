@@ -16,7 +16,7 @@ import {
 import { Button } from './ui/button';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { useTheme } from 'next-themes';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function BottomNav() {
   const pathname = usePathname();
@@ -24,6 +24,11 @@ export default function BottomNav() {
   const firestore = useFirestore();
   const { theme, setTheme } = useTheme();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const menuItemsQuery = useMemoFirebase(
     () => (firestore ? query(collection(firestore, 'menuItems'), orderBy('order')) : null),
@@ -70,7 +75,7 @@ export default function BottomNav() {
     return href;
   };
   
-  if (pathname.startsWith('/admin')) {
+  if (pathname.startsWith('/admin') || !isMounted) {
     return null;
   }
 
