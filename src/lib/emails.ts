@@ -1,4 +1,5 @@
 
+'use server';
 import { type Order } from './types';
 
 async function sendEmail(to: string, subject: string, html: string) {
