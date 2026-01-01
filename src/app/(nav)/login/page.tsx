@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
-import { useAuth, useUser, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
+import { useAuth, useUser, useFirestore } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -37,9 +37,6 @@ export default function LoginPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
 
-  const settingsRef = useMemoFirebase(() => (firestore ? doc(firestore, 'settings', 'payment') : null), [firestore]);
-  const { data: settingsData } = useDoc(settingsRef);
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -50,9 +47,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!isUserLoading && user) {
-      if (user.emailVerified) {
-        router.replace('/profile');
-      }
+      router.replace('/profile');
     }
   }, [user, isUserLoading, router]);
 
@@ -62,29 +57,21 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
       const loggedInUser = userCredential.user;
 
-      // Check ban status from Firestore
       const userDocRef = doc(firestore, 'users', loggedInUser.uid);
       const userDoc = await getDoc(userDocRef);
+      const userData = userDoc.data();
 
-      if (userDoc.exists() && userDoc.data().ban?.isBanned) {
-        const banInfo = userDoc.data().ban;
-        const now = new Date();
-        
-        if (banInfo.type === 'permanent' || (banInfo.expiresAt && new Date(banInfo.expiresAt) > now)) {
-           let description = `Your account has been banned. Reason: ${banInfo.reason || 'Not specified'}.`;
-           if (settingsData?.whatsappNumber) {
-             description += ` Please contact support on WhatsApp at ${settingsData.whatsappNumber}.`;
-           }
-           toast({
-            variant: 'destructive',
-            title: 'Account Banned',
-            description: description,
-            duration: 10000,
+      // If user is banned, they can still log in, they will be redirected to the profile page
+      // which will show the banned state.
+      if (userData?.ban?.isBanned) {
+          toast({
+              title: 'Account Status',
+              description: 'Your account is currently banned. Redirecting...',
+              variant: 'destructive',
+              duration: 5000
           });
-          await auth.signOut();
-          return;
-        }
       }
+
 
       if (!loggedInUser.emailVerified) {
         toast({
@@ -111,7 +98,7 @@ export default function LoginPage() {
     }
   }
 
-  if (isUserLoading || (user && user.emailVerified)) {
+  if (isUserLoading || user) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />

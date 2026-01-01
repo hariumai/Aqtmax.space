@@ -95,6 +95,9 @@ function BannedProfile({ user, banInfo, settings, onSignOut }: { user: any, banI
                          <p><strong>Expires:</strong> {expirationDate}</p>
                     )}
                 </div>
+                 <div className="text-sm p-4 border rounded-md bg-primary/10 text-primary-foreground/80">
+                   If you believe this is a mistake, you can request an appeal. Our team will review your account. For urgent matters, contact us on WhatsApp.
+                </div>
                 <div className="flex flex-col gap-2">
                    {banInfo.appealRequested ? (
                        <Button disabled>
