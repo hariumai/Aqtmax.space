@@ -11,11 +11,6 @@ export default function PrivacyPage() {
     [firestore]
   );
   const { data: page, isLoading } = useDoc(pageRef);
-  const [lastUpdated, setLastUpdated] = useState('');
-
-  useEffect(() => {
-    setLastUpdated(new Date().toLocaleDateString());
-  }, []);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -23,7 +18,6 @@ export default function PrivacyPage() {
         {isLoading && (
             <div className="prose prose-invert max-w-none">
                 <Skeleton className="h-12 w-3/4 mb-4" />
-                <Skeleton className="h-6 w-1/4 mb-8" />
                 <Skeleton className="h-4 w-full mb-2" />
                 <Skeleton className="h-4 w-full mb-2" />
                 <Skeleton className="h-4 w-5/6 mb-8" />
@@ -35,7 +29,6 @@ export default function PrivacyPage() {
         {page && (
             <div className="prose prose-invert max-w-none">
             <h1 className="font-headline text-4xl font-extrabold tracking-tighter">{page.title}</h1>
-            {lastUpdated && <p className="lead">Last updated: {lastUpdated}</p>}
             <div dangerouslySetInnerHTML={{ __html: page.content.replace(/\n/g, '<br />') }} />
             </div>
         )}
