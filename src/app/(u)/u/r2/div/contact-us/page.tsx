@@ -1,4 +1,3 @@
-
 'use client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -19,7 +18,7 @@ import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { Loader2, Mail, MessageSquare, Send, User } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
-import Link from 'next/link';
+import DelayedLink from '@/components/delayed-link';
 import { useState } from 'react';
 
 const contactFormSchema = z.object({
@@ -115,13 +114,13 @@ export default function ContactUsPage() {
                     <p className="text-muted-foreground text-sm">
                       For urgent matters and order support.
                     </p>
-                    <Link
+                    <a
                       href={`https://wa.me/${settingsData.whatsappNumber.replace(/[^0-9]/g, '')}`}
                       target="_blank"
                       className="text-green-500 hover:underline"
                     >
                       {settingsData.whatsappNumber}
-                    </Link>
+                    </a>
                   </div>
                 </div>
               )}
@@ -212,5 +211,3 @@ export default function ContactUsPage() {
     </main>
   );
 }
-
-    

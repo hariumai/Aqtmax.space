@@ -13,7 +13,7 @@ import { Separator } from './ui/separator';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { collection, writeBatch, query, orderBy, doc, where, Timestamp } from 'firebase/firestore';
 import { Bell, BellOff, Trash, Smartphone, Monitor } from 'lucide-react';
-import Link from 'next/link';
+import DelayedLink from './delayed-link';
 import { useEffect, useState, useMemo } from 'react';
 import { Skeleton } from './ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -134,7 +134,7 @@ export function NotificationsDrawer() {
                   return (
                     <li key={notif.id}>
                       <SheetClose asChild>
-                        <Link href={notif.href || '#'} className="block">
+                        <DelayedLink href={notif.href || '#'} className="block">
                           <div className="p-4 hover:bg-muted/50 transition-colors">
                             <div className="flex items-start gap-4">
                               {!notif.read && <div className="h-2 w-2 rounded-full bg-primary mt-1.5 flex-shrink-0 animate-pulse"></div>}
@@ -154,7 +154,7 @@ export function NotificationsDrawer() {
                               </div>
                             </div>
                           </div>
-                        </Link>
+                        </DelayedLink>
                       </SheetClose>
                     </li>
                   );

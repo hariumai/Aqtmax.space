@@ -8,7 +8,7 @@ import { collection, query, doc, where, setDoc } from 'firebase/firestore';
 import { useDoc } from '@/firebase';
 import { Info, AlertTriangle, MessageCircle, ShieldX, Bell, Phone, User as UserIcon, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import Link from 'next/link';
+import DelayedLink from '@/components/delayed-link';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -36,7 +36,7 @@ function OrderItemRow({ order }: { order: Order }) {
   const isCompleted = order.status === 'completed';
 
   return (
-    <Link href={`/u/r2/div/order/${order.id}`}>
+    <DelayedLink href={`/u/r2/div/order/${order.id}`}>
         <div className="flex justify-between items-center py-4 px-4 hover:bg-muted/50 rounded-lg cursor-pointer">
             <div>
                 <p className="font-semibold text-left">{itemNames}</p>
@@ -55,7 +55,7 @@ function OrderItemRow({ order }: { order: Order }) {
                 </Badge>
             </div>
         </div>
-    </Link>
+    </DelayedLink>
   );
 }
 
@@ -416,7 +416,7 @@ export default function ProfilePage() {
               <div className="text-center py-8">
                   <p className="text-muted-foreground">You have not placed any orders yet.</p>
                   <Button asChild variant="link" className="mt-2">
-                      <Link href="/u/r2/div/products">Start Shopping</Link>
+                      <DelayedLink href="/u/r2/div/products">Start Shopping</DelayedLink>
                   </Button>
               </div>
             )}

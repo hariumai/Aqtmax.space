@@ -7,12 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { notFound, useRouter, useParams } from 'next/navigation';
 import { AlertTriangle, CheckCircle, FileDown, ImageIcon, Phone, ShoppingCart } from 'lucide-react';
-import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { useToast } from '@/hooks/use-toast';
 import { type Order } from '@/lib/types';
+import DelayedLink from '@/components/delayed-link';
 
 function OrderDetailsSkeleton() {
     return (
@@ -205,13 +205,12 @@ export default function OrderDetailsPage() {
                         </Button>
                     </div>
                      <Button asChild className="w-full" size="lg" variant="secondary">
-                        <Link href="/products">
+                        <DelayedLink href="/products">
                             <ShoppingCart className="mr-2 h-4 w-4" /> Continue Shopping
-                        </Link>
+                        </DelayedLink>
                     </Button>
                 </CardContent>
             </Card>
         </main>
     );
 }
-    

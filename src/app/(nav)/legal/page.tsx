@@ -1,8 +1,7 @@
-
 'use client';
 import { Card } from '@/components/ui/card';
 import { FileText, Shield, Undo2, Gavel } from 'lucide-react';
-import Link from 'next/link';
+import DelayedLink from '@/components/delayed-link';
 
 const legalLinks = [
     {
@@ -46,7 +45,7 @@ export default function LegalPage() {
         {legalLinks.map((link) => {
             const Icon = link.icon;
             return (
-              <Link href={link.href} key={link.href}>
+              <DelayedLink href={link.href} key={link.href}>
                 <div
                   className="group relative flex items-center gap-6 rounded-2xl border border-border/10 bg-card/50 p-6 transition-all duration-300 hover:bg-card/70 hover:scale-105 hover:shadow-2xl backdrop-blur-xl"
                 >
@@ -58,7 +57,7 @@ export default function LegalPage() {
                     <p className="text-muted-foreground text-sm">{link.description}</p>
                   </div>
                 </div>
-              </Link>
+              </DelayedLink>
             )
         })}
       </div>

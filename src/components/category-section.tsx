@@ -3,9 +3,9 @@ import { Clapperboard, Music, Palette, Tv } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query } from 'firebase/firestore';
 import { Card } from './ui/card';
-import Link from 'next/link';
 import { Button } from './ui/button';
 import { ArrowRight } from 'lucide-react';
+import DelayedLink from './delayed-link';
 
 const iconMap: { [key: string]: React.ElementType } = {
   Entertainment: Clapperboard,
@@ -48,7 +48,7 @@ export default function CategorySection() {
           {!isLoading && categories?.map((category) => {
             const Icon = iconMap[category.name] || iconMap.default;
             return (
-              <Link href={`/u/r2/div/category/${category.id}`} key={category.id}>
+              <DelayedLink href={`/u/r2/div/category/${category.id}`} key={category.id}>
                 <div className="group relative rounded-2xl border border-border bg-card p-6 text-center transition-all duration-300 hover:border-primary/50 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10">
                   <div className="flex justify-center">
                     <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-colors duration-300 group-hover:bg-primary group-hover:text-primary-foreground">
@@ -57,15 +57,15 @@ export default function CategorySection() {
                   </div>
                   <h3 className="mt-6 font-semibold">{category.name}</h3>
                 </div>
-              </Link>
+              </DelayedLink>
             );
           })}
         </div>
         <div className="mt-12 text-center">
           <Button asChild variant="outline">
-            <Link href="/u/r2/div/categories">
+            <DelayedLink href="/u/r2/div/categories">
               View All Categories <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
+            </DelayedLink>
           </Button>
         </div>
       </div>

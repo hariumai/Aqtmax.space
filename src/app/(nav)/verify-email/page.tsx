@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MailCheck } from 'lucide-react';
-import Link from 'next/link';
+import DelayedLink from '@/components/delayed-link';
 
 export default function VerifyEmailPage() {
   return (
@@ -20,9 +20,9 @@ export default function VerifyEmailPage() {
         <CardContent>
            <p className="text-sm text-muted-foreground">
               Once verified, you can{' '}
-              <Link href="/login" className="underline text-primary">
+              <DelayedLink href="/login" className="underline text-primary">
                   log in
-              </Link>
+              </DelayedLink>
               .
            </p>
         </CardContent>

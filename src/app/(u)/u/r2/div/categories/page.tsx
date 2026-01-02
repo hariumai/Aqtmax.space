@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query } from 'firebase/firestore';
 import { Clapperboard, Music, Palette, Tv } from 'lucide-react';
-import Link from 'next/link';
+import DelayedLink from '@/components/delayed-link';
 
 const iconMap: { [key: string]: React.ElementType } = {
   Entertainment: Clapperboard,
@@ -44,7 +44,7 @@ export default function CategoriesPage() {
         {!isLoading && categories?.map((category) => {
           const Icon = iconMap[category.name] || iconMap.default;
           return (
-            <Link href={`/u/r2/div/category/${category.id}`} key={category.id}>
+            <DelayedLink href={`/u/r2/div/category/${category.id}`} key={category.id}>
               <div
                 className="group relative rounded-2xl border border-border/10 bg-card/50 p-6 text-center transition-all duration-300 hover:bg-card/70 hover:scale-105 hover:shadow-2xl backdrop-blur-xl"
               >
@@ -55,7 +55,7 @@ export default function CategoriesPage() {
                 </div>
                 <h3 className="mt-6 font-semibold">{category.name}</h3>
               </div>
-            </Link>
+            </DelayedLink>
           );
         })}
       </div>

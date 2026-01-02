@@ -21,7 +21,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useState, useMemo, ChangeEvent, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
-import Link from 'next/link';
+import DelayedLink from '@/components/delayed-link';
 import { type Order } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { sendOrderConfirmationEmail } from '@/lib/emails';
@@ -293,9 +293,9 @@ export default function CheckoutPage() {
                                         <Switch id="terms-agreement" checked={agreedToPolicies} onCheckedChange={setAgreedToPolicies} />
                                         <Label htmlFor="terms-agreement" className="text-xs text-muted-foreground">
                                             I have read and agree to the 
-                                            <Link href="/legal/terms" className="underline hover:text-primary"> Terms of Service</Link>, 
-                                            <Link href="/legal/privacy" className="underline hover:text-primary"> Privacy Policy</Link>, and 
-                                            <Link href="/legal/refund" className="underline hover:text-primary"> Refund Policy</Link>.
+                                            <DelayedLink href="/legal/terms" className="underline hover:text-primary"> Terms of Service</DelayedLink>, 
+                                            <DelayedLink href="/legal/privacy" className="underline hover:text-primary"> Privacy Policy</DelayedLink>, and 
+                                            <DelayedLink href="/legal/refund" className="underline hover:text-primary"> Refund Policy</DelayedLink>.
                                         </Label>
                                     </div>
 

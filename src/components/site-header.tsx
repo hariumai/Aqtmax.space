@@ -18,6 +18,8 @@ import { collection, query, orderBy, where } from 'firebase/firestore';
 import { CartDrawer } from './cart-drawer';
 import { NotificationsDrawer } from './notifications-drawer';
 import Link from 'next/link';
+import DelayedLink from './delayed-link';
+
 
 export default function SiteHeader() {
   const { user, isUserLoading } = useUser();
@@ -66,20 +68,20 @@ export default function SiteHeader() {
         <div className="flex items-center justify-start flex-1">
             <nav className="hidden items-center gap-6 md:flex">
                 {navLinks?.map(link => (
-                    <Link key={link.id} href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                    <DelayedLink key={link.id} href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
                         {link.label}
-                    </Link>
+                    </DelayedLink>
                 ))}
             </nav>
         </div>
         
         <div className="flex items-center justify-center">
-            <Link href="/u/r2/div" className="flex items-center gap-2">
+            <DelayedLink href="/u/r2/div" className="flex items-center gap-2">
             <Gem className="h-6 w-6 text-primary" />
             <span className="text-xl font-bold tracking-tighter text-foreground">
                 AQT Max
             </span>
-            </Link>
+            </DelayedLink>
         </div>
 
         <div className="flex items-center justify-end flex-1 gap-2">
@@ -108,8 +110,8 @@ export default function SiteHeader() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push('/u/r2/div/profile')}>
-                  Profile
+                <DropdownMenuItem>
+                  <DelayedLink href="/u/r2/div/profile" className="w-full text-left">Profile</DelayedLink>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
@@ -121,10 +123,10 @@ export default function SiteHeader() {
           ) : (
             <div className="hidden md:flex items-center gap-2">
               <Button asChild variant="ghost">
-                <Link href="/login">Sign In</Link>
+                <DelayedLink href="/login">Sign In</DelayedLink>
               </Button>
               <Button asChild>
-                <Link href="/signup">Get Started</Link>
+                <DelayedLink href="/signup">Get Started</DelayedLink>
               </Button>
             </div>
           )}

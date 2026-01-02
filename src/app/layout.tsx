@@ -7,6 +7,8 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { ThemeProvider } from '@/components/theme-provider';
 import AppIcons from '@/components/app-icons';
 import NextTopLoader from 'nextjs-toploader';
+import { PageTransitionProvider } from '@/context/page-transition-context';
+import PageTransitionLoader from '@/components/page-transition-loader';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -44,19 +46,11 @@ export default function RootLayout({
             disableTransitionOnChange
         >
           <FirebaseClientProvider>
-            <NextTopLoader
-              color="hsl(var(--primary))"
-              initialPosition={0.08}
-              crawlSpeed={200}
-              height={3}
-              crawl={true}
-              showSpinner={false}
-              easing="ease"
-              speed={200}
-              shadow="0 0 10px hsl(var(--primary)),0 0 5px hsl(var(--primary))"
-            />
-            {children}
-            <Toaster />
+            <PageTransitionProvider>
+              <PageTransitionLoader />
+              {children}
+              <Toaster />
+            </PageTransitionProvider>
           </FirebaseClientProvider>
         </ThemeProvider>
       </body>

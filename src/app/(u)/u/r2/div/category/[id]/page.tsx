@@ -3,10 +3,10 @@ import { Card } from '@/components/ui/card';
 import { useCollection, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, doc } from 'firebase/firestore';
 import { Clapperboard, Music, Palette, Tv } from 'lucide-react';
-import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/product-card';
+import DelayedLink from '@/components/delayed-link';
 
 const categoryIconMap: { [key: string]: React.ElementType } = {
     Entertainment: Clapperboard,
@@ -70,7 +70,7 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
           <div className="text-center col-span-full">
               <p className="text-muted-foreground">No products found in this category.</p>
               <Button asChild variant="link" className="mt-4">
-                  <Link href="/u/r2/div/products">View all products</Link>
+                  <DelayedLink href="/u/r2/div/products">View all products</DelayedLink>
               </Button>
           </div>
       )}

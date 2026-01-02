@@ -12,7 +12,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createNotification } from '@/lib/notifications';
 import { Input } from '@/components/ui/input';
-import Link from 'next/link';
+import DelayedLink from '@/components/delayed-link';
 
 const iconMap: { [key: string]: React.ElementType } = {
   'Netflix Premium': Clapperboard,
@@ -333,18 +333,18 @@ export default function ProductPage({ params: paramsProp }: { params: { id: stri
             </div>
           </div>
           <div className="text-center mt-16">
-            <Link href="/u/r2/div/#products" className="text-sm text-primary hover:underline">
+            <DelayedLink href="/u/r2/div/#products" className="text-sm text-primary hover:underline">
               &larr; Back to all products
-            </Link>
+            </DelayedLink>
           </div>
         </>
       )}
       {!isLoading && !product && (
          <div className="text-center">
           <h1 className="text-2xl font-bold">Product not found</h1>
-          <Link href="/u/r2/div" className="text-sm text-primary hover:underline mt-4 inline-block">
+          <DelayedLink href="/u/r2/div" className="text-sm text-primary hover:underline mt-4 inline-block">
               &larr; Back to homepage
-          </Link>
+          </DelayedLink>
          </div>
       )}
     </main>

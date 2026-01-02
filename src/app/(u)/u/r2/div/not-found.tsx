@@ -1,8 +1,7 @@
-
 'use client';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 import { Frown } from 'lucide-react';
+import DelayedLink from '@/components/delayed-link';
 
 export default function NotFound() {
   return (
@@ -26,10 +25,10 @@ export default function NotFound() {
       </div>
       <div className="flex flex-col sm:flex-row justify-center gap-4 animate-fade-in" style={{ animationDelay: '0.4s' }}>
         <Button asChild size="lg">
-          <Link href="/u/r2/div">Return to Homepage</Link>
+          <DelayedLink href="/u/r2/div">Return to Homepage</DelayedLink>
         </Button>
         <Button asChild variant="outline" size="lg">
-          <Link href="/u/r2/div/products">Explore All Products</Link>
+          <DelayedLink href="/u/r2/div/products">Explore All Products</DelayedLink>
         </Button>
       </div>
     </main>

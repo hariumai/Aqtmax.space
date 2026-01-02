@@ -1,5 +1,5 @@
 'use client';
-import Link from 'next/link';
+import DelayedLink from './delayed-link';
 import { Button } from './ui/button';
 import { Card, CardHeader, CardTitle } from './ui/card';
 import { ArrowRight } from 'lucide-react';
@@ -46,9 +46,9 @@ export default function ProductSection() {
         </div>
         <div className="mt-12 text-center">
           <Button asChild variant="outline">
-            <Link href="/u/r2/div/products">
+            <DelayedLink href="/u/r2/div/products">
               View All Products <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
+            </DelayedLink>
           </Button>
         </div>
       </div>

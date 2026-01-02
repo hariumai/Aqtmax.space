@@ -14,7 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import Link from 'next/link';
+import DelayedLink from '@/components/delayed-link';
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -103,12 +103,12 @@ export default function SignupPage() {
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-4">
       <div className="flex flex-col items-center text-center mb-8">
-        <Link href="/" className="flex items-center gap-2 mb-4">
+        <DelayedLink href="/" className="flex items-center gap-2 mb-4">
             <Gem className="h-8 w-8 text-primary" />
             <span className="text-3xl font-bold tracking-tighter text-foreground">
                 AQT Max
             </span>
-        </Link>
+        </DelayedLink>
       </div>
       <Card className="mx-auto max-w-sm w-full">
         <CardHeader className="text-center">
@@ -166,9 +166,9 @@ export default function SignupPage() {
           </Form>
           <div className="mt-4 text-center text-sm">
             Already have an account?{' '}
-            <Link href="/login" className="underline">
+            <DelayedLink href="/login" className="underline">
               Sign in
-            </Link>
+            </DelayedLink>
           </div>
         </CardContent>
       </Card>

@@ -7,13 +7,13 @@ import { collection, addDoc, serverTimestamp, query, where, limit, getDocs, writ
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Clapperboard, Music, Palette, Tv, ShoppingCart, CreditCard, Minus, Plus } from 'lucide-react';
-import Link from 'next/link';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
 import { createNotification } from '@/lib/notifications';
 import { Input } from './ui/input';
 import { type ViewMode } from './product-filters';
 import { cn } from '@/lib/utils';
+import DelayedLink from './delayed-link';
 
 
 const iconMap: { [key: string]: React.ElementType } = {
@@ -236,7 +236,7 @@ export default function ProductCard({ product, viewMode = 'grid' }: { product: a
   const pricePrefix = hasVariants && product.variantGroups && !product.variantGroups.every((g:any) => selectedVariants[g.name]) ? 'From' : '';
 
   return (
-    <Link href={`/u/r2/div/products/${product.id}`} className="block h-full">
+    <DelayedLink href={`/u/r2/div/products/${product.id}`} className="block h-full">
       <Card className={cn("flex flex-col h-full overflow-hidden rounded-2xl border-border/10 bg-card/50 backdrop-blur-xl transition-all duration-300 hover:border-primary/30 hover:shadow-primary/10 hover:shadow-2xl hover:-translate-y-1", viewMode === 'list' && 'md:flex-row')}>
         <CardHeader className={cn("flex-row items-start gap-4", viewMode === 'list' && 'md:w-1/3')}>
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted flex-shrink-0">
@@ -314,6 +314,6 @@ export default function ProductCard({ product, viewMode = 'grid' }: { product: a
             </CardFooter>
         </div>
       </Card>
-    </Link>
+    </DelayedLink>
   );
 }

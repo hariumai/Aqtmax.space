@@ -2,7 +2,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from './ui/button';
 import { ArrowRight, ShoppingCart } from 'lucide-react';
-import Link from 'next/link';
+import DelayedLink from './delayed-link';
 
 const floatingItems = [
     { id: 1, style: { top: '10%', left: '5%', animationDelay: '0s' } },
@@ -53,14 +53,14 @@ export default function HeroSection() {
 
             <div className="mt-8 flex flex-col items-center gap-4">
                <Button size="lg" asChild>
-                <Link href="/u/r2/div/products">
+                <DelayedLink href="/u/r2/div/products">
                     Browse Products <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
+                </DelayedLink>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link href="/u/r2/div/categories">
+                <DelayedLink href="/u/r2/div/categories">
                     View Categories
-                </Link>
+                </DelayedLink>
               </Button>
             </div>
           </div>
