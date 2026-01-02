@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { collection, query, orderBy, where } from 'firebase/firestore';
 import { CartDrawer } from './cart-drawer';
 import { NotificationsDrawer } from './notifications-drawer';
+import CustomLink from './custom-link';
 
 export default function SiteHeader() {
   const { user, isUserLoading } = useUser();
@@ -66,20 +67,20 @@ export default function SiteHeader() {
         <div className="flex items-center justify-start flex-1">
             <nav className="hidden items-center gap-6 md:flex">
                 {navLinks?.map(link => (
-                    <Link key={link.id} href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                    <CustomLink key={link.id} href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
                         {link.label}
-                    </Link>
+                    </CustomLink>
                 ))}
             </nav>
         </div>
         
         <div className="flex items-center justify-center">
-            <Link href="/u/r2/div" className="flex items-center gap-2">
+            <CustomLink href="/u/r2/div" className="flex items-center gap-2">
             <Gem className="h-6 w-6 text-primary" />
             <span className="text-xl font-bold tracking-tighter text-foreground">
                 AQT Max
             </span>
-            </Link>
+            </CustomLink>
         </div>
 
         <div className="flex items-center justify-end flex-1 gap-2">
@@ -121,10 +122,10 @@ export default function SiteHeader() {
           ) : (
             <div className="hidden md:flex items-center gap-2">
               <Button asChild variant="ghost">
-                <Link href="/login">Sign In</Link>
+                <CustomLink href="/login">Sign In</CustomLink>
               </Button>
               <Button asChild>
-                <Link href="/signup">Get Started</Link>
+                <CustomLink href="/signup">Get Started</CustomLink>
               </Button>
             </div>
           )}

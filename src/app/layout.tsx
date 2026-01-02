@@ -5,8 +5,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { cn } from '@/lib/utils';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { ThemeProvider } from '@/components/theme-provider';
-import NextTopLoader from 'nextjs-toploader';
 import AppIcons from '@/components/app-icons';
+import { PageLoaderProvider } from '@/context/page-loader-context';
+import PageLoader from '@/components/page-loader';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -37,17 +38,6 @@ export default function RootLayout({
         <AppIcons />
       </head>
       <body className={cn('font-body antialiased', inter.variable)}>
-        <NextTopLoader
-          color="#DC2626"
-          initialPosition={0.08}
-          crawlSpeed={200}
-          height={3}
-          crawl={true}
-          showSpinner={false}
-          easing="ease"
-          speed={3000}
-          shadow="0 0 10px #DC2626,0 0 5px #DC2626"
-        />
         <ThemeProvider
             attribute="class"
             defaultTheme="dark"
@@ -55,8 +45,11 @@ export default function RootLayout({
             disableTransitionOnChange
         >
           <FirebaseClientProvider>
-            {children}
-            <Toaster />
+            <PageLoaderProvider>
+              <PageLoader />
+              {children}
+              <Toaster />
+            </PageLoaderProvider>
           </FirebaseClientProvider>
         </ThemeProvider>
       </body>
