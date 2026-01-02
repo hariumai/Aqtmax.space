@@ -1,35 +1,37 @@
+
 'use client';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Link2Off } from 'lucide-react';
+import { Frown } from 'lucide-react';
 
 export default function NotFound() {
   return (
-    <main className="flex-grow flex items-center justify-center p-4">
-        <div className="flex flex-col items-center text-center max-w-md w-full animate-fade-in">
-            <div className="relative mb-8">
-                <span className="absolute -z-10 text-[200px] font-extrabold text-primary/10 -top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                    404
-                </span>
-                <Link2Off className="h-24 w-24 text-primary animate-float" />
-            </div>
-            
-            <h1 className="text-4xl font-extrabold tracking-tight mb-4">
-                Page Not Found
-            </h1>
-            <p className="text-muted-foreground mb-8">
-                Oops! The page you’re looking for seems to have gotten lost in the digital void.
-            </p>
-            <div className="flex justify-center gap-4">
-                <Button asChild size="lg">
-                    <Link href="/u/r2/div">Return Home</Link>
-                </Button>
-                <Button asChild variant="outline" size="lg">
-                    <Link href="/u/r2/div/products">Browse Products</Link>
-                </Button>
-            </div>
-        </div>
+    <main className="flex min-h-[60vh] flex-col items-center justify-center gap-8 bg-background p-4 text-center">
+      <div className="relative">
+        <h1
+          className="relative z-10 text-[15vw] font-black leading-none text-foreground md:text-[150px] animate-fade-in"
+        >
+          404
+        </h1>
+        <div className="absolute inset-0 -z-10 bg-gradient-to-tr from-primary via-primary to-blue-400 bg-clip-text text-transparent opacity-20 [filter:blur(40px)]"></div>
+        <Frown className="absolute left-1/2 top-1/2 z-20 h-1/4 w-1/4 -translate-x-1/2 -translate-y-1/2 text-primary/50 animate-float" />
+      </div>
+      <div className="space-y-4 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+        <h2 className="text-3xl font-extrabold tracking-tight">
+          Oops! Page Lost in Cyberspace.
+        </h2>
+        <p className="max-w-md text-muted-foreground">
+          It seems the page you were looking for has taken a detour. Let’s get you back on track.
+        </p>
+      </div>
+      <div className="flex flex-col sm:flex-row justify-center gap-4 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+        <Button asChild size="lg">
+          <Link href="/u/r2/div">Return to Homepage</Link>
+        </Button>
+        <Button asChild variant="outline" size="lg">
+          <Link href="/u/r2/div/products">Explore All Products</Link>
+        </Button>
+      </div>
     </main>
   );
 }
-    
