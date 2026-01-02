@@ -13,7 +13,7 @@ import { Separator } from './ui/separator';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { collection, deleteDoc, doc, query, updateDoc } from 'firebase/firestore';
 import { ShoppingCart, Trash2, Plus, Minus } from 'lucide-react';
-import CustomLink from './custom-link';
+import Link from 'next/link';
 import Image from 'next/image';
 
 export function CartDrawer() {
@@ -66,7 +66,7 @@ export function CartDrawer() {
             <p className="text-muted-foreground">Add items to your cart to see them here.</p>
             <SheetClose asChild>
                 <Button asChild>
-                    <CustomLink href="/u/r2/div/products">Continue Shopping</CustomLink>
+                    <Link href="/u/r2/div/products">Continue Shopping</Link>
                 </Button>
             </SheetClose>
           </div>
@@ -105,7 +105,7 @@ export function CartDrawer() {
                 </div>
                 <SheetClose asChild>
                   <Button asChild size="lg" className="w-full">
-                    <CustomLink href="/u/r2/div/checkout">Proceed to Checkout</CustomLink>
+                    <Link href="/u/r2/div/checkout">Proceed to Checkout</Link>
                   </Button>
                 </SheetClose>
               </div>

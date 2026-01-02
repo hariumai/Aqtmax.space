@@ -2,7 +2,7 @@
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { cn } from '@/lib/utils';
 import { Gem, Home, LayoutGrid, Menu, Shapes, User, ArrowRight, Sun, Moon, Phone, MoreHorizontal } from 'lucide-react';
-import CustomLink from './custom-link';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Sheet,
@@ -86,7 +86,7 @@ export default function BottomNav() {
              const Icon = item.icon || Home;
              const itemPath = getHref(item.href);
              return (
-             <CustomLink
+             <Link
              key={item.id}
              href={itemPath}
              className="inline-flex flex-col items-center justify-center px-5 hover:bg-muted/50 group"
@@ -105,7 +105,7 @@ export default function BottomNav() {
              >
                {item.label}
              </span>
-           </CustomLink>
+           </Link>
         )})}
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
@@ -125,18 +125,18 @@ export default function BottomNav() {
                  <div className="flex flex-col gap-6 p-6">
                         <div className="flex justify-between items-center">
                            <SheetClose asChild>
-                            <CustomLink href="/u/r2/div" className="flex items-center gap-2">
+                            <Link href="/u/r2/div" className="flex items-center gap-2">
                                 <Gem className="h-6 w-6 text-primary" />
                                 <span className="text-xl font-bold tracking-tighter">AQT Max</span>
-                            </CustomLink>
+                            </Link>
                            </SheetClose>
                         </div>
                         <nav className="flex flex-col gap-4">
                         {overflowNavItems.map(link => (
                            <SheetClose asChild key={link.id}>
-                            <CustomLink href={link.href} className="text-lg font-medium text-foreground hover:text-primary transition-colors">
+                            <Link href={link.href} className="text-lg font-medium text-foreground hover:text-primary transition-colors">
                                 {link.label}
-                            </CustomLink>
+                            </Link>
                            </SheetClose>
                         ))}
                         </nav>
@@ -158,12 +158,12 @@ export default function BottomNav() {
                           <div className="flex flex-col gap-2 border-t pt-6 mt-2">
                               <SheetClose asChild>
                                 <Button asChild size="lg">
-                                    <CustomLink href="/signup">Get Started <ArrowRight className="ml-2 h-4 w-4" /></CustomLink>
+                                    <Link href="/signup">Get Started <ArrowRight className="ml-2 h-4 w-4" /></Link>
                                 </Button>
                               </SheetClose>
                               <SheetClose asChild>
                                 <Button asChild variant="ghost">
-                                    <CustomLink href="/login">Sign In</CustomLink>
+                                    <Link href="/login">Sign In</Link>
                                 </Button>
                               </SheetClose>
                           </div>
