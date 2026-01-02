@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
@@ -11,6 +12,21 @@ export default function PrivacyPage() {
     [firestore]
   );
   const { data: page, isLoading } = useDoc(pageRef);
+  const [htmlContent, setHtmlContent] = useState('');
+
+  useEffect(() => {
+    if (page?.content) {
+        let content = page.content;
+        // Replace markdown-style bold and links
+        content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        content = content.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-primary hover:underline">$1</a>');
+        // Replace newlines with <br> for paragraphs
+        content = content.replace(/\n/g, '<br />');
+
+        setHtmlContent(content);
+    }
+  }, [page]);
+
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -29,7 +45,7 @@ export default function PrivacyPage() {
         {page && (
             <div className="prose prose-invert max-w-none">
             <h1 className="font-headline text-4xl font-extrabold tracking-tighter">{page.title}</h1>
-            <div dangerouslySetInnerHTML={{ __html: page.content.replace(/\n/g, '<br />') }} />
+            <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
             </div>
         )}
       </main>
