@@ -1,6 +1,5 @@
 'use client';
 import { Gem, LogOut, ShoppingCart, Bell } from 'lucide-react';
-import Link from 'next/link';
 import { Button } from './ui/button';
 import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
