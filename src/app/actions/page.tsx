@@ -2,7 +2,7 @@
 'use client';
 import { useAuth } from '@/firebase';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { applyActionCode, checkActionCode, confirmPasswordReset } from 'firebase/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,14 +11,13 @@ import { Label } from '@/components/ui/label';
 import { Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
 import DelayedLink from '@/components/delayed-link';
 
-export default function ActionsPage() {
+function Actions() {
   const auth = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
   
   const mode = searchParams.get('mode');
   const oobCode = searchParams.get('oobCode');
-  const continueUrl = searchParams.get('continueUrl');
   
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'resetting'>('loading');
   const [message, setMessage] = useState('Processing...');
@@ -106,25 +105,33 @@ export default function ActionsPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md text-center">
-        <CardHeader>
-          <div className="mx-auto flex h-16 w-16 items-center justify-center">
-            {renderContent()}
-          </div>
-          <CardTitle className="mt-4 text-2xl">
-            {status === 'resetting' ? 'Reset Your Password' : 'Action Status'}
-          </CardTitle>
-          <CardDescription>{message}</CardDescription>
-        </CardHeader>
-        {status === 'success' || status === 'error' ? (
-          <CardContent>
-            <Button asChild className="w-full">
-              <DelayedLink href="/login">Proceed to Login</DelayedLink>
-            </Button>
-          </CardContent>
-        ) : null}
-      </Card>
-    </main>
+    <Card className="w-full max-w-md text-center">
+      <CardHeader>
+        <div className="mx-auto flex h-16 w-16 items-center justify-center">
+          {renderContent()}
+        </div>
+        <CardTitle className="mt-4 text-2xl">
+          {status === 'resetting' ? 'Reset Your Password' : 'Action Status'}
+        </CardTitle>
+        <CardDescription>{message}</CardDescription>
+      </CardHeader>
+      {status === 'success' || status === 'error' ? (
+        <CardContent>
+          <Button asChild className="w-full">
+            <DelayedLink href="/login">Proceed to Login</DelayedLink>
+          </Button>
+        </CardContent>
+      ) : null}
+    </Card>
   );
+}
+
+export default function ActionsPage() {
+    return (
+        <main className="flex min-h-screen items-center justify-center p-4">
+            <Suspense fallback={<Loader2 className="h-12 w-12 animate-spin text-primary" />}>
+                <Actions />
+            </Suspense>
+        </main>
+    )
 }
