@@ -1,3 +1,4 @@
+
 'use client';
 import { useAuth } from '@/firebase';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -113,7 +114,7 @@ export default function ActionsPage() {
           </div>
           <CardTitle className="mt-4 text-2xl">
             {status === 'resetting' ? 'Reset Your Password' : 'Action Status'}
-          </Title>
+          </CardTitle>
           <CardDescription>{message}</CardDescription>
         </CardHeader>
         {status === 'success' || status === 'error' ? (
